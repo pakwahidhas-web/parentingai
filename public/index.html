@@ -133,6 +133,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 .sc-icon{font-size:24px;margin-bottom:4px}
 .sc-name{font-size:10px;font-weight:600;color:var(--txt);line-height:1.3}
 .sc-stars{display:flex;justify-content:center;gap:1px;margin-top:4px;font-size:9px}
+.sc.done [style*="background:var(--pul)"]{background:#dcfce7!important;color:#15803d!important}
+.sc.learning [style*="background:var(--pul)"]{background:#fef3c7!important;color:#92400e!important}
 .sc-badge{position:absolute;top:5px;right:5px;font-size:10px}
 .sc.done .sc-badge::after{content:'✅'}
 .sc.learning .sc-badge::after{content:'⏳'}
@@ -346,9 +348,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 
   <!-- HERO -->
   <div class="lnd-hero">
-    <div class="lnd-badge">✨ Berbasis AI · Kelas 1 SD s/d Kelas 12 SMA</div>
-    <h1>Dampingi Tumbuh Kembang Anak<br><span>dari SD hingga SMA</span></h1>
-    <p>Aplikasi parenting pertama di Indonesia yang memandu orang tua mendampingi 108 life skill anak secara terstruktur — dilengkapi AI Konsultan yang selalu siap membantu kapan saja.</p>
+    <div class="lnd-badge">✨ Berbasis AI · P21 Framework · Kelas 1 SD s/d Kelas 12 SMA</div>
+    <h1>Dampingi Tumbuh Kembang Anak<br><span>dengan 21st Century Skills</span></h1>
+    <p>Satu-satunya aplikasi parenting di Indonesia yang mengintegrasikan <strong>P21 Framework</strong> (Critical Thinking, Creativity, Communication, Collaboration + Digital Literacy) ke dalam 108 life skill terstruktur dari SD hingga SMA — dilengkapi AI Konsultan yang siap membantu kapan saja.</p>
     <div class="lnd-hero-btns">
       <button class="btn-auth" style="max-width:220px;margin:0" onclick="showAuth('register')">🚀 Mulai Gratis 7 Hari</button>
       <button class="tbbtn" style="padding:12px 24px;font-size:14px" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Lihat Harga</button>
@@ -357,12 +359,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 
   <!-- FEATURES -->
   <div class="lnd-features">
-    <div class="lnd-feat"><div class="ico">🌱</div><h3>108 Life Skill</h3><p>Kurikulum terstruktur dari Kelas 1 SD hingga Kelas 12 SMA, dirancang bersama pakar parenting dan coach anak.</p></div>
-    <div class="lnd-feat"><div class="ico">✨</div><h3>AI Konsultan 24/7</h3><p>Tanya apa saja tentang tumbuh kembang anak — AI kami tahu persis posisi dan progres anak Anda.</p></div>
-    <div class="lnd-feat"><div class="ico">👨‍👩‍👧‍👦</div><h3>Multi Anak</h3><p>Kelola semua anak dalam satu akun. Data setiap anak tersimpan terpisah dan aman.</p></div>
-    <div class="lnd-feat"><div class="ico">📄</div><h3>Laporan PDF Bulanan</h3><p>Laporan perkembangan lengkap berisi analisis AI, detail skill per kelas, dan catatan aktivitas.</p></div>
-    <div class="lnd-feat"><div class="ico">🔔</div><h3>Laporan Mingguan</h3><p>Setiap minggu dapatkan ringkasan perkembangan dan rekomendasi konkret dari AI.</p></div>
-    <div class="lnd-feat"><div class="ico">🔒</div><h3>Data Privat & Aman</h3><p>Data keluarga Anda terlindungi penuh. Hanya Anda yang bisa mengaksesnya.</p></div>
+    <div class="lnd-feat"><div class="ico">🧩</div><h3>P21 Framework</h3><p>108 skill dirancang berdasarkan framework 21st Century Skills (P21) — Critical Thinking, Creativity, Communication, Collaboration, Digital Literacy & Life Skills.</p></div>
+    <div class="lnd-feat"><div class="ico">🌱</div><h3>Terstruktur per Kelas</h3><p>Kurikulum life skill dari Kelas 1 SD hingga Kelas 12 SMA, disesuaikan tahapan perkembangan anak dan jenjang pendidikan.</p></div>
+    <div class="lnd-feat"><div class="ico">✨</div><h3>AI Konsultan 24/7</h3><p>Tanya apa saja tentang tumbuh kembang anak — AI kami memahami P21 framework dan tahu persis posisi anak Anda.</p></div>
+    <div class="lnd-feat"><div class="ico">👨‍👩‍👧‍👦</div><h3>Multi Anak</h3><p>Kelola semua anak dalam satu akun. Data setiap anak tersimpan terpisah dan aman di cloud.</p></div>
+    <div class="lnd-feat"><div class="ico">📄</div><h3>Laporan PDF Bulanan</h3><p>Laporan perkembangan lengkap berisi analisis AI, mapping P21 skills yang dikuasai, dan rekomendasi bulan depan.</p></div>
+    <div class="lnd-feat"><div class="ico">🔒</div><h3>Data Privat & Aman</h3><p>Data keluarga Anda terlindungi penuh dengan Row Level Security. Hanya Anda yang bisa mengaksesnya.</p></div>
   </div>
 
   <!-- PRICING -->
@@ -844,82 +846,169 @@ const JENJANG = [
 ];
 
 const TMPL = [
-  // ═══════════════════════ SD ═══════════════════════
+  // ═══════════ SD ═══════════
+  // P21: Fondasi Learning & Life Skills — motorik, keberanian, kebiasaan
   { title:'Kelas 1 SD', sub:'Tahap Fondasi', ico:'🌱', focus:'Motorik, keberanian & kebiasaan baik', jenjang:'SD',
+    p21:['Life & Career Skills','Learning to Learn'],
     skills:[
-      {n:"Baca Al-Qur'an",i:'📖'},{n:'English Dasar',i:'🔤'},{n:'Menggambar',i:'🎨'},
-      {n:'Naik Sepeda',i:'🚲'},{n:'Sepatu Roda',i:'🛼'},{n:'Berenang',i:'🏊'},
-      {n:'Memelihara Hewan',i:'🐟'},{n:'Kerajinan Tangan',i:'✂️'},{n:'Kebersihan Diri',i:'🪥'}
+      {n:"Baca Al-Qur\'an",i:'📖',p21:'Life & Career'},
+      {n:'English Dasar',i:'🔤',p21:'Communication'},
+      {n:'Menggambar & Mewarnai',i:'🎨',p21:'Creativity'},
+      {n:'Naik Sepeda',i:'🚲',p21:'Life Skills'},
+      {n:'Berenang',i:'🏊',p21:'Life Skills'},
+      {n:'Kerajinan Tangan',i:'✂️',p21:'Creativity & Innovation'},
+      {n:'Memelihara Hewan',i:'🐟',p21:'Social Skills'},
+      {n:'Kebersihan Diri',i:'🪥',p21:'Life Skills'},
+      {n:'Kerjasama & Berbagi',i:'🤝',p21:'Collaboration'}
     ]},
-  { title:'Kelas 2 SD', sub:'Tahap Keberanian', ico:'🦁', focus:'Percaya diri & eksplorasi diri',  jenjang:'SD',
+  { title:'Kelas 2 SD', sub:'Tahap Keberanian', ico:'🦁', focus:'Percaya diri, komunikasi & eksplorasi', jenjang:'SD',
+    p21:['Communication','Social & Cross-Cultural Skills'],
     skills:[
-      {n:'Story Telling',i:'📢'},{n:'Public Speaking',i:'🎤'},{n:'Membaca Nyaring',i:'📚'},
-      {n:'Memasak Sederhana',i:'🍳'},{n:'Menjahit Dasar',i:'🧵'},{n:'Menanam Sayur',i:'🌱'},
-      {n:'Beladiri Dasar',i:'🥋'},{n:'Hafalan Tahfidz',i:'🕌'},{n:'Kerjasama Tim',i:'🤝'}
+      {n:'Story Telling',i:'📢',p21:'Communication'},
+      {n:'Public Speaking Dasar',i:'🎤',p21:'Communication'},
+      {n:'Membaca Nyaring',i:'📚',p21:'Communication'},
+      {n:'Memasak Sederhana',i:'🍳',p21:'Life Skills'},
+      {n:'Menjahit Dasar',i:'🧵',p21:'Creativity'},
+      {n:'Menanam & Berkebun',i:'🌱',p21:'Life Skills'},
+      {n:'Beladiri Dasar',i:'🥋',p21:'Life Skills'},
+      {n:'Hafalan & Literasi',i:'📖',p21:'Learning to Learn'},
+      {n:'Empati & Tolong-Menolong',i:'💛',p21:'Social Skills'}
     ]},
-  { title:'Kelas 3 SD', sub:'Tahap Eksplorasi', ico:'🔭', focus:'Logika, teknologi & alam', jenjang:'SD',
+  { title:'Kelas 3 SD', sub:'Tahap Eksplorasi', ico:'🔭', focus:'Logika, teknologi dasar & kreativitas digital', jenjang:'SD',
+    p21:['ICT Literacy','Creativity & Innovation'],
     skills:[
-      {n:'Block Coding',i:'💻'},{n:'Robotik Dasar',i:'🤖'},{n:'Mengetik 10 Jari',i:'⌨️'},
-      {n:'Fotografi',i:'📷'},{n:'Editing Video',i:'🎬'},{n:'Youtuber Pemula',i:'▶️'},
-      {n:'Membaca Peta',i:'🗺️'},{n:'Jelajah Alam',i:'🏕️'},{n:'Menyusun Tenda',i:'⛺'}
+      {n:'Block Coding (Scratch)',i:'💻',p21:'ICT Literacy'},
+      {n:'Robotik Dasar',i:'🤖',p21:'ICT Literacy'},
+      {n:'Mengetik 10 Jari',i:'⌨️',p21:'ICT Literacy'},
+      {n:'Fotografi Dasar',i:'📷',p21:'Media Literacy'},
+      {n:'Editing Video Sederhana',i:'🎬',p21:'Media Literacy'},
+      {n:'Membaca Peta & Navigasi',i:'🗺️',p21:'Critical Thinking'},
+      {n:'Jelajah Alam',i:'🏕️',p21:'Life Skills'},
+      {n:'Eksperimen Sains Sederhana',i:'🔬',p21:'Critical Thinking'},
+      {n:'Presentasi Lisan',i:'🗣️',p21:'Communication'}
     ]},
-  { title:'Kelas 4 SD', sub:'Tahap Keterampilan', ico:'🔧', focus:'Skill praktis & problem solving', jenjang:'SD',
+  { title:'Kelas 4 SD', sub:'Tahap Keterampilan', ico:'🔧', focus:'Problem solving, skill praktis & literasi digital', jenjang:'SD',
+    p21:['Critical Thinking','Information Literacy','Productivity'],
     skills:[
-      {n:'Kelistrikan Dasar',i:'⚡'},{n:'IoT Sederhana',i:'📡'},{n:'Desain Grafis',i:'🖥️'},
-      {n:'Menulis Cerita',i:'✍️'},{n:'Presentasi Slide',i:'📊'},{n:'P3K Dasar',i:'🩹'},
-      {n:'Mengatur Waktu',i:'⏰'},{n:'Berani Bertanya',i:'❓'},{n:'Berjualan Langsung',i:'🛒'}
+      {n:'Critical Thinking & Analisis',i:'🧩',p21:'Critical Thinking'},
+      {n:'Menulis Kreatif',i:'✍️',p21:'Communication'},
+      {n:'Presentasi Slide (PowerPoint)',i:'📊',p21:'Communication'},
+      {n:'Literasi Informasi (riset)',i:'🔍',p21:'Information Literacy'},
+      {n:'P3K & Keselamatan Diri',i:'🩹',p21:'Life Skills'},
+      {n:'Manajemen Waktu',i:'⏰',p21:'Productivity & Accountability'},
+      {n:'Desain Grafis Dasar',i:'🖥️',p21:'Creativity & ICT'},
+      {n:'Berjualan & Negosiasi',i:'🛒',p21:'Career Skills'},
+      {n:'Literasi Keuangan Dasar',i:'💰',p21:'Financial Literacy'}
     ]},
-  { title:'Kelas 5 SD', sub:'Tahap Kemandirian', ico:'🚀', focus:'Entrepreneurship & teknologi lanjut', jenjang:'SD',
+  { title:'Kelas 5 SD', sub:'Tahap Kemandirian', ico:'🚀', focus:'Entrepreneurship, teknologi & future skills', jenjang:'SD',
+    p21:['ICT Literacy','Initiative & Self-Direction','Creativity'],
     skills:[
-      {n:'3D Desain & Printing',i:'🖨️'},{n:'Finansial Literasi',i:'💰'},{n:'Membuat Website',i:'🌐'},
-      {n:'Game Coding',i:'🎮'},{n:'Mengenal AI',i:'🤖'},{n:'Jualan Online',i:'🛍️'},
-      {n:'Problem Solving',i:'🧩'},{n:'Pengambilan Keputusan',i:'⚖️'},{n:'Digital Marketing Dasar',i:'📣'}
+      {n:'3D Desain & Printing',i:'🖨️',p21:'Creativity & ICT'},
+      {n:'Coding Python Dasar',i:'🐍',p21:'ICT Literacy'},
+      {n:'Membuat Website',i:'🌐',p21:'ICT Literacy'},
+      {n:'Jualan Online',i:'🛍️',p21:'Career Skills'},
+      {n:'Problem Solving Sistematis',i:'🧠',p21:'Critical Thinking'},
+      {n:'Pengambilan Keputusan',i:'⚖️',p21:'Critical Thinking'},
+      {n:'Digital Marketing Dasar',i:'📣',p21:'Media Literacy'},
+      {n:'Mindset Growth & Resiliensi',i:'💪',p21:'Initiative & Self-Direction'},
+      {n:'Global Awareness',i:'🌍',p21:'Global Literacy'}
     ]},
-  { title:'Kelas 6 SD', sub:'Tahap Transisi', ico:'🎓', focus:'Persiapan SMP & penguatan karakter', jenjang:'SD',
+  { title:'Kelas 6 SD', sub:'Tahap Transisi', ico:'🎓', focus:'Persiapan SMP, kepemimpinan & karakter', jenjang:'SD',
+    p21:['Leadership','Initiative & Self-Direction','Communication'],
     skills:[
-      {n:'Manajemen Stres',i:'🧘'},{n:'Debat & Argumen',i:'🗣️'},{n:'Mind Mapping',i:'🗂️'},
-      {n:'Riset Sederhana',i:'🔬'},{n:'Podcast Pemula',i:'🎙️'},{n:'Membuat Aplikasi',i:'📱'},
-      {n:'Kepemimpinan Tim',i:'👑'},{n:'Menulis Artikel',i:'📰'},{n:'Budgeting Pribadi',i:'💳'}
+      {n:'Kepemimpinan Tim',i:'👑',p21:'Leadership & Responsibility'},
+      {n:'Manajemen Stres & Emosi',i:'🧘',p21:'Life Skills'},
+      {n:'Debat & Argumentasi',i:'🗣️',p21:'Communication'},
+      {n:'Riset & Mind Mapping',i:'🗂️',p21:'Information Literacy'},
+      {n:'Podcast & Konten Suara',i:'🎙️',p21:'Media Literacy'},
+      {n:'Kolaborasi Proyek Tim',i:'🤝',p21:'Collaboration'},
+      {n:'Menulis Artikel & Blog',i:'📰',p21:'Communication'},
+      {n:'Budgeting & Tabungan',i:'💳',p21:'Financial Literacy'},
+      {n:'Kesadaran Lingkungan',i:'♻️',p21:'Environmental Literacy'}
     ]},
 
-  // ═══════════════════════ SMP ═══════════════════════
-  { title:'Kelas 7 SMP', sub:'Tahap Identitas', ico:'🌊', focus:'Membangun jati diri & minat bakat', jenjang:'SMP',
+  // ═══════════ SMP ═══════════
+  // P21: 4C's lebih dalam + Digital Literacy + Career Skills
+  { title:'Kelas 7 SMP', sub:'Tahap Identitas', ico:'🌊', focus:'Jati diri, minat bakat & digital citizenship', jenjang:'SMP',
+    p21:['Self-Direction','ICT Literacy','Social Skills'],
     skills:[
-      {n:'Journaling Reflektif',i:'📓'},{n:'Bahasa Inggris Aktif',i:'🇬🇧'},{n:'Olahraga Rutin',i:'⚽'},
-      {n:'Musik / Seni Pertunjukan',i:'🎵'},{n:'Coding Python Dasar',i:'🐍'},{n:'Desain UI/UX',i:'🎨'},
-      {n:'Literasi Media',i:'📱'},{n:'Empati & Sosial',i:'💛'},{n:'Navigasi Internet Aman',i:'🔐'}
+      {n:'Journaling & Refleksi Diri',i:'📓',p21:'Initiative & Self-Direction'},
+      {n:'Digital Citizenship',i:'🔐',p21:'ICT Literacy'},
+      {n:'Bahasa Inggris Aktif',i:'🇬🇧',p21:'Communication'},
+      {n:'Coding Python Lanjut',i:'🐍',p21:'ICT Literacy'},
+      {n:'Desain UI/UX Dasar',i:'🎨',p21:'Creativity & ICT'},
+      {n:'Literasi Media & Hoaks',i:'📱',p21:'Media Literacy'},
+      {n:'Olahraga & Kebugaran',i:'⚽',p21:'Life Skills'},
+      {n:'Musik / Seni Pertunjukan',i:'🎵',p21:'Creativity'},
+      {n:'Cross-Cultural Communication',i:'🌐',p21:'Social & Cross-Cultural'}
     ]},
-  { title:'Kelas 8 SMP', sub:'Tahap Ekspansi', ico:'🌍', focus:'Memperluas wawasan & skill produktif', jenjang:'SMP',
+  { title:'Kelas 8 SMP', sub:'Tahap Ekspansi', ico:'🌍', focus:'4Cs mendalam, analisis data & produktivitas', jenjang:'SMP',
+    p21:['Critical Thinking','Collaboration','Information Literacy'],
     skills:[
-      {n:'Bahasa Arab / Mandarin',i:'🈶'},{n:'Riset & Analisis Data',i:'📊'},{n:'Copywriting',i:'✏️'},
-      {n:'Video Cinematography',i:'🎬'},{n:'Elektronika & Arduino',i:'🔌'},{n:'Meditasi & Mindfulness',i:'🧠'},
-      {n:'Bisnis Plan Sederhana',i:'📋'},{n:'Volunteerism',i:'🤲'},{n:'Speed Reading',i:'⚡'}
+      {n:'Analisis Data & Statistik',i:'📊',p21:'Information Literacy'},
+      {n:'Copywriting & Persuasi',i:'✏️',p21:'Communication'},
+      {n:'Video Cinematography',i:'🎬',p21:'Media Literacy'},
+      {n:'Elektronika & Arduino',i:'🔌',p21:'ICT Literacy'},
+      {n:'Kolaborasi Global Online',i:'🌐',p21:'Collaboration'},
+      {n:'Meditasi & Mindfulness',i:'🧠',p21:'Life Skills'},
+      {n:'Business Plan Sederhana',i:'📋',p21:'Career Skills'},
+      {n:'Volunteerism & Sosial',i:'🤲',p21:'Social Responsibility'},
+      {n:'Speed Reading & Riset',i:'⚡',p21:'Information Literacy'}
     ]},
-  { title:'Kelas 9 SMP', sub:'Tahap Prestasi', ico:'🏆', focus:'Orientasi karir & prestasi akademik', jenjang:'SMP',
+  { title:'Kelas 9 SMP', sub:'Tahap Prestasi', ico:'🏆', focus:'Orientasi karir, prestasi & inovasi', jenjang:'SMP',
+    p21:['Initiative','Leadership','Critical Thinking'],
     skills:[
-      {n:'Persiapan Olimpiade',i:'🥇'},{n:'Personal Branding',i:'🌟'},{n:'Pitching Ide',i:'💡'},
-      {n:'Machine Learning Dasar',i:'🤖'},{n:'Manajemen Proyek',i:'📌'},{n:'Menulis Karya Ilmiah',i:'📜'},
-      {n:'Networking',i:'🤝'},{n:'Self-Defense Lanjut',i:'🥊'},{n:'Eksplorasi Karir',i:'🧭'}
+      {n:'Persiapan Olimpiade',i:'🥇',p21:'Critical Thinking'},
+      {n:'Personal Branding',i:'🌟',p21:'Career Skills'},
+      {n:'Pitching Ide & Presentasi',i:'💡',p21:'Communication'},
+      {n:'Machine Learning Dasar',i:'🤖',p21:'ICT Literacy'},
+      {n:'Manajemen Proyek (Agile)',i:'📌',p21:'Productivity & Accountability'},
+      {n:'Karya Tulis Ilmiah',i:'📜',p21:'Information Literacy'},
+      {n:'Networking & Komunitas',i:'🤝',p21:'Social Skills'},
+      {n:'Self-Defense Lanjut',i:'🥊',p21:'Life Skills'},
+      {n:'Eksplorasi Karir & Minat',i:'🧭',p21:'Initiative & Self-Direction'}
     ]},
 
-  // ═══════════════════════ SMA ═══════════════════════
-  { title:'Kelas 10 SMA', sub:'Tahap Pendalaman', ico:'🎯', focus:'Spesialisasi minat & skill abad 21', jenjang:'SMA',
+  // ═══════════ SMA ═══════════
+  // P21: Mastery level — semua 12 skills P21 framework
+  { title:'Kelas 10 SMA', sub:'Tahap Pendalaman', ico:'🎯', focus:'Spesialisasi, abad 21 & civic literacy', jenjang:'SMA',
+    p21:['Critical Thinking','ICT Literacy','Civic Literacy'],
     skills:[
-      {n:'Critical Thinking',i:'🧩'},{n:'Full-Stack Web Dev',i:'💻'},{n:'Investasi & Saham',i:'📈'},
-      {n:'Bahasa Ketiga',i:'🗺️'},{n:'Content Creation',i:'📸'},{n:'Kepemimpinan Organisasi',i:'🏛️'},
-      {n:'Public Policy Dasar',i:'⚖️'},{n:'Design Thinking',i:'💡'},{n:'Spiritual Intelligence',i:'🕌'}
+      {n:'Critical & Systems Thinking',i:'🧩',p21:'Critical Thinking'},
+      {n:'Full-Stack Web Dev',i:'💻',p21:'ICT Literacy'},
+      {n:'Investasi & Literasi Saham',i:'📈',p21:'Financial Literacy'},
+      {n:'Bahasa Ketiga (Arab/Mandarin)',i:'🈶',p21:'Communication'},
+      {n:'Content Creation & Branding',i:'📸',p21:'Media Literacy'},
+      {n:'Kepemimpinan Organisasi',i:'🏛️',p21:'Leadership & Responsibility'},
+      {n:'Civic & Kebijakan Publik',i:'⚖️',p21:'Civic Literacy'},
+      {n:'Design Thinking',i:'💡',p21:'Creativity & Innovation'},
+      {n:'Kecerdasan Emosional',i:'❤️',p21:'Social & Cross-Cultural'}
     ]},
-  { title:'Kelas 11 SMA', sub:'Tahap Spesialisasi', ico:'🔬', focus:'Keahlian mendalam & entrepreneurship', jenjang:'SMA',
+  { title:'Kelas 11 SMA', sub:'Tahap Spesialisasi', ico:'🔬', focus:'Keahlian mendalam, riset & social entrepreneurship', jenjang:'SMA',
+    p21:['Innovation','Leadership','Productivity','Global Awareness'],
     skills:[
-      {n:'Startup Building',i:'🚀'},{n:'Data Science',i:'📉'},{n:'Riset Ilmiah',i:'🔭'},
-      {n:'Coaching & Mentoring',i:'🎓'},{n:'Keuangan Lanjut',i:'💰'},{n:'AI Produktivitas',i:'🤖'},
-      {n:'Diplomasi & Negosiasi',i:'🕊️'},{n:'Film / Konten Series',i:'🎥'},{n:'Social Entrepreneurship',i:'🌏'}
+      {n:'Startup Building',i:'🚀',p21:'Career Skills & Innovation'},
+      {n:'Data Science & AI',i:'📉',p21:'ICT Literacy'},
+      {n:'Riset Ilmiah & Publikasi',i:'🔭',p21:'Information Literacy'},
+      {n:'Coaching & Mentoring',i:'🎓',p21:'Leadership & Responsibility'},
+      {n:'Keuangan Lanjut & Investasi',i:'💰',p21:'Financial Literacy'},
+      {n:'AI Tools & Produktivitas',i:'🤖',p21:'ICT & Productivity'},
+      {n:'Diplomasi & Negosiasi',i:'🕊️',p21:'Communication & Social'},
+      {n:'Film / Serial Konten',i:'🎥',p21:'Media Literacy'},
+      {n:'Social Entrepreneurship',i:'🌏',p21:'Global & Civic Literacy'}
     ]},
-  { title:'Kelas 12 SMA', sub:'Tahap Persiapan Dunia', ico:'🌟', focus:'Kesiapan kuliah, karir & kehidupan', jenjang:'SMA',
+  { title:'Kelas 12 SMA', sub:'Tahap Persiapan Dunia', ico:'🌟', focus:'Kesiapan kuliah, karir global & legacy', jenjang:'SMA',
+    p21:['All P21 Skills','Accountability','Leadership','Self-Direction'],
     skills:[
-      {n:'Personal Finance Mastery',i:'💎'},{n:'Portofolio & CV Global',i:'📁'},{n:'Interview & Seleksi',i:'🎤'},
-      {n:'Gap Year Planning',i:'✈️'},{n:'Kehidupan Mandiri',i:'🏠'},{n:'Resiliensi & Growth Mindset',i:'🌱'},
-      {n:'Legacy Project',i:'🏗️'},{n:'Mentor Adik Kelas',i:'👨‍🏫'},{n:'Visi Hidup 10 Tahun',i:'🔭'}
+      {n:'Personal Finance Mastery',i:'💎',p21:'Financial Literacy'},
+      {n:'Portofolio & CV Global',i:'📁',p21:'Career Skills'},
+      {n:'Interview & Seleksi Masuk',i:'🎤',p21:'Communication'},
+      {n:'Kehidupan Mandiri',i:'🏠',p21:'Life Skills'},
+      {n:'Resiliensi & Growth Mindset',i:'🌱',p21:'Flexibility & Adaptability'},
+      {n:'Legacy Project',i:'🏗️',p21:'Leadership & Responsibility'},
+      {n:'Mentor Adik Kelas',i:'👨‍🏫',p21:'Social Responsibility'},
+      {n:'Visi Hidup & Personal Mission',i:'🔭',p21:'Initiative & Self-Direction'},
+      {n:'Global Citizenship',i:'🌍',p21:'Global & Civic Literacy'}
     ]}
 ];
 
@@ -1309,7 +1398,9 @@ function renderClass(idx){
   hdr.className='clshdr '+jname.toLowerCase();
   document.getElementById('clsico').textContent=t.ico;
   document.getElementById('clstit').textContent=t.title;
-  document.getElementById('clsdesc').textContent=t.sub+' · '+t.focus;
+  // Tampilkan P21 tags di deskripsi kelas
+  const p21Tags = t.p21 ? t.p21.map(p=>`<span style="background:rgba(255,255,255,.18);padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600">${p}</span>`).join(' ') : '';
+  document.getElementById('clsdesc').innerHTML = `<span style="opacity:.85">${t.sub} · ${t.focus}</span><br><div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${p21Tags}</div>`;
   const done=cntDone(idx),learn=cntLearn(idx),total=t.skills.length,pct=Math.round(done/total*100);
   document.getElementById('spDone').textContent=done+' dikuasai';
   document.getElementById('spLearn').textContent=learn+' belajar';
@@ -1341,10 +1432,12 @@ function renderClass(idx){
     let cls='sc';
     if(sk.status==='done')cls+=' done';
     else if(sk.status==='learning')cls+=' learning';
+    const p21badge = s.p21 ? `<div style="font-size:8px;color:var(--pu);background:var(--pul);padding:1px 5px;border-radius:8px;margin-top:3px;line-height:1.4;font-weight:600">${s.p21}</div>` : '';
     return `<div class="${cls}" onclick="openSkillModal(${idx},${i})">
       <div class="sc-badge"></div>
       <div class="sc-icon">${s.i}</div>
       <div class="sc-name">${s.n}</div>
+      ${p21badge}
       <div class="sc-stars">${'⭐'.repeat(sk.stars)+'☆'.repeat(3-sk.stars)}</div>
     </div>`;
   }).join('');
@@ -1354,15 +1447,16 @@ function renderClass(idx){
 function updateHomeReco(){
   if(!child()){document.getElementById('homeReco').innerHTML='Tambah anak untuk memulai.';return;}
   const c=child();
-  // Find child's current class index (grade-1 maps to TMPL index)
   const curIdx=Math.min(c.grade-1, TMPL.length-1);
   const curTmpl=TMPL[curIdx];
   const learning=curTmpl.skills.filter((_,i)=>getSk(curIdx,i).status==='learning');
   const none=curTmpl.skills.filter((_,i)=>getSk(curIdx,i).status==='none');
   let totalDoneAll=0; TMPL.forEach((_,ci)=>{totalDoneAll+=cntDone(ci);});
-  let t=`<strong>${c.name}</strong> · ${curTmpl.title} · <strong>${totalDoneAll} skill</strong> dikuasai total. `;
+  const p21focus = curTmpl.p21 ? curTmpl.p21[0] : '';
+  let t=`<strong>${c.name}</strong> · ${curTmpl.title} · <strong>${totalDoneAll} skill</strong> dikuasai. `;
+  if(p21focus) t+=`Fokus P21: <span style="color:var(--pu);font-weight:600">${p21focus}</span>. `;
   if(learning.length) t+=`Sedang belajar: ${learning.map(s=>s.i+' '+s.n).join(', ')}. `;
-  if(none.length) t+=`Skill berikutnya: <strong>${none[0].i} ${none[0].n}</strong>.`;
+  if(none.length) t+=`Skill berikutnya: <strong>${none[0].i} ${none[0].n}</strong> <span style="font-size:10px;color:var(--pu)">[${none[0].p21||'P21'}]</span>.`;
   else t+=`🎉 Semua skill ${curTmpl.title} selesai!`;
   document.getElementById('homeReco').innerHTML=t;
 }
@@ -1693,30 +1787,41 @@ function buildCtx(){
     :jLabel==='SMP'
     ?'Fokus: identitas diri, minat bakat, skill produktif, literasi digital & persiapan karir awal.'
     :'Fokus: spesialisasi keahlian, entrepreneurship, persiapan kuliah, karir & kehidupan mandiri.';
-  return `Kamu adalah konsultan parenting DAN coach anak profesional untuk orang tua Indonesia. Kamu ahli mendampingi tumbuh kembang anak dari SD hingga SMA secara holistik.
+  // P21 skills untuk kelas ini
+  const p21Focus = TMPL[curIdx].p21 ? TMPL[curIdx].p21.join(', ') : '';
+  const p21Done = done.filter((_,i)=>{
+    const s = TMPL.reduce((acc,cls,ci)=>{
+      cls.skills.forEach((sk,si)=>{if(getSk(ci,si).status==='done')acc.push(sk.p21||'');});
+      return acc;
+    },[]);
+    return true;
+  });
+
+  return `Kamu adalah konsultan parenting DAN coach anak profesional untuk orang tua Indonesia. Kamu menggunakan framework 21st Century Skills (P21) dari buku "21st Century Skills: Learning for Life in Our Times" oleh Trilling & Fadel.
+
+FRAMEWORK P21 yang kamu gunakan:
+• Learning & Innovation Skills: Critical Thinking, Communication, Collaboration, Creativity & Innovation
+• Digital Literacy Skills: Information Literacy, Media Literacy, ICT Literacy
+• Career & Life Skills: Flexibility, Initiative & Self-Direction, Social & Cross-Cultural, Productivity, Leadership
 
 DATA ANAK (BACA DENGAN TELITI):
 - Nama: ${c.name}
 - KELAS saat ini: ${TMPL[curIdx].title} — jenjang ${jLabel} (BUKAN usia!)
 - Usia: ${estimasiUsia} tahun
+- Fokus P21 di kelas ini: ${p21Focus}
 - ${jCtx}
 - Total poin reward: ${c.points||0}
-- Jumlah skill dikuasai: ${done.length} skill
-- Skill dikuasai (terbaru): ${done.slice(-8).join('; ')||'belum ada'}
+- Skill dikuasai (${done.length}): ${done.slice(-8).join('; ')||'belum ada'}
 - Sedang dipelajari: ${learn.join('; ')||'belum ada'}
 - Belum dimulai di kelasnya: ${curNone.join(', ')||'semua selesai!'}
 
-PENTING: Ketika menyebut ${c.name}, gunakan "Kelas ${c.grade} ${jLabel}" BUKAN "usia ${c.grade} tahun". Kelas dan usia adalah dua hal berbeda.
+PENTING: Gunakan "Kelas ${c.grade} ${jLabel}" BUKAN "usia ${c.grade} tahun". Kelas ≠ usia.
 
-KEAHLIANMU:
-• Parenting berbasis tahapan perkembangan anak (SD/SMP/SMA)
-• Coaching minat, bakat & gaya belajar anak
-• Kurikulum life skill & future skills abad 21
-• Pendekatan islami, karakter & spiritual intelligence
-• Tech literacy, coding, AI untuk generasi muda
-• Entrepreneurship & financial literacy anak
-
-Jawab Bahasa Indonesia, hangat & praktis. Maks 200 kata. Sesuaikan saran dengan jenjang ${jLabel}, ${TMPL[curIdx].title}, usia sekitar ${estimasiUsia} tahun.`;
+GAYA MENJAWAB:
+• Hubungkan saran dengan P21 framework (sebutkan skill P21 yang relevan)
+• Berikan contoh aktivitas nyata yang melatih P21 skills
+• Bahasa Indonesia, hangat & praktis. Maks 200 kata.
+• Sesuaikan dengan jenjang ${jLabel}, ${TMPL[curIdx].title}, usia ~${estimasiUsia} tahun.`;
 }
 
 function addAIGreeting(){
