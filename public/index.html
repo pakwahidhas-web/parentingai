@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ParentingAI – Asisten Tumbuh Kembang Anak</title>
+<meta name="description" content="Asisten AI untuk memandu tumbuh kembang anak SD secara terstruktur">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ===== TOKENS ===== */
+:root{
+  --green:#22c55e;--gl:#dcfce7;--gd:#15803d;
+  --purple:#7c3aed;--pl:#ede9fe;--pd:#4c1d95;
+  --amber:#f59e0b;--al:#fef3c7;--ad:#92400e;
+  --blue:#3b82f6;--bl:#dbeafe;--bd:#1e40af;
+  --red:#ef4444;--rl:#fee2e2;--rd:#991b1b;
+  --teal:#0d9488;--tl:#ccfbf1;--td:#134e4a;
+  --bg:#f8fafc;--surf:#fff;--bdr:#e2e8f0;
+  --txt:#0f172a;--mut:#64748b;--sub:#94a3b8;
+  --r:14px;--rs:8px;--rx:20px;
+  --sh:0 2px 12px rgba(0,0,0,.06);
+  --shm:0 8px 32px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);overflow:hidden}
+body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
+
+/* ===== AUTH SCREEN ===== */
+#authScreen{
+  position:fixed;inset:0;background:linear-gradient(135deg,#4c1d95 0%,#7c3aed 50%,#5b21b6 100%);
+  display:flex;align-items:center;justify-content:center;z-index:1000;
+  transition:opacity .4s,transform .4s;
+}
+#authScreen.hidden{opacity:0;pointer-events:none;transform:scale(1.02)}
+.auth-card{background:var(--surf);border-radius:24px;padding:36px;width:100%;max-width:420px;margin:16px;box-shadow:var(--shm)}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo .icon{font-size:48px;display:block;margin-bottom:8px}
+.auth-logo h1{font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;color:var(--purple)}
+.auth-logo p{font-size:13px;color:var(--mut);margin-top:4px}
+.auth-tabs{display:flex;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:24px}
+.auth-tab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:600;border-radius:7px;cursor:pointer;transition:all .15s;color:var(--mut);border:none;background:transparent;font-family:'Plus Jakarta Sans',sans-serif}
+.auth-tab.active{background:var(--surf);color:var(--txt);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.field{margin-bottom:14px}
+.field label{font-size:12px;font-weight:600;color:var(--mut);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.fin{width:100%;padding:11px 14px;border-radius:var(--rs);border:1.5px solid var(--bdr);font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;outline:none;transition:border-color .15s;background:var(--surf);color:var(--txt)}
+.fin:focus{border-color:var(--purple)}
+.btn-auth{width:100%;padding:13px;border-radius:var(--rs);background:var(--purple);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;margin-top:6px}
+.btn-auth:hover{background:var(--pd)}
+.btn-auth:disabled{opacity:.6;cursor:not-allowed}
+.auth-err{background:var(--rl);color:var(--rd);padding:10px 14px;border-radius:var(--rs);font-size:13px;margin-bottom:12px;display:none}
+.auth-divider{text-align:center;color:var(--sub);font-size:12px;margin:16px 0;position:relative}
+.auth-divider::before{content:'';position:absolute;left:0;top:50%;width:42%;height:1px;background:var(--bdr)}
+.auth-divider::after{content:'';position:absolute;right:0;top:50%;width:42%;height:1px;background:var(--bdr)}
+
+/* ===== APP SHELL ===== */
+#appShell{display:flex;height:100vh;opacity:0;transition:opacity .4s}
+#appShell.visible{opacity:1}
+.sidebar{width:68px;background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:2px;flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--surf);border-bottom:1px solid var(--bdr);padding:8px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:54px}
+.content{flex:1;overflow-y:auto;padding:20px}
+
+/* SIDEBAR */
+.logo-s{font-family:'Nunito',sans-serif;font-size:19px;font-weight:900;color:var(--purple);margin-bottom:10px}
+.nb{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:none;background:transparent;transition:all .15s;position:relative}
+.nb:hover,.nb.active{background:var(--pl)}
+.nb .tip{position:absolute;left:56px;background:var(--txt);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;font-family:'Plus Jakarta Sans',sans-serif;z-index:999}
+.nb:hover .tip{opacity:1}
+.nb-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid var(--surf);display:none}
+
+/* TOPBAR */
+.child-bar{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;align-items:center}
+.cpill{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:20px;border:1.5px solid var(--bdr);cursor:pointer;transition:all .15s;background:var(--surf);white-space:nowrap;flex-shrink:0}
+.cpill.active{border-color:var(--purple);background:var(--pl)}
+.cava{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+.cpill strong{font-size:12px;display:block;line-height:1.2}
+.cpill span{font-size:10px;color:var(--mut)}
+.add-c-btn{width:30px;height:30px;border-radius:50%;border:1.5px dashed var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--mut);background:transparent;transition:all .15s;flex-shrink:0}
+.add-c-btn:hover{border-color:var(--purple);color:var(--purple)}
+.pts-pill{background:var(--al);color:var(--ad);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.tbbtn{padding:5px 10px;border-radius:var(--rs);border:1.5px solid var(--bdr);background:var(--surf);cursor:pointer;font-size:11px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0}
+.tbbtn:hover{border-color:var(--purple);color:var(--purple)}
+.tbbtn.pri{background:var(--purple);color:#fff;border-color:var(--purple)}
+.tbbtn.pri:hover{background:var(--pd)}
+.db-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.db-ok{background:var(--gl);color:var(--gd)}
+.db-err{background:var(--rl);color:var(--rd)}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+.pgtit{font-family:'Nunito',sans-serif;font-size:21px;font-weight:800;margin-bottom:3px}
+.pgsub{font-size:12px;color:var(--mut);margin-bottom:18px}
+
+/* CLASS TABS */
+.ctabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:3px}
+.ctab{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);color:var(--mut);background:var(--surf);white-space:nowrap;transition:all .15s;flex-shrink:0}
+.ctab.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+.ctab.locked{opacity:.35;cursor:not-allowed}
+
+/* CLASS HEADER */
+.clshdr{background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:var(--rx);padding:16px 20px;color:#fff;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.clshdr h2{font-family:'Nunito',sans-serif;font-size:16px;font-weight:800}
+.clshdr p{font-size:11px;opacity:.8;margin-top:2px}
+.spills{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.spill{background:rgba(255,255,255,.2);padding:2px 10px;border-radius:20px;font-size:10px;font-weight:600}
+
+/* SKILL GRID */
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:20px}
+.sc{background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--r);padding:11px 7px 9px;text-align:center;cursor:pointer;transition:all .18s;position:relative}
+.sc:hover{border-color:var(--purple);transform:translateY(-2px);box-shadow:var(--shm)}
+.sc.done{border-color:var(--green);background:#f0fdf4}
+.sc.learning{border-color:var(--amber);background:#fffbeb}
+.sc.locked{opacity:.4;cursor:not-allowed;filter:grayscale(60%)}
+.sc.locked:hover{transform:none;box-shadow:none;border-color:var(--bdr)}
+.sc-icon{font-size:24px;margin-bottom:4px}
+.sc-name{font-size:10px;font-weight:600;color:var(--txt);line-height:1.3}
+.sc-stars{display:flex;justify-content:center;gap:1px;margin-top:4px;font-size:9px}
+.sc-badge{position:absolute;top:5px;right:5px;font-size:10px}
+.sc.done .sc-badge::after{content:'✅'}
+.sc.learning .sc-badge::after{content:'⏳'}
+
+/* STATS */
+.srow{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
+.scard{background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--r);padding:13px}
+.scard .num{font-family:'Nunito',sans-serif;font-size:26px;font-weight:900}
+.scard .lbl{font-size:11px;color:var(--mut);margin-top:2px}
+.scard.g .num{color:var(--gd)}.scard.a .num{color:var(--ad)}.scard.p .num{color:var(--purple)}
+.pbarw{background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--r);padding:13px;margin-bottom:16px}
+.pbarw label{font-size:11px;font-weight:600;color:var(--mut);display:flex;justify-content:space-between;margin-bottom:6px}
+.pbar{height:8px;background:var(--bg);border-radius:10px;overflow:hidden}
+.pbarfill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--purple),var(--blue));transition:width .4s}
+
+/* AI RECO */
+.ai-reco{background:var(--pl);border:1.5px solid #c4b5fd;border-radius:var(--r);padding:11px 13px;margin-bottom:16px;display:flex;gap:8px;align-items:flex-start}
+.ai-reco-body{font-size:12px;color:#4c1d95;line-height:1.6}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 148px)}
+.chat-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:11px;padding-bottom:6px}
+.msg{display:flex;gap:8px;align-items:flex-start}
+.msg.user{flex-direction:row-reverse}
+.mava{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.mava.ai{background:var(--pl)}.mava.user{background:var(--gl)}
+.bubble{padding:10px 14px;border-radius:16px;max-width:78%;font-size:13px;line-height:1.65}
+.bubble.ai{background:var(--surf);border:1.5px solid var(--bdr);border-radius:4px 16px 16px 16px}
+.bubble.user{background:var(--purple);color:#fff;border-radius:16px 4px 16px 16px}
+.bubble.loading{color:var(--mut);font-style:italic}
+.chat-foot{border-top:1px solid var(--bdr);padding-top:10px}
+.qchips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.qchip{padding:5px 10px;border-radius:20px;background:var(--pl);color:var(--purple);font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .12s}
+.qchip:hover{background:var(--purple);color:#fff}
+.irow{display:flex;gap:6px}
+.chin{flex:1;padding:10px 14px;border-radius:22px;border:1.5px solid var(--bdr);font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:var(--surf);transition:border-color .15s}
+.chin:focus{border-color:var(--purple)}
+.sbtn{width:40px;height:40px;border-radius:50%;background:var(--purple);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.sbtn:hover{background:var(--pd);transform:scale(1.05)}
+.sbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* TIMELINE */
+.tl{display:flex;flex-direction:column}
+.ti{display:flex;gap:11px;padding-bottom:13px;position:relative}
+.ti::before{content:'';position:absolute;left:14px;top:30px;bottom:0;width:1.5px;background:var(--bdr)}
+.ti:last-child::before{display:none}
+.tdot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;border:2px solid var(--surf)}
+.tdot.g{background:var(--gl)}.tdot.a{background:var(--al)}.tdot.p{background:var(--pl)}
+.tcnt{flex:1;padding-top:4px}
+.tcnt strong{font-size:13px;font-weight:600}
+.tcnt p{font-size:11px;color:var(--mut);margin-top:2px}
+
+/* REWARD */
+.rwh{background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:var(--rx);padding:16px 20px;color:#fff;margin-bottom:16px;display:flex;align-items:center}
+.rwpts{font-family:'Nunito',sans-serif;font-size:38px;font-weight:900}
+.rwlist{display:flex;flex-direction:column;gap:8px}
+.ri{background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--r);padding:12px 14px}
+.ri.done{border-color:var(--green)}.ri.cur{border-color:var(--amber)}
+.ri-row{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.ri-name{font-size:13px;font-weight:700;flex:1}
+.ri-pts{font-size:12px;font-weight:700;color:var(--ad)}
+.ri-ok{font-size:12px;font-weight:700;color:var(--gd)}
+.rpbar{height:6px;background:var(--bg);border-radius:10px;overflow:hidden}
+.rpf{height:100%;border-radius:10px}
+.rpf.g{background:var(--green)}.rpf.a{background:var(--amber)}.rpf.gr{background:var(--bdr)}
+
+/* SETTINGS */
+.sg{background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--bdr);font-size:13px}
+.sr:last-child{border-bottom:none}
+.sr .val{font-size:13px;color:var(--mut)}
+.tog{width:40px;height:22px;border-radius:11px;background:var(--green);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tog::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;right:3px;transition:all .2s}
+.tog.off{background:var(--bdr)}
+.tog.off::after{right:auto;left:3px}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s}
+.overlay.hidden{display:none}
+.modal{background:var(--surf);border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:460px;animation:slideUp .22s ease-out;max-height:88vh;overflow-y:auto}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mhdr{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.m-ico{font-size:30px}
+.modal h3{font-family:'Nunito',sans-serif;font-size:17px;font-weight:800}
+.modal .msub{font-size:12px;color:var(--mut)}
+.msec{margin-bottom:13px}
+.msec label{font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:5px}
+.stpick{display:flex;gap:6px}
+.stbtn{flex:1;padding:9px;border-radius:var(--rs);border:1.5px solid var(--bdr);background:var(--bg);cursor:pointer;font-size:12px;font-weight:600;text-align:center;transition:all .12s;font-family:'Plus Jakarta Sans',sans-serif}
+.stbtn.sl.active{background:var(--al);border-color:var(--amber);color:var(--ad)}
+.stbtn.sd.active{background:var(--gl);border-color:var(--green);color:var(--gd)}
+.starp{display:flex;gap:6px}
+.starb{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--bdr);background:var(--bg);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.starb.sel{background:var(--al);border-color:var(--amber)}
+.mact{display:flex;gap:7px;margin-top:16px}
+.btn{padding:10px 16px;border-radius:var(--rs);border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif}
+.btn-p{background:var(--purple);color:#fff;flex:1}
+.btn-p:hover{background:var(--pd)}
+.btn-g{background:var(--bg);border:1.5px solid var(--bdr);color:var(--mut)}
+.btn-g:hover{background:var(--bdr)}
+.btn-r{background:var(--rl);color:var(--rd);border:1.5px solid var(--red)}
+.card{background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--r);padding:14px;margin-bottom:11px}
+.card h3{font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;margin-bottom:8px}
+.ava-pick{display:flex;gap:7px;flex-wrap:wrap}
+.avab{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--bdr);background:var(--bg);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.avab.sel{border-color:var(--purple);background:var(--pl)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--txt);color:#fff;padding:9px 18px;border-radius:22px;font-size:12px;font-weight:600;z-index:9999;transition:transform .3s;pointer-events:none;max-width:300px;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* LOADING SPINNER */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* JENJANG BAR */
+.jbtn{padding:6px 16px;border-radius:24px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif}
+.jbtn-sd{border-color:#7c3aed;color:#7c3aed;background:transparent}
+.jbtn-sd.active{background:#7c3aed;color:#fff}
+.jbtn-smp{border-color:#0d9488;color:#0d9488;background:transparent}
+.jbtn-smp.active{background:#0d9488;color:#fff}
+.jbtn-sma{border-color:#d97706;color:#d97706;background:transparent}
+.jbtn-sma.active{background:#d97706;color:#fff}
+.clshdr.smp{background:linear-gradient(135deg,#0d9488,#0f766e)}
+.clshdr.sma{background:linear-gradient(135deg,#d97706,#b45309)}
+.overall-bars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.ovbar{background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--r);padding:10px 12px}
+.ovbar .obt{font-size:10px;font-weight:700;color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.ovbar .obv{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;margin-bottom:4px}
+.ovbar.sd .obv{color:#7c3aed}.ovbar.smp .obv{color:#0d9488}.ovbar.sma .obv{color:#d97706}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ==================== AUTH SCREEN ==================== -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="icon">🌱</span>
+      <h1>ParentingAI</h1>
+      <p>Asisten tumbuh kembang anak berbasis AI</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Masuk</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Daftar Baru</button>
+    </div>
+    <div class="auth-err" id="authErr"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" class="fin" id="loginEmail" placeholder="email@anda.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" class="fin" id="loginPass" placeholder="Password" autocomplete="current-password">
+      </div>
+      <button class="btn-auth" id="loginBtn" onclick="doLogin()">Masuk</button>
+      <div class="auth-divider">atau</div>
+      <button class="btn-auth" style="background:#db4437" onclick="doGoogleLogin()">🔑 Masuk dengan Google</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" style="display:none">
+      <div class="field">
+        <label>Nama Lengkap</label>
+        <input type="text" class="fin" id="regName" placeholder="Nama Ayah/Ibu" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" class="fin" id="regEmail" placeholder="email@anda.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" class="fin" id="regPass" placeholder="Minimal 6 karakter" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Konfirmasi Password</label>
+        <input type="password" class="fin" id="regPass2" placeholder="Ulangi password" autocomplete="new-password">
+      </div>
+      <button class="btn-auth" id="regBtn" onclick="doRegister()">Buat Akun</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== APP SHELL ==================== -->
+<div id="appShell" style="display:none">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo-s">P</div>
+    <button class="nb active" onclick="nav('skills')" id="nb-skills">🌱<span class="tip">Skill Tree</span></button>
+    <button class="nb" onclick="nav('ai')" id="nb-ai">✨<span class="tip">AI Konsultan</span></button>
+    <button class="nb" onclick="nav('log')" id="nb-log">📋<span class="tip">Aktivitas</span></button>
+    <button class="nb" onclick="nav('reward')" id="nb-reward">🎁<span class="tip">Reward</span></button>
+    <div style="flex:1"></div>
+    <button class="nb" onclick="nav('notif')" id="nb-notif" style="position:relative">
+      🔔<span class="tip">Notifikasi</span>
+      <div class="nb-dot" id="notifDot"></div>
+    </button>
+    <button class="nb" onclick="nav('settings')" id="nb-settings">⚙️<span class="tip">Pengaturan</span></button>
+    <button class="nb" onclick="doLogout()" style="color:var(--red)" title="Keluar">🚪<span class="tip">Keluar</span></button>
+  </div>
+
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="child-bar" id="childBar"></div>
+      <button class="tbbtn" onclick="openModal('addChildModal')">👶 Anak</button>
+      <button class="tbbtn pri" onclick="genPDF()">📄 PDF</button>
+      <div class="pts-pill" id="ptsDisp">⭐ 0</div>
+      <div class="db-pill db-ok" id="dbPill">🗄️ Live</div>
+    </div>
+
+    <div class="content">
+
+      <!-- SKILLS -->
+      <div class="page active" id="page-skills">
+        <div class="pgtit">Skill Tree</div>
+        <div class="pgsub">Ketuk skill untuk update progres</div>
+        <div class="ai-reco"><span style="font-size:19px;flex-shrink:0">✨</span><div class="ai-reco-body" id="homeReco">Memuat...</div></div>
+        <!-- JENJANG FILTER -->
+        <div id="jenjangBar" style="display:flex;gap:7px;margin-bottom:12px"></div>
+        <!-- CLASS TABS -->
+        <div class="ctabs" id="ctabs"></div>
+        <div class="clshdr" id="clshdr">
+          <div style="font-size:32px" id="clsico">📚</div>
+          <div>
+            <h2 id="clstit">—</h2><p id="clsdesc">—</p>
+            <div class="spills"><div class="spill" id="spDone">—</div><div class="spill" id="spLearn">—</div><div class="spill" id="spPct">—</div></div>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="scard g"><div class="num" id="sDone">0</div><div class="lbl">✅ Dikuasai</div></div>
+          <div class="scard a"><div class="num" id="sLearn">0</div><div class="lbl">⏳ Belajar</div></div>
+          <div class="scard p"><div class="num" id="sPct">0%</div><div class="lbl">Progress</div></div>
+        </div>
+        <div class="pbarw"><label><span>Progress keseluruhan</span><span id="oPct">0%</span></label><div class="pbar"><div class="pbarfill" id="oBar" style="width:0%"></div></div></div>
+        <!-- JENJANG BREAKDOWN -->
+        <div class="overall-bars">
+          <div class="ovbar sd"><div class="obt">SD (Kelas 1–6)</div><div class="obv" id="sdPct">0%</div><div class="pbar"><div class="pbarfill" id="sdBar" style="width:0%;background:#7c3aed"></div></div></div>
+          <div class="ovbar smp"><div class="obt">SMP (Kelas 7–9)</div><div class="obv" id="smpPct">0%</div><div class="pbar"><div class="pbarfill" id="smpBar" style="width:0%;background:#0d9488"></div></div></div>
+          <div class="ovbar sma"><div class="obt">SMA (Kelas 10–12)</div><div class="obv" id="smaPct">0%</div><div class="pbar"><div class="pbarfill" id="smaBar" style="width:0%;background:#d97706"></div></div></div>
+        </div>
+        <div class="sgrid" id="sgrid"></div>
+      </div>
+
+      <!-- AI CHAT -->
+      <div class="page" id="page-ai">
+        <div class="pgtit">AI Konsultan</div>
+        <div class="pgsub">Tanyakan apa saja tentang tumbuh kembang anak</div>
+        <div class="chat-wrap">
+          <div class="chat-msgs" id="chatMsgs"></div>
+          <div class="chat-foot">
+            <div class="qchips" id="qchips"></div>
+            <div class="irow">
+              <input type="text" class="chin" id="chatIn" placeholder="Tanya tentang anak Anda...">
+              <button class="sbtn" id="sbtn" onclick="sendChat()">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOG -->
+      <div class="page" id="page-log">
+        <div class="pgtit">Catatan Aktivitas</div>
+        <div class="pgsub">Riwayat perkembangan dan pencapaian</div>
+        <button class="tbbtn" style="margin-bottom:13px" onclick="openModal('addLogModal')">➕ Tambah Catatan</button>
+        <div class="tl" id="timeline"></div>
+      </div>
+
+      <!-- REWARD -->
+      <div class="page" id="page-reward">
+        <div class="pgtit">Sistem Reward</div>
+        <div class="pgsub">Hadiah untuk mendorong semangat belajar</div>
+        <div class="rwh">
+          <div><h2 style="font-family:'Nunito',sans-serif;font-size:17px;font-weight:900">Total Poin</h2><p style="font-size:11px;opacity:.85">Terus semangat!</p></div>
+          <div style="margin-left:auto;text-align:right"><div class="rwpts" id="rwpts">0</div><div style="font-size:11px;opacity:.8">poin</div></div>
+        </div>
+        <button class="tbbtn" style="margin-bottom:13px" onclick="openModal('addRewardModal')">➕ Tambah Target</button>
+        <div class="rwlist" id="rwlist"></div>
+      </div>
+
+      <!-- NOTIF -->
+      <div class="page" id="page-notif">
+        <div class="pgtit">Notifikasi</div>
+        <div class="pgsub">Pengingat dan laporan otomatis</div>
+        <div class="card">
+          <h3>📬 Pesan</h3>
+          <div id="notifList"><p style="font-size:12px;color:var(--mut)">Belum ada notifikasi.</p></div>
+        </div>
+        <div class="card">
+          <h3>⚙️ Jadwal</h3>
+          <div class="sg" style="margin-bottom:0">
+            <div class="sr"><span>Notifikasi mingguan</span><div class="tog" id="togW" onclick="this.classList.toggle('off')"></div></div>
+            <div class="sr"><span>Laporan bulanan PDF</span><div class="tog" id="togM" onclick="this.classList.toggle('off')"></div></div>
+            <div class="sr"><span>Pengingat skill tertunda</span><div class="tog" id="togR" onclick="this.classList.toggle('off')"></div></div>
+          </div>
+        </div>
+        <button class="tbbtn pri" onclick="genWeeklyAI()" style="width:100%;justify-content:center;margin-bottom:8px">✨ Buat Laporan Mingguan AI</button>
+        <button class="tbbtn" onclick="genPDF()" style="width:100%;justify-content:center">📄 Download Laporan PDF</button>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="page-settings">
+        <div class="pgtit">Pengaturan</div>
+        <div class="pgsub">Profil dan konfigurasi API</div>
+        <div class="card" style="background:var(--pl);border-color:#c4b5fd">
+          <h3 style="color:var(--pd)">👤 Akun Anda</h3>
+          <div class="sg" style="margin-bottom:0;border-color:#c4b5fd">
+            <div class="sr"><span>Email</span><span class="val" id="accEmail">—</span></div>
+            <div class="sr"><span>Nama</span><span class="val" id="accName">—</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🔑 Anthropic API Key</h3>
+          <p style="font-size:12px;color:var(--mut);margin-bottom:10px;line-height:1.6">Diperlukan untuk fitur AI Konsultan dan laporan otomatis. Dapatkan di <a href="https://console.anthropic.com" target="_blank" style="color:var(--purple)">console.anthropic.com</a></p>
+          <div style="display:flex;gap:7px">
+            <input type="password" class="fin" id="apiKeyInput" placeholder="sk-ant-..." style="flex:1">
+            <button class="btn btn-p" onclick="saveApiKey()">Simpan</button>
+          </div>
+          <div id="apiKeyStatus" style="font-size:11px;margin-top:7px;color:var(--mut)"></div>
+        </div>
+        <div class="card">
+          <h3>📊 Statistik</h3>
+          <div class="sg" style="margin-bottom:0">
+            <div class="sr"><span>Jumlah anak</span><span class="val" id="stChildren">—</span></div>
+            <div class="sr"><span>Total skill dikuasai</span><span class="val" id="stDone">—</span></div>
+            <div class="sr"><span>Database</span><span class="val">Supabase (Live)</span></div>
+          </div>
+        </div>
+        <div class="card" style="border-color:var(--red)">
+          <h3 style="color:var(--rd)">⚠️ Hapus Akun</h3>
+          <p style="font-size:12px;color:var(--mut);margin-bottom:10px">Hapus semua data anak dan skill. Tidak bisa dibatalkan.</p>
+          <button class="btn btn-r" onclick="confirmDeleteAccount()">Hapus Akun Saya</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+
+<!-- SKILL MODAL -->
+<div class="overlay hidden" id="skillModal" onclick="bgClose(event,'skillModal')">
+  <div class="modal">
+    <div class="mhdr"><div class="m-ico" id="mIco">📖</div><div><h3 id="mTit">Skill</h3><p class="msub" id="mSub">Update progres</p></div></div>
+    <div class="msec"><label>Status</label>
+      <div class="stpick">
+        <div class="stbtn" id="stN" onclick="setSt('none')">Belum mulai</div>
+        <div class="stbtn sl" id="stL" onclick="setSt('learning')">⏳ Sedang</div>
+        <div class="stbtn sd" id="stD" onclick="setSt('done')">✅ Dikuasai</div>
+      </div>
+    </div>
+    <div class="msec"><label>Bintang</label>
+      <div class="starp">
+        <div class="starb" onclick="setStar(1)">⭐</div>
+        <div class="starb" onclick="setStar(2)">⭐</div>
+        <div class="starb" onclick="setStar(3)">⭐</div>
+      </div>
+    </div>
+    <div class="msec"><label>Catatan</label>
+      <input type="text" class="fin" id="mNote" placeholder="Tambah catatan...">
+    </div>
+    <div class="mact">
+      <button class="btn btn-g" onclick="closeModal('skillModal')">Batal</button>
+      <button class="btn btn-p" onclick="saveSkill()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CHILD MODAL -->
+<div class="overlay hidden" id="addChildModal" onclick="bgClose(event,'addChildModal')">
+  <div class="modal">
+    <div class="mhdr"><div class="m-ico">👶</div><div><h3>Tambah Anak</h3><p class="msub">Data anak baru Anda</p></div></div>
+    <div class="msec"><label>Nama Anak</label><input type="text" class="fin" id="ncName" placeholder="Nama lengkap"></div>
+    <div class="msec"><label>Kelas Saat Ini</label>
+      <select class="fin" id="ncGrade">
+        <optgroup label="── SD ──">
+          <option value="1">Kelas 1 SD</option><option value="2">Kelas 2 SD</option>
+          <option value="3">Kelas 3 SD</option><option value="4">Kelas 4 SD</option>
+          <option value="5">Kelas 5 SD</option><option value="6">Kelas 6 SD</option>
+        </optgroup>
+        <optgroup label="── SMP ──">
+          <option value="7">Kelas 7 SMP</option><option value="8">Kelas 8 SMP</option>
+          <option value="9">Kelas 9 SMP</option>
+        </optgroup>
+        <optgroup label="── SMA ──">
+          <option value="10">Kelas 10 SMA</option><option value="11">Kelas 11 SMA</option>
+          <option value="12">Kelas 12 SMA</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="msec"><label>Usia</label><input type="number" class="fin" id="ncAge" placeholder="Usia (tahun)" min="5" max="19"></div>
+    <div class="msec"><label>Avatar</label>
+      <div class="ava-pick">
+        <div class="avab sel" id="av-👦" onclick="pickAva('👦')">👦</div>
+        <div class="avab" id="av-👧" onclick="pickAva('👧')">👧</div>
+        <div class="avab" id="av-🧒" onclick="pickAva('🧒')">🧒</div>
+        <div class="avab" id="av-👦🏽" onclick="pickAva('👦🏽')">👦🏽</div>
+        <div class="avab" id="av-👧🏽" onclick="pickAva('👧🏽')">👧🏽</div>
+        <div class="avab" id="av-👶" onclick="pickAva('👶')">👶</div>
+      </div>
+    </div>
+    <div class="mact">
+      <button class="btn btn-g" onclick="closeModal('addChildModal')">Batal</button>
+      <button class="btn btn-p" onclick="addChild()">Tambah</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD LOG MODAL -->
+<div class="overlay hidden" id="addLogModal" onclick="bgClose(event,'addLogModal')">
+  <div class="modal">
+    <div class="mhdr"><div class="m-ico">📝</div><div><h3>Catatan Baru</h3><p class="msub">Tambah catatan aktivitas</p></div></div>
+    <div class="msec"><label>Deskripsi</label><input type="text" class="fin" id="logTxt" placeholder="Apa yang terjadi hari ini?"></div>
+    <div class="msec"><label>Tipe</label>
+      <select class="fin" id="logType">
+        <option value="green">✅ Pencapaian</option>
+        <option value="amber">⏳ Sedang belajar</option>
+        <option value="purple">💡 Catatan umum</option>
+      </select>
+    </div>
+    <div class="msec"><label>Catatan tambahan</label><input type="text" class="fin" id="logNote" placeholder="Detail..."></div>
+    <div class="mact">
+      <button class="btn btn-g" onclick="closeModal('addLogModal')">Batal</button>
+      <button class="btn btn-p" onclick="saveLog()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD REWARD MODAL -->
+<div class="overlay hidden" id="addRewardModal" onclick="bgClose(event,'addRewardModal')">
+  <div class="modal">
+    <div class="mhdr"><div class="m-ico">🎁</div><div><h3>Target Hadiah</h3><p class="msub">Tambah milestone reward baru</p></div></div>
+    <div class="msec"><label>Nama Hadiah</label><input type="text" class="fin" id="rwName" placeholder="Contoh: Sepeda baru"></div>
+    <div class="msec"><label>Icon (emoji)</label><input type="text" class="fin" id="rwIco" placeholder="🎁" maxlength="4"></div>
+    <div class="msec"><label>Target Poin</label><input type="number" class="fin" id="rwPtsIn" placeholder="Contoh: 200" min="1"></div>
+    <div class="mact">
+      <button class="btn btn-g" onclick="closeModal('addRewardModal')">Batal</button>
+      <button class="btn btn-p" onclick="saveReward()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — diisi dari env saat deploy
+// ============================================================
+const SUPA_URL  = window.ENV_SUPABASE_URL  || '';
+const SUPA_KEY  = window.ENV_SUPABASE_KEY  || '';
+
+// ============================================================
+// SUPABASE INIT
+// ============================================================
+let supa = null;
+let currentUser = null;
+
+function initSupa() {
+  if (!SUPA_URL || !SUPA_KEY) {
+    toast('⚠️ Konfigurasi Supabase belum diset! Lihat env.js');
+    return false;
+  }
+  supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+  return true;
+}
+
+// ============================================================
+// SKILL TEMPLATES
+// ============================================================
+// Jenjang: 0=SD(0-4), 1=SMP(5-7), 2=SMA(8-11)
+const JENJANG = [
+  { label:'SD', color:'#7c3aed', range:[0,4] },
+  { label:'SMP', color:'#0d9488', range:[5,7] },
+  { label:'SMA', color:'#d97706', range:[8,11] }
+];
+
+const TMPL = [
+  // ═══════════════════════ SD ═══════════════════════
+  { title:'Kelas 1 SD', sub:'Tahap Fondasi', ico:'🌱', focus:'Motorik, keberanian & kebiasaan baik', jenjang:'SD',
+    skills:[
+      {n:"Baca Al-Qur'an",i:'📖'},{n:'English Dasar',i:'🔤'},{n:'Menggambar',i:'🎨'},
+      {n:'Naik Sepeda',i:'🚲'},{n:'Sepatu Roda',i:'🛼'},{n:'Berenang',i:'🏊'},
+      {n:'Memelihara Hewan',i:'🐟'},{n:'Kerajinan Tangan',i:'✂️'},{n:'Kebersihan Diri',i:'🪥'}
+    ]},
+  { title:'Kelas 2 SD', sub:'Tahap Keberanian', ico:'🦁', focus:'Percaya diri & eksplorasi diri',  jenjang:'SD',
+    skills:[
+      {n:'Story Telling',i:'📢'},{n:'Public Speaking',i:'🎤'},{n:'Membaca Nyaring',i:'📚'},
+      {n:'Memasak Sederhana',i:'🍳'},{n:'Menjahit Dasar',i:'🧵'},{n:'Menanam Sayur',i:'🌱'},
+      {n:'Beladiri Dasar',i:'🥋'},{n:'Hafalan Tahfidz',i:'🕌'},{n:'Kerjasama Tim',i:'🤝'}
+    ]},
+  { title:'Kelas 3 SD', sub:'Tahap Eksplorasi', ico:'🔭', focus:'Logika, teknologi & alam', jenjang:'SD',
+    skills:[
+      {n:'Block Coding',i:'💻'},{n:'Robotik Dasar',i:'🤖'},{n:'Mengetik 10 Jari',i:'⌨️'},
+      {n:'Fotografi',i:'📷'},{n:'Editing Video',i:'🎬'},{n:'Youtuber Pemula',i:'▶️'},
+      {n:'Membaca Peta',i:'🗺️'},{n:'Jelajah Alam',i:'🏕️'},{n:'Menyusun Tenda',i:'⛺'}
+    ]},
+  { title:'Kelas 4 SD', sub:'Tahap Keterampilan', ico:'🔧', focus:'Skill praktis & problem solving', jenjang:'SD',
+    skills:[
+      {n:'Kelistrikan Dasar',i:'⚡'},{n:'IoT Sederhana',i:'📡'},{n:'Desain Grafis',i:'🖥️'},
+      {n:'Menulis Cerita',i:'✍️'},{n:'Presentasi Slide',i:'📊'},{n:'P3K Dasar',i:'🩹'},
+      {n:'Mengatur Waktu',i:'⏰'},{n:'Berani Bertanya',i:'❓'},{n:'Berjualan Langsung',i:'🛒'}
+    ]},
+  { title:'Kelas 5 SD', sub:'Tahap Kemandirian', ico:'🚀', focus:'Entrepreneurship & teknologi lanjut', jenjang:'SD',
+    skills:[
+      {n:'3D Desain & Printing',i:'🖨️'},{n:'Finansial Literasi',i:'💰'},{n:'Membuat Website',i:'🌐'},
+      {n:'Game Coding',i:'🎮'},{n:'Mengenal AI',i:'🤖'},{n:'Jualan Online',i:'🛍️'},
+      {n:'Problem Solving',i:'🧩'},{n:'Pengambilan Keputusan',i:'⚖️'},{n:'Digital Marketing Dasar',i:'📣'}
+    ]},
+  { title:'Kelas 6 SD', sub:'Tahap Transisi', ico:'🎓', focus:'Persiapan SMP & penguatan karakter', jenjang:'SD',
+    skills:[
+      {n:'Manajemen Stres',i:'🧘'},{n:'Debat & Argumen',i:'🗣️'},{n:'Mind Mapping',i:'🗂️'},
+      {n:'Riset Sederhana',i:'🔬'},{n:'Podcast Pemula',i:'🎙️'},{n:'Membuat Aplikasi',i:'📱'},
+      {n:'Kepemimpinan Tim',i:'👑'},{n:'Menulis Artikel',i:'📰'},{n:'Budgeting Pribadi',i:'💳'}
+    ]},
+
+  // ═══════════════════════ SMP ═══════════════════════
+  { title:'Kelas 7 SMP', sub:'Tahap Identitas', ico:'🌊', focus:'Membangun jati diri & minat bakat', jenjang:'SMP',
+    skills:[
+      {n:'Journaling Reflektif',i:'📓'},{n:'Bahasa Inggris Aktif',i:'🇬🇧'},{n:'Olahraga Rutin',i:'⚽'},
+      {n:'Musik / Seni Pertunjukan',i:'🎵'},{n:'Coding Python Dasar',i:'🐍'},{n:'Desain UI/UX',i:'🎨'},
+      {n:'Literasi Media',i:'📱'},{n:'Empati & Sosial',i:'💛'},{n:'Navigasi Internet Aman',i:'🔐'}
+    ]},
+  { title:'Kelas 8 SMP', sub:'Tahap Ekspansi', ico:'🌍', focus:'Memperluas wawasan & skill produktif', jenjang:'SMP',
+    skills:[
+      {n:'Bahasa Arab / Mandarin',i:'🈶'},{n:'Riset & Analisis Data',i:'📊'},{n:'Copywriting',i:'✏️'},
+      {n:'Video Cinematography',i:'🎬'},{n:'Elektronika & Arduino',i:'🔌'},{n:'Meditasi & Mindfulness',i:'🧠'},
+      {n:'Bisnis Plan Sederhana',i:'📋'},{n:'Volunteerism',i:'🤲'},{n:'Speed Reading',i:'⚡'}
+    ]},
+  { title:'Kelas 9 SMP', sub:'Tahap Prestasi', ico:'🏆', focus:'Orientasi karir & prestasi akademik', jenjang:'SMP',
+    skills:[
+      {n:'Persiapan Olimpiade',i:'🥇'},{n:'Personal Branding',i:'🌟'},{n:'Pitching Ide',i:'💡'},
+      {n:'Machine Learning Dasar',i:'🤖'},{n:'Manajemen Proyek',i:'📌'},{n:'Menulis Karya Ilmiah',i:'📜'},
+      {n:'Networking',i:'🤝'},{n:'Self-Defense Lanjut',i:'🥊'},{n:'Eksplorasi Karir',i:'🧭'}
+    ]},
+
+  // ═══════════════════════ SMA ═══════════════════════
+  { title:'Kelas 10 SMA', sub:'Tahap Pendalaman', ico:'🎯', focus:'Spesialisasi minat & skill abad 21', jenjang:'SMA',
+    skills:[
+      {n:'Critical Thinking',i:'🧩'},{n:'Full-Stack Web Dev',i:'💻'},{n:'Investasi & Saham',i:'📈'},
+      {n:'Bahasa Ketiga',i:'🗺️'},{n:'Content Creation',i:'📸'},{n:'Kepemimpinan Organisasi',i:'🏛️'},
+      {n:'Public Policy Dasar',i:'⚖️'},{n:'Design Thinking',i:'💡'},{n:'Spiritual Intelligence',i:'🕌'}
+    ]},
+  { title:'Kelas 11 SMA', sub:'Tahap Spesialisasi', ico:'🔬', focus:'Keahlian mendalam & entrepreneurship', jenjang:'SMA',
+    skills:[
+      {n:'Startup Building',i:'🚀'},{n:'Data Science',i:'📉'},{n:'Riset Ilmiah',i:'🔭'},
+      {n:'Coaching & Mentoring',i:'🎓'},{n:'Keuangan Lanjut',i:'💰'},{n:'AI Produktivitas',i:'🤖'},
+      {n:'Diplomasi & Negosiasi',i:'🕊️'},{n:'Film / Konten Series',i:'🎥'},{n:'Social Entrepreneurship',i:'🌏'}
+    ]},
+  { title:'Kelas 12 SMA', sub:'Tahap Persiapan Dunia', ico:'🌟', focus:'Kesiapan kuliah, karir & kehidupan', jenjang:'SMA',
+    skills:[
+      {n:'Personal Finance Mastery',i:'💎'},{n:'Portofolio & CV Global',i:'📁'},{n:'Interview & Seleksi',i:'🎤'},
+      {n:'Gap Year Planning',i:'✈️'},{n:'Kehidupan Mandiri',i:'🏠'},{n:'Resiliensi & Growth Mindset',i:'🌱'},
+      {n:'Legacy Project',i:'🏗️'},{n:'Mentor Adik Kelas',i:'👨‍🏫'},{n:'Visi Hidup 10 Tahun',i:'🔭'}
+    ]}
+];
+
+const DEF_REWARDS = [
+  {name:'Hadiah kecil (stiker)',icon:'🎀',pts:10},
+  {name:'Buku cerita favorit',icon:'📖',pts:50},
+  {name:'Mainan pilihan sendiri',icon:'🧸',pts:100},
+  {name:'Makan di restoran favorit',icon:'🍔',pts:150},
+  {name:'Wisata keluarga',icon:'🎡',pts:200},
+  {name:'Hadiah besar',icon:'🚲',pts:1000}
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  children: [],       // [{id, name, grade, age, avatar, points, skills:{}, log:[], rewards:[]}]
+  activeChild: 0,
+  activeClass: 0,
+  apiKey: '',
+  notifs: []
+};
+let modalCI=0, modalSI=0, modalSt='none', modalStars=0;
+let selAva='👦';
+let chatHist=[];
+
+// ============================================================
+// AUTH
+// ============================================================
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='login'?0:1)));
+  document.getElementById('loginForm').style.display  = tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'block':'none';
+  hideAuthErr();
+}
+
+function showAuthErr(msg) {
+  const el=document.getElementById('authErr');
+  el.textContent=msg; el.style.display='block';
+}
+function hideAuthErr() { document.getElementById('authErr').style.display='none'; }
+
+async function doLogin() {
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  if(!email||!pass){showAuthErr('Isi email dan password');return;}
+  const btn=document.getElementById('loginBtn');
+  btn.innerHTML='<span class="spinner"></span> Masuk...'; btn.disabled=true;
+  const {data,error}=await supa.auth.signInWithPassword({email,password:pass});
+  btn.textContent='Masuk'; btn.disabled=false;
+  if(error){showAuthErr('Email atau password salah');return;}
+  await onLogin(data.user);
+}
+
+async function doRegister() {
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPass').value;
+  const pass2=document.getElementById('regPass2').value;
+  if(!name||!email||!pass){showAuthErr('Semua kolom wajib diisi');return;}
+  if(pass!==pass2){showAuthErr('Password tidak cocok');return;}
+  if(pass.length<6){showAuthErr('Password minimal 6 karakter');return;}
+  const btn=document.getElementById('regBtn');
+  btn.innerHTML='<span class="spinner"></span> Mendaftar...'; btn.disabled=true;
+  const {data,error}=await supa.auth.signUp({email,password:pass,options:{data:{full_name:name}}});
+  btn.textContent='Buat Akun'; btn.disabled=false;
+  if(error){showAuthErr(error.message);return;}
+  if(data.user && !data.session){
+    showAuthErr('✅ Cek email Anda untuk verifikasi akun!');
+    document.getElementById('authErr').style.background='#dcfce7';
+    document.getElementById('authErr').style.color='#15803d';
+    return;
+  }
+  await onLogin(data.user);
+}
+
+async function doGoogleLogin() {
+  await supa.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}});
+}
+
+async function doLogout() {
+  await supa.auth.signOut();
+  currentUser=null; state={children:[],activeChild:0,activeClass:0,apiKey:'',notifs:[]};
+  document.getElementById('appShell').classList.remove('visible');
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('authScreen').classList.remove('hidden');
+  toast('👋 Sampai jumpa!');
+}
+
+async function onLogin(user) {
+  currentUser=user;
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('appShell').style.display='flex';
+  setTimeout(()=>document.getElementById('appShell').classList.add('visible'),50);
+  await loadUserData();
+}
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+async function loadUserData() {
+  toast('🔄 Memuat data...');
+  try {
+    // Load profile + api key
+    const {data:prof}=await supa.from('profiles').select('*').eq('id',currentUser.id).single();
+    if(prof){
+      state.apiKey = prof.anthropic_key||'';
+      document.getElementById('apiKeyInput').value = state.apiKey?'sk-ant-••••••••':'';
+      document.getElementById('accEmail').textContent = prof.email||currentUser.email;
+      document.getElementById('accName').textContent = prof.full_name||'—';
+    }
+
+    // Load children
+    const {data:children}=await supa.from('children').select('*').eq('parent_id',currentUser.id).order('created_at');
+    if(!children||children.length===0){
+      // New user: show add child prompt
+      state.children=[];
+      renderAll();
+      toast('👋 Selamat datang! Tambah anak pertama Anda 👶');
+      setTimeout(()=>openModal('addChildModal'),800);
+      return;
+    }
+    state.children = children.map(c=>({
+      id:c.id, name:c.name, grade:c.grade, age:c.age, avatar:c.avatar, points:c.points||0,
+      skills:{}, log:[], rewards:[]
+    }));
+
+    // Load skills for all children
+    const childIds = state.children.map(c=>c.id);
+    const {data:skills}=await supa.from('skills').select('*').in('child_id',childIds);
+    if(skills) skills.forEach(s=>{
+      const c=state.children.find(x=>x.id===s.child_id);
+      if(c) c.skills[`${s.class_idx}_${s.skill_idx}`]={status:s.status,stars:s.stars,note:s.note||''};
+    });
+
+    // Load logs
+    const {data:logs}=await supa.from('activity_log').select('*').in('child_id',childIds).order('created_at',{ascending:false}).limit(100);
+    if(logs) logs.forEach(l=>{
+      const c=state.children.find(x=>x.id===l.child_id);
+      if(c) c.log.push({id:l.id,text:l.text,dot:l.dot,icon:l.icon,note:l.note,
+        time:new Date(l.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short'})});
+    });
+
+    // Load rewards
+    const {data:rewards}=await supa.from('rewards').select('*').in('child_id',childIds).order('pts');
+    if(rewards) rewards.forEach(r=>{
+      const c=state.children.find(x=>x.id===r.child_id);
+      if(c) c.rewards.push({id:r.id,name:r.name,icon:r.icon,pts:r.pts,done:r.done});
+    });
+
+    renderAll();
+    startRealtimeSync();
+    toast('✅ Data dimuat');
+  } catch(e) {
+    console.error(e);
+    toast('⚠️ Gagal memuat: '+e.message);
+  }
+}
+
+// ============================================================
+// REALTIME SYNC (Supabase Realtime)
+// ============================================================
+function startRealtimeSync() {
+  supa.channel('changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:'skills'},(payload)=>{
+      handleSkillChange(payload);
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'activity_log'},(payload)=>{
+      handleLogInsert(payload.new);
+    })
+    .subscribe();
+}
+
+function handleSkillChange(payload) {
+  const row=payload.new;
+  const c=state.children.find(x=>x.id===row.child_id);
+  if(!c)return;
+  c.skills[`${row.class_idx}_${row.skill_idx}`]={status:row.status,stars:row.stars,note:row.note||''};
+  // recalc points
+  c.points=calcPoints(c);
+  renderClass(state.activeClass);
+  updatePts();
+}
+
+function handleLogInsert(row) {
+  const c=state.children.find(x=>x.id===row.child_id);
+  if(!c)return;
+  const entry={id:row.id,text:row.text,dot:row.dot,icon:row.icon,note:row.note,time:'Baru saja'};
+  c.log.unshift(entry);
+  if(document.getElementById('page-log').classList.contains('active')) renderLog();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function child(){ return state.children[state.activeChild]||null; }
+function getSk(ci,si){
+  const c=child(); if(!c)return{status:'none',stars:0,note:''};
+  return c.skills[`${ci}_${si}`]||{status:'none',stars:0,note:''};
+}
+function cntDone(ci){ return TMPL[ci].skills.filter((_,i)=>getSk(ci,i).status==='done').length; }
+function cntLearn(ci){ return TMPL[ci].skills.filter((_,i)=>getSk(ci,i).status==='learning').length; }
+function calcPoints(c){
+  let p=0;
+  TMPL.forEach((_,ci)=>TMPL[ci].skills.forEach((_,si)=>{p+=(c.skills[`${ci}_${si}`]?.stars||0)*10;}));
+  return p;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderAll(){
+  renderChildBar();
+  renderJenjangBar();
+  renderCtabs();
+  renderClass(state.activeClass);
+  renderLog();
+  renderRewards();
+  renderSettings2();
+  updatePts();
+}
+
+function renderChildBar(){
+  const el=document.getElementById('childBar');
+  if(!state.children.length){ el.innerHTML='<span style="font-size:12px;color:var(--mut)">Belum ada anak — tambah dulu 👶</span>'; return; }
+  el.innerHTML=state.children.map((c,i)=>`
+    <div class="cpill ${i===state.activeChild?'active':''}" onclick="switchChild(${i})">
+      <div class="cava">${c.avatar}</div>
+      <div><strong>${c.name}</strong><span>Kelas ${c.grade} SD</span></div>
+    </div>`).join('')+
+    `<button class="add-c-btn" onclick="openModal('addChildModal')" title="Tambah anak">+</button>`;
+}
+
+function switchChild(i){
+  state.activeChild=i;
+  const c=state.children[i];
+  // Auto-select jenjang based on child's grade
+  const g=c.grade||1;
+  if(g<=6) activeJenjang=0;
+  else if(g<=9) activeJenjang=1;
+  else activeJenjang=2;
+  state.activeClass=Math.min(g-1, TMPL.length-1);
+  renderAll(); chatHist=[]; addAIGreeting();
+}
+
+function updatePts(){
+  const c=child(); if(!c)return;
+  document.getElementById('ptsDisp').textContent='⭐ '+(c.points||0);
+  document.getElementById('rwpts').textContent=(c.points||0);
+}
+
+// ============================================================
+// JENJANG & CLASS TABS
+// ============================================================
+let activeJenjang = 0; // 0=SD, 1=SMP, 2=SMA
+
+function renderJenjangBar(){
+  const bar=document.getElementById('jenjangBar');
+  bar.innerHTML=JENJANG.map((j,i)=>{
+    // count total done for this jenjang
+    const [s,e]=j.range; let d=0,t=0;
+    for(let ci=s;ci<=e;ci++){d+=cntDone(ci);t+=TMPL[ci].skills.length;}
+    const pct=t>0?Math.round(d/t*100):0;
+    const lc=j.label.toLowerCase();
+    return `<button class="jbtn jbtn-${lc} ${i===activeJenjang?'active':''}" onclick="selJenjang(${i})">
+      ${j.label} <span style="opacity:.7;font-weight:400">${pct}%</span>
+    </button>`;
+  }).join('');
+}
+
+function selJenjang(i){
+  activeJenjang=i;
+  state.activeClass=JENJANG[i].range[0];
+  renderJenjangBar();
+  renderCtabs();
+  renderClass(state.activeClass);
+}
+
+function renderCtabs(){
+  const [s,e]=JENJANG[activeJenjang].range;
+  document.getElementById('ctabs').innerHTML=TMPL.slice(s,e+1).map((t,rel)=>{
+    const abs=s+rel;
+    return `<div class="ctab ${abs===state.activeClass?'active':''}"
+      onclick="selClass(${abs},this)">${t.title.replace(' SD','').replace(' SMP','').replace(' SMA','')}</div>`;
+  }).join('');
+}
+
+function selClass(i,el){
+  state.activeClass=i;
+  document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderClass(i);
+}
+
+function renderClass(idx){
+  if(!child()){ document.getElementById('sgrid').innerHTML=''; return; }
+  const t=TMPL[idx];
+  const jname=t.jenjang||'SD';
+  const hdr=document.getElementById('clshdr');
+  hdr.className='clshdr '+jname.toLowerCase();
+  document.getElementById('clsico').textContent=t.ico;
+  document.getElementById('clstit').textContent=t.title;
+  document.getElementById('clsdesc').textContent=t.sub+' · '+t.focus;
+  const done=cntDone(idx),learn=cntLearn(idx),total=t.skills.length,pct=Math.round(done/total*100);
+  document.getElementById('spDone').textContent=done+' dikuasai';
+  document.getElementById('spLearn').textContent=learn+' belajar';
+  document.getElementById('spPct').textContent=pct+'%';
+  document.getElementById('sDone').textContent=done;
+  document.getElementById('sLearn').textContent=learn;
+  document.getElementById('sPct').textContent=pct+'%';
+
+  // Overall all classes
+  let td=0,tt=0;
+  TMPL.forEach((_,ci)=>{td+=cntDone(ci);tt+=TMPL[ci].skills.length;});
+  const op=Math.round(td/tt*100);
+  document.getElementById('oPct').textContent=op+'%';
+  document.getElementById('oBar').style.width=op+'%';
+
+  // Per-jenjang breakdown
+  JENJANG.forEach(j=>{
+    const lc=j.label.toLowerCase();
+    const [s,e]=j.range; let d2=0,t2=0;
+    for(let ci=s;ci<=e;ci++){d2+=cntDone(ci);t2+=TMPL[ci].skills.length;}
+    const p2=t2>0?Math.round(d2/t2*100):0;
+    const pEl=document.getElementById(lc+'Pct'), bEl=document.getElementById(lc+'Bar');
+    if(pEl)pEl.textContent=p2+'%';
+    if(bEl)bEl.style.width=p2+'%';
+  });
+
+  document.getElementById('sgrid').innerHTML=t.skills.map((s,i)=>{
+    const sk=getSk(idx,i);
+    let cls='sc';
+    if(sk.status==='done')cls+=' done';
+    else if(sk.status==='learning')cls+=' learning';
+    return `<div class="${cls}" onclick="openSkillModal(${idx},${i})">
+      <div class="sc-badge"></div>
+      <div class="sc-icon">${s.i}</div>
+      <div class="sc-name">${s.n}</div>
+      <div class="sc-stars">${'⭐'.repeat(sk.stars)+'☆'.repeat(3-sk.stars)}</div>
+    </div>`;
+  }).join('');
+  updateHomeReco();
+}
+
+function updateHomeReco(){
+  if(!child()){document.getElementById('homeReco').innerHTML='Tambah anak untuk memulai.';return;}
+  const c=child();
+  // Find child's current class index (grade-1 maps to TMPL index)
+  const curIdx=Math.min(c.grade-1, TMPL.length-1);
+  const curTmpl=TMPL[curIdx];
+  const learning=curTmpl.skills.filter((_,i)=>getSk(curIdx,i).status==='learning');
+  const none=curTmpl.skills.filter((_,i)=>getSk(curIdx,i).status==='none');
+  let totalDoneAll=0; TMPL.forEach((_,ci)=>{totalDoneAll+=cntDone(ci);});
+  let t=`<strong>${c.name}</strong> · ${curTmpl.title} · <strong>${totalDoneAll} skill</strong> dikuasai total. `;
+  if(learning.length) t+=`Sedang belajar: ${learning.map(s=>s.i+' '+s.n).join(', ')}. `;
+  if(none.length) t+=`Skill berikutnya: <strong>${none[0].i} ${none[0].n}</strong>.`;
+  else t+=`🎉 Semua skill ${curTmpl.title} selesai!`;
+  document.getElementById('homeReco').innerHTML=t;
+}
+
+function renderLog(){
+  const c=child(); if(!c){document.getElementById('timeline').innerHTML='';return;}
+  const logs=c.log||[];
+  document.getElementById('timeline').innerHTML = logs.length?logs.map(l=>`
+    <div class="ti">
+      <div class="tdot ${l.dot}">${l.icon}</div>
+      <div class="tcnt"><strong>${l.text}</strong><p>${l.time}${l.note?' · '+l.note:''}</p></div>
+    </div>`).join('')
+    :'<p style="font-size:13px;color:var(--mut)">Belum ada catatan. Tambah yang pertama!</p>';
+}
+
+function renderRewards(){
+  const c=child(); if(!c)return;
+  const pts=c.points||0;
+  const rws=c.rewards||[];
+  document.getElementById('rwlist').innerHTML=rws.map(r=>{
+    const pct=Math.min(100,Math.round(pts/r.pts*100));
+    const done=pts>=r.pts||r.done;
+    return `<div class="ri ${done?'done':(pct>0&&pct<100?'cur':'')}">
+      <div class="ri-row">
+        <span style="font-size:21px">${r.icon}</span>
+        <div class="ri-name">${r.name}</div>
+        ${done?`<div class="ri-ok">✅ Tercapai</div>`:`<div class="ri-pts">${r.pts} ⭐</div>`}
+      </div>
+      <div class="rpbar"><div class="rpf ${done?'g':pct>0?'a':'gr'}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderSettings2(){
+  document.getElementById('stChildren').textContent=state.children.length+' anak';
+  let td=0; state.children.forEach(c=>TMPL.forEach((_,ci)=>TMPL[ci].skills.forEach((_,si)=>{if(c.skills[`${ci}_${si}`]?.status==='done')td++;})));
+  document.getElementById('stDone').textContent=td+' skill';
+}
+
+// ============================================================
+// SKILL MODAL
+// ============================================================
+function openSkillModal(ci,si){
+  modalCI=ci; modalSI=si;
+  const sk=getSk(ci,si);
+  modalSt=sk.status; modalStars=sk.stars;
+  document.getElementById('mIco').textContent=TMPL[ci].skills[si].i;
+  document.getElementById('mTit').textContent=TMPL[ci].skills[si].n;
+  document.getElementById('mSub').textContent=TMPL[ci].title;
+  document.getElementById('mNote').value=sk.note||'';
+  updStBtns(); updStarBtns();
+  openModal('skillModal');
+}
+function setSt(s){modalSt=s;updStBtns();}
+function setStar(n){modalStars=n;updStarBtns();}
+function updStBtns(){
+  ['stN','stL','stD'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  if(modalSt==='none')document.getElementById('stN').classList.add('active');
+  if(modalSt==='learning')document.getElementById('stL').classList.add('active');
+  if(modalSt==='done')document.getElementById('stD').classList.add('active');
+}
+function updStarBtns(){
+  document.querySelectorAll('.starb').forEach((b,i)=>b.classList.toggle('sel',i<modalStars));
+}
+
+async function saveSkill(){
+  const c=child(); if(!c)return;
+  const prev=getSk(modalCI,modalSI).status;
+  const note=document.getElementById('mNote').value;
+  c.skills[`${modalCI}_${modalSI}`]={status:modalSt,stars:modalStars,note};
+  c.points=calcPoints(c);
+  closeModal('skillModal');
+  renderClass(state.activeClass);
+  updatePts();
+
+  // Save to Supabase
+  const {error}=await supa.from('skills').upsert({
+    child_id:c.id, class_idx:modalCI, skill_idx:modalSI,
+    status:modalSt, stars:modalStars, note, updated_at:new Date().toISOString()
+  });
+  if(error){toast('⚠️ Gagal simpan: '+error.message);return;}
+
+  // Update points
+  await supa.from('children').update({points:c.points}).eq('id',c.id);
+
+  // Auto log if newly done
+  if(prev!=='done'&&modalSt==='done'){
+    const sn=TMPL[modalCI].skills[modalSI].n;
+    const si2=TMPL[modalCI].skills[modalSI].i;
+    const entry={child_id:c.id, parent_id:currentUser.id, text:sn+' berhasil dikuasai! 🎉', dot:'green', icon:si2, note};
+    await supa.from('activity_log').insert(entry);
+    // local
+    c.log.unshift({id:'tmp',text:entry.text,dot:'green',icon:si2,note,time:'Baru saja'});
+    renderLog();
+    pushNotif('✅ '+c.name+' kuasai: '+sn+'!');
+  }
+  toast('✅ Tersimpan!');
+  renderRewards();
+}
+
+// ============================================================
+// ADD CHILD
+// ============================================================
+function pickAva(a){
+  selAva=a;
+  document.querySelectorAll('.avab').forEach(el=>el.classList.remove('sel'));
+  const el=document.getElementById('av-'+a); if(el)el.classList.add('sel');
+}
+
+async function addChild(){
+  const name=document.getElementById('ncName').value.trim();
+  const grade=parseInt(document.getElementById('ncGrade').value);
+  const age=parseInt(document.getElementById('ncAge').value)||grade+5;
+  if(!name){toast('⚠️ Isi nama anak');return;}
+  const {data,error}=await supa.from('children').insert({
+    parent_id:currentUser.id, name, grade, age, avatar:selAva, points:0
+  }).select().single();
+  if(error){toast('⚠️ '+error.message);return;}
+  // Add default rewards
+  const defRws=DEF_REWARDS.map(r=>({...r, child_id:data.id, done:false}));
+  await supa.from('rewards').insert(defRws);
+  const rws=defRws.map((r,i)=>({id:'',name:r.name,icon:r.icon,pts:r.pts,done:false}));
+  state.children.push({id:data.id,name,grade,age,avatar:selAva,points:0,skills:{},log:[],rewards:rws});
+  state.activeChild=state.children.length-1;
+  // Auto-select jenjang
+  activeJenjang=grade<=6?0:grade<=9?1:2;
+  state.activeClass=Math.min(grade-1,TMPL.length-1);
+  closeModal('addChildModal');
+  renderAll(); chatHist=[]; addAIGreeting();
+  toast('👶 '+name+' ditambahkan!');
+  document.getElementById('ncName').value='';
+}
+
+// ============================================================
+// ADD LOG
+// ============================================================
+async function saveLog(){
+  const txt=document.getElementById('logTxt').value.trim();
+  if(!txt){toast('⚠️ Isi deskripsi');return;}
+  const dot=document.getElementById('logType').value;
+  const note=document.getElementById('logNote').value.trim();
+  const icons={green:'✅',amber:'⏳',purple:'💡'};
+  const c=child();
+  const {error}=await supa.from('activity_log').insert({
+    child_id:c.id, parent_id:currentUser.id, text:txt, dot, icon:icons[dot], note
+  });
+  if(error){toast('⚠️ '+error.message);return;}
+  c.log.unshift({id:'tmp',text:txt,dot,icon:icons[dot],note,time:'Baru saja'});
+  closeModal('addLogModal');
+  renderLog();
+  document.getElementById('logTxt').value='';
+  document.getElementById('logNote').value='';
+  toast('📝 Catatan tersimpan');
+}
+
+// ============================================================
+// ADD REWARD
+// ============================================================
+async function saveReward(){
+  const name=document.getElementById('rwName').value.trim();
+  const icon=document.getElementById('rwIco').value.trim()||'🎁';
+  const pts=parseInt(document.getElementById('rwPtsIn').value);
+  if(!name||!pts){toast('⚠️ Lengkapi data');return;}
+  const c=child();
+  const {data,error}=await supa.from('rewards').insert({child_id:c.id,name,icon,pts,done:false}).select().single();
+  if(error){toast('⚠️ '+error.message);return;}
+  c.rewards.push({id:data.id,name,icon,pts,done:false});
+  c.rewards.sort((a,b)=>a.pts-b.pts);
+  closeModal('addRewardModal');
+  renderRewards();
+  document.getElementById('rwName').value='';
+  document.getElementById('rwPtsIn').value='';
+  toast('🎁 Target hadiah ditambahkan');
+}
+
+// ============================================================
+// API KEY
+// ============================================================
+async function saveApiKey(){
+  const k=document.getElementById('apiKeyInput').value.trim();
+  if(!k){toast('⚠️ Isi API Key dulu');return;}
+  const {error}=await supa.from('profiles').update({anthropic_key:k}).eq('id',currentUser.id);
+  if(error){toast('⚠️ '+error.message);return;}
+  state.apiKey=k;
+  document.getElementById('apiKeyStatus').innerHTML='✅ API Key tersimpan di database';
+  toast('🔑 API Key disimpan');
+}
+
+// ============================================================
+// AI CHAT
+// ============================================================
+function buildCtx(){
+  const c=child(); if(!c)return'';
+  const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
+  const curIdx=Math.min(c.grade-1,TMPL.length-1);
+  let done=[],learn=[],curNone=[];
+  TMPL.forEach((cls,ci)=>cls.skills.forEach((s,si)=>{
+    const sk=getSk(ci,si);
+    if(sk.status==='done')done.push(`${cls.title}: ${s.n}`);
+    else if(sk.status==='learning')learn.push(`${cls.title}: ${s.n}`);
+    else if(ci===curIdx)curNone.push(s.n);
+  }));
+  const jCtx=jLabel==='SD'
+    ?'Fokus: karakter, motorik, kebiasaan baik, fondasi akademik & kreativitas.'
+    :jLabel==='SMP'
+    ?'Fokus: identitas diri, minat bakat, skill produktif, literasi digital & persiapan karir awal.'
+    :'Fokus: spesialisasi keahlian, entrepreneurship, persiapan kuliah, karir & kehidupan mandiri.';
+  return `Kamu adalah konsultan parenting DAN coach anak profesional untuk orang tua Indonesia. Kamu ahli mendampingi tumbuh kembang anak dari SD hingga SMA secara holistik.
+
+DATA ANAK:
+- Nama: ${c.name} | Usia: ${c.age} tahun | ${TMPL[curIdx].title} (${jLabel})
+- ${jCtx}
+- Total poin: ${c.points||0} | Skill dikuasai: ${done.length}
+- Dikuasai (terbaru): ${done.slice(-8).join('; ')||'belum ada'}
+- Sedang dipelajari: ${learn.join('; ')||'belum ada'}
+- Belum dimulai di kelasnya: ${curNone.join(', ')||'semua selesai!'}
+
+KEAHLIANMU:
+• Parenting berbasis tahapan perkembangan anak (SD/SMP/SMA)
+• Coaching minat, bakat & gaya belajar anak
+• Kurikulum life skill & future skills abad 21
+• Pendekatan islami, karakter & spiritual intelligence
+• Tech literacy, coding, AI untuk generasi muda
+• Entrepreneurship & financial literacy anak
+
+Jawab Bahasa Indonesia, hangat & praktis. Maks 200 kata. Sesuaikan saran dengan jenjang ${jLabel} usia ${c.age} tahun.`;
+}
+
+function addAIGreeting(){
+  const c=child(); if(!c)return;
+  const msgs=document.getElementById('chatMsgs');
+  msgs.innerHTML=''; chatHist=[];
+  let td=0; TMPL.forEach((_,ci)=>{td+=cntDone(ci);});
+  const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
+  const jMsg=jLabel==='SD'
+    ?'Saya siap bantu membangun fondasi karakter & skill dasar yang kuat 🌱'
+    :jLabel==='SMP'
+    ?'Saya siap bantu menemukan minat bakat & skill produktif untuk masa depannya 🎯'
+    :'Saya siap bantu persiapkan jalur kuliah, karir & kehidupan mandirinya 🚀';
+  addBubble('ai',`Halo! Saya konsultan parenting & coach anak Anda 👋\n\n<strong>${c.name}</strong> (${TMPL[Math.min(c.grade-1,11)].title}) sudah punya <strong>${td} skill dikuasai</strong>. Keren!\n\n${jMsg}\n\nAda yang ingin ditanyakan?`);
+  renderQchips(jLabel);
+}
+
+function renderQchips(jLabel){
+  const chips = jLabel==='SD' ? [
+    'Skill apa yang harus diprioritaskan bulan ini?',
+    'Bagaimana cara memotivasi anak SD belajar skill baru?',
+    'Tips jadwal harian anak SD yang seimbang',
+    'Bagaimana mendeteksi bakat anak sejak dini?'
+  ] : jLabel==='SMP' ? [
+    'Bagaimana membantu anak SMP menemukan passion-nya?',
+    'Skill digital apa yang paling penting untuk anak SMP?',
+    'Cara mengatasi anak SMP yang mulai malas belajar',
+    'Persiapan apa yang perlu dilakukan menuju SMA?'
+  ] : [
+    'Bagaimana mempersiapkan anak masuk universitas terbaik?',
+    'Skill apa yang paling dicari dunia kerja saat ini?',
+    'Cara mendampingi anak SMA yang sedang menemukan identitasnya',
+    'Kapan waktu tepat anak SMA mulai membangun bisnis?'
+  ];
+  document.getElementById('qchips').innerHTML=chips.map(q=>
+    `<button class="qchip" onclick="document.getElementById('chatIn').value=\`${q}\`;sendChat()">${q}</button>`
+  ).join('');
+}
+
+function addBubble(type,text,loading=false){
+  const msgs=document.getElementById('chatMsgs');
+  const d=document.createElement('div');
+  d.className=`msg ${type}`;
+  d.innerHTML=`<div class="mava ${type}">${type==='ai'?'✨':'👤'}</div><div class="bubble ${type} ${loading?'loading':''}">${text.replace(/\n/g,'<br>')}</div>`;
+  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+  return d;
+}
+
+async function sendChat(){
+  const inp=document.getElementById('chatIn');
+  const btn=document.getElementById('sbtn');
+  const msg=inp.value.trim();
+  if(!msg)return;
+  if(!state.apiKey){toast('⚠️ Set Anthropic API Key di Pengaturan dulu');nav('settings');return;}
+  inp.value=''; btn.disabled=true;
+  addBubble('user',msg);
+  chatHist.push({role:'user',content:msg});
+  const ld=addBubble('ai','Sedang berpikir...',true);
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':state.apiKey,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildCtx(),messages:chatHist})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const reply=data.content?.map(b=>b.text||'').join('')||'Maaf, ada gangguan.';
+    ld.querySelector('.bubble').className='bubble ai';
+    ld.querySelector('.bubble').innerHTML=reply.replace(/\n/g,'<br>');
+    chatHist.push({role:'assistant',content:reply});
+    if(chatHist.length>20)chatHist=chatHist.slice(-20);
+  }catch(e){
+    ld.querySelector('.bubble').innerHTML='❌ Error: '+e.message;
+  }
+  btn.disabled=false;
+  document.getElementById('chatMsgs').scrollTop=9999;
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement===document.getElementById('chatIn'))sendChat();});
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function pushNotif(txt){
+  state.notifs.unshift({txt,time:'Baru saja'});
+  document.getElementById('notifDot').style.display='block';
+  renderNotifList();
+}
+function renderNotifList(){
+  const el=document.getElementById('notifList');
+  if(!state.notifs.length){el.innerHTML='<p style="font-size:12px;color:var(--mut)">Belum ada notifikasi.</p>';return;}
+  el.innerHTML=state.notifs.map(n=>`
+    <div style="display:flex;gap:9px;align-items:flex-start;padding:9px;background:var(--bg);border-radius:var(--rs);margin-bottom:6px">
+      <div style="width:7px;height:7px;border-radius:50%;background:var(--purple);margin-top:5px;flex-shrink:0"></div>
+      <div><div style="font-size:12px;font-weight:600">${n.txt}</div><div style="font-size:10px;color:var(--mut)">${n.time}</div></div>
+    </div>`).join('');
+}
+
+async function genWeeklyAI(){
+  if(!state.apiKey){toast('⚠️ Set API Key dulu');nav('settings');return;}
+  toast('🔄 Membuat laporan mingguan...');
+  const c=child(); if(!c)return;
+  const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
+  const curIdx=Math.min(c.grade-1,TMPL.length-1);
+  let done=[],learn=[],curNone=[];
+  TMPL.forEach((cls,ci)=>cls.skills.forEach((s,si)=>{
+    const sk=getSk(ci,si);
+    if(sk.status==='done')done.push(s.n);
+    else if(sk.status==='learning')learn.push(s.n);
+    else if(ci===curIdx)curNone.push(s.n);
+  }));
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':state.apiKey,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,
+        messages:[{role:'user',content:`Kamu adalah konsultan parenting & coach anak profesional. Buat laporan mingguan (4-5 kalimat, Bahasa Indonesia, hangat & memotivasi) untuk orang tua dari ${c.name}, ${c.age} tahun, ${TMPL[curIdx].title} (${jLabel}).
+Skill dikuasai minggu ini: ${done.slice(-5).join(', ')||'belum ada baru'}.
+Sedang dipelajari: ${learn.join(', ')||'belum ada'}.
+Belum dimulai di kelasnya: ${curNone.slice(0,3).join(', ')||'semua selesai'}.
+Berikan: (1) apresiasi pencapaian, (2) 2 saran konkret minggu depan sesuai jenjang ${jLabel}, (3) 1 tips parenting relevan untuk usia ${c.age} tahun.`}]
+      })
+    });
+    const d=await res.json();
+    const rep=d.content?.[0]?.text||'Gagal membuat laporan.';
+    pushNotif('📊 Laporan Mingguan '+c.name+'\n\n'+rep);
+    nav('notif');
+    toast('✅ Laporan mingguan selesai!');
+  }catch(e){toast('❌ Gagal: '+e.message);}
+}
+
+// ============================================================
+// PDF REPORT
+// ============================================================
+async function genPDF(){
+  const c=child(); if(!c){toast('⚠️ Pilih anak dulu');return;}
+  toast('📄 Membuat PDF laporan lengkap...');
+  const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
+  const curIdx=Math.min(c.grade-1,TMPL.length-1);
+  let aiAnalysis='Gunakan fitur AI Konsultan untuk analisis mendalam tentang perkembangan anak Anda.';
+  if(state.apiKey){
+    try{
+      let done=[],learn=[],curNone=[];
+      TMPL.forEach((cls,ci)=>cls.skills.forEach((s,si)=>{
+        const sk=getSk(ci,si);
+        if(sk.status==='done')done.push(cls.title+': '+s.n);
+        else if(sk.status==='learning')learn.push(s.n);
+        else if(ci===curIdx)curNone.push(s.n);
+      }));
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':state.apiKey,'anthropic-version':'2023-06-01'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
+          messages:[{role:'user',content:`Kamu konsultan parenting & coach anak profesional. Buat analisis perkembangan bulanan untuk laporan PDF (Bahasa Indonesia, formal tapi hangat, 5-6 kalimat) untuk ${c.name}, ${c.age} tahun, ${TMPL[curIdx].title} (${jLabel}).
+Skill dikuasai: ${done.slice(0,15).join('; ')||'belum ada'}.
+Sedang belajar: ${learn.slice(0,5).join(', ')||'belum ada'}.
+Belum dimulai di kelasnya: ${curNone.slice(0,3).join(', ')||'semua selesai'}.
+Sertakan: (1) apresiasi pencapaian, (2) analisis kekuatan yang menonjol, (3) area yang perlu dikembangkan, (4) saran prioritas bulan depan sesuai jenjang ${jLabel}, (5) pesan motivasi untuk anak dan orang tua.`}]
+        })
+      });
+      const d=await res.json();
+      aiAnalysis=d.content?.[0]?.text||aiAnalysis;
+    }catch(e){}
+  }
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,M=18; let y=20;
+  const now=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  const hCol=jLabel==='SD'?[124,58,237]:jLabel==='SMP'?[13,148,136]:[217,119,6];
+  const fillCol=jLabel==='SD'?[237,233,254]:jLabel==='SMP'?[204,251,241]:[254,243,199];
+  const textCol=jLabel==='SD'?[76,29,149]:jLabel==='SMP'?[19,78,74]:[120,53,15];
+  const jenjangCols=[[124,58,237],[13,148,136],[217,119,6]];
+
+  doc.setFillColor(...hCol);doc.rect(0,0,W,44,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(17);doc.setFont('helvetica','bold');
+  doc.text('LAPORAN PERKEMBANGAN BULANAN',M,15);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('ParentingAI — Konsultan Parenting & Coach Anak SD s/d SMA',M,25);
+  doc.text('Dicetak: '+now,M,34);
+
+  y=54;
+  doc.setFillColor(...fillCol);doc.roundedRect(M,y,W-2*M,28,3,3,'F');
+  doc.setTextColor(...textCol);
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text(c.name,M+7,y+10);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text(`${TMPL[curIdx].title} (${jLabel})  |  Usia ${c.age} tahun  |  Poin: ${c.points||0}`,M+7,y+20);
+  doc.setTextColor(0,0,0);
+
+  y=92;
+  let td=0,tl=0,ta=0;
+  TMPL.forEach((_,ci)=>{td+=cntDone(ci);tl+=cntLearn(ci);ta+=TMPL[ci].skills.length;});
+  const op=Math.round(td/ta*100);
+  doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
+  doc.text('RINGKASAN PROGRES KESELURUHAN (Kelas 1-12)',M,y);y+=7;
+  [[td,'Dikuasai',[34,197,94]],[tl,'Belajar',[245,158,11]],[ta-td-tl,'Belum',[148,163,184]]].forEach(([n,lb,col],i)=>{
+    const bx=M+i*58;
+    doc.setFillColor(...col);doc.roundedRect(bx,y,52,20,2,2,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');
+    doc.text(String(n),bx+26,y+11,{align:'center'});
+    doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text(lb,bx+26,y+17,{align:'center'});
+  });
+  y+=28;
+  doc.setFontSize(8);doc.setTextColor(100,116,139);doc.text(`Progress total: ${op}%`,M,y);y+=4;
+  doc.setFillColor(226,232,240);doc.roundedRect(M,y,W-2*M,5,2,2,'F');
+  doc.setFillColor(...hCol);doc.roundedRect(M,y,(W-2*M)*op/100,5,2,2,'F');
+  y+=12;
+
+  doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
+  doc.text('PROGRESS PER JENJANG',M,y);y+=6;
+  JENJANG.forEach((j,ji)=>{
+    const [s,e]=j.range; let jd=0,jt=0;
+    for(let ci=s;ci<=e;ci++){jd+=cntDone(ci);jt+=TMPL[ci].skills.length;}
+    const jp=jt>0?Math.round(jd/jt*100):0;
+    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...jenjangCols[ji]);
+    doc.text(`${j.label}: ${jd}/${jt} skill (${jp}%)`,M,y);
+    doc.setFillColor(226,232,240);doc.roundedRect(M+44,y-4,W-2*M-46,5,2,2,'F');
+    doc.setFillColor(...jenjangCols[ji]);doc.roundedRect(M+44,y-4,(W-2*M-46)*jp/100,5,2,2,'F');
+    y+=10;
+  });
+  y+=4;
+
+  JENJANG.forEach((j,ji)=>{
+    const [s,e]=j.range;
+    if(y>250){doc.addPage();y=20;}
+    doc.setFillColor(...jenjangCols[ji]);doc.roundedRect(M,y,W-2*M,9,2,2,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text(`${j.label} — ${j.label==='SD'?'Kelas 1-6':j.label==='SMP'?'Kelas 7-9':'Kelas 10-12'}`,M+4,y+6);
+    y+=13;
+    for(let ci=s;ci<=e;ci++){
+      const cls=TMPL[ci];
+      if(y>258){doc.addPage();y=20;}
+      const d2=cntDone(ci),t2=cls.skills.length;
+      doc.setFillColor(248,250,252);doc.roundedRect(M,y,W-2*M,8,1,1,'F');
+      doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(...jenjangCols[ji]);
+      doc.text(`${cls.title} — ${cls.sub}`,M+2,y+5.5);
+      doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);
+      doc.text(`${d2}/${t2}`,W-M-2,y+5.5,{align:'right'});
+      y+=10;
+      const dones=cls.skills.filter((_,si)=>getSk(ci,si).status==='done').map(s2=>s2.n);
+      const learns=cls.skills.filter((_,si)=>getSk(ci,si).status==='learning').map(s2=>s2.n);
+      if(dones.length){
+        if(y>265){doc.addPage();y=20;}
+        doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(21,128,61);
+        doc.text('v',M+2,y);doc.setFont('helvetica','normal');doc.setTextColor(15,23,42);
+        const ll=doc.splitTextToSize(dones.join(', '),W-2*M-12);
+        doc.text(ll,M+7,y);y+=ll.length*3.2+1.5;
+      }
+      if(learns.length){
+        if(y>265){doc.addPage();y=20;}
+        doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(146,64,14);
+        doc.text('~',M+2,y);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+        const ll=doc.splitTextToSize(learns.join(', '),W-2*M-12);
+        doc.text(ll,M+7,y);y+=ll.length*3.2+1.5;
+      }
+      y+=2.5;
+    }
+    y+=4;
+  });
+
+  if(y>230){doc.addPage();y=20;}
+  doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
+  doc.text('ANALISIS AI KONSULTAN',M,y);y+=6;
+  doc.setFillColor(...fillCol);
+  const aiLines=doc.splitTextToSize(aiAnalysis,W-2*M-10);
+  const aiBoxH=aiLines.length*4.5+14;
+  doc.roundedRect(M,y,W-2*M,aiBoxH,3,3,'F');
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(...textCol);
+  doc.text(aiLines,M+6,y+9);y+=aiBoxH+10;
+
+  if(y>220){doc.addPage();y=20;}
+  doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
+  doc.text('CATATAN AKTIVITAS TERKINI',M,y);y+=7;
+  const logs=(c.log||[]).slice(0,8);
+  if(!logs.length){doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);doc.text('Belum ada catatan.',M+2,y);y+=8;}
+  else logs.forEach(l=>{
+    if(y>268){doc.addPage();y=20;}
+    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
+    const tx=(l.text||'').replace(/[^\x20-\x7E]/g,'').substring(0,68);
+    doc.text(tx||'—',M+2,y);
+    doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);
+    doc.text((l.time||'')+((l.note)?' — '+(l.note||'').replace(/[^\x20-\x7E]/g,'').substring(0,40):''),M+2,y+4);
+    y+=9;
+  });
+
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setFontSize(7);doc.setTextColor(148,163,184);
+    doc.setDrawColor(226,232,240);doc.line(M,285,W-M,285);
+    doc.text(`ParentingAI | ${c.name} | ${TMPL[curIdx].title} | Hal. ${i}/${pages}`,W/2,289,{align:'center'});
+  }
+  doc.save(`Laporan_${c.name}_${TMPL[curIdx].title.replace(/ /g,'_')}_${new Date().toISOString().slice(0,7)}.pdf`);
+  toast('✅ PDF berhasil didownload!');
+}
+
+
+// ============================================================
+// UTILS
+// ============================================================
+function nav(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nb-'+id).classList.add('active');
+  if(id==='notif'){document.getElementById('notifDot').style.display='none';renderNotifList();}
+  if(id==='ai'&&document.getElementById('chatMsgs').children.length===0)addAIGreeting();
+}
+function openModal(id){document.getElementById(id).classList.remove('hidden');}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function bgClose(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+function toast(msg,dur=2800){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+function confirmDeleteAccount(){
+  if(!confirm('Hapus seluruh data akun ini? Ini tidak bisa dibatalkan!'))return;
+  doLogout();
+  toast('Akun dihapus.');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(async()=>{
+  if(!initSupa())return;
+
+  // Check existing session
+  const {data:{session}}=await supa.auth.getSession();
+  if(session?.user){
+    await onLogin(session.user);
+  }
+
+  // Auth state listener
+  supa.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_IN'&&session?.user){
+      await onLogin(session.user);
+    }
+  });
+
+  // Default qchips before child loaded
+  renderQchips('SD');
+})();
+</script>
+</body>
+</html>
