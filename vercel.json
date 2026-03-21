@@ -1,5 +1,9 @@
 {
+  "outputDirectory": "public",
   "routes": [
+    { "src": "/env.js", "dest": "/env.js" },
+    { "src": "/index.html", "dest": "/index.html" },
+    { "src": "/(.*\\.(js|css|png|jpg|svg|ico|json|woff|woff2|ttf))", "dest": "/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
