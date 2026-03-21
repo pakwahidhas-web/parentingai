@@ -9,6 +9,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// Load config dari Vercel API route — blocking agar tersedia sebelum app init
+(function(){
+  var x = new XMLHttpRequest();
+  x.open('GET', '/api/env', false); // synchronous
+  try {
+    x.send();
+    if(x.status === 200) eval(x.responseText);
+  } catch(e) {
+    console.warn('env load failed:', e);
+  }
+})();
+</script>
 <style>
 /* ===== TOKENS ===== */
 :root{
@@ -788,16 +801,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 
 <script>
 // ============================================================
-// CONFIG — diisi dari env saat deploy
+// CONFIG — diisi dari /api/env (Vercel Serverless Function)
 // ============================================================
-const SUPA_URL       = window.ENV_SUPABASE_URL       || '';
-const SUPA_KEY       = window.ENV_SUPABASE_KEY       || '';
-const ANTHROPIC_KEY  = window.ENV_ANTHROPIC_KEY      || ''; // Key milik owner — tidak terekspos ke user
-const MIDTRANS_CLIENT= window.ENV_MIDTRANS_CLIENT_KEY|| ''; // Midtrans client key (snap.js)
-const APP_PRICE      = 49000; // Rp 49.000/bulan
+const SUPA_URL       = window.ENV_SUPABASE_URL        || '';
+const SUPA_KEY       = window.ENV_SUPABASE_KEY         || '';
+const ANTHROPIC_KEY  = window.ENV_ANTHROPIC_KEY        || '';
+const MIDTRANS_CLIENT= window.ENV_MIDTRANS_CLIENT_KEY  || '';
+const APP_PRICE      = 49000;
 const TRIAL_DAYS     = 7;
-const OWNER_WA       = window.ENV_OWNER_WA           || '6281234567890'; // No WA owner untuk konfirmasi manual
-const OWNER_BANK     = window.ENV_OWNER_BANK         || 'BCA 1234567890';
+const OWNER_WA       = window.ENV_OWNER_WA             || '6281234567890';
+const OWNER_BANK     = window.ENV_OWNER_BANK           || 'BCA 1234567890';
 
 // ============================================================
 // SUPABASE INIT
