@@ -3,18 +3,3 @@
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
-```
-
----
-
-**Langkah 4 — Commit & tunggu Vercel auto-deploy**
-
-Setelah edit kedua file di GitHub, Vercel otomatis deploy ulang dalam ~1 menit.
-
----
-
-**Langkah 5 — Verifikasi**
-
-Buka:
-```
-https://parentingai-3gzwwefqi-pakwahidhas-webs-projects.vercel.app/env.js
