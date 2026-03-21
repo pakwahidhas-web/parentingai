@@ -838,9 +838,9 @@ function initSupa() {
 // ============================================================
 // Jenjang: 0=SD(0-4), 1=SMP(5-7), 2=SMA(8-11)
 const JENJANG = [
-  { label:'SD', color:'#7c3aed', range:[0,4] },
-  { label:'SMP', color:'#0d9488', range:[5,7] },
-  { label:'SMA', color:'#d97706', range:[8,11] }
+  { label:'SD',  color:'#7c3aed', range:[0,5]  },  // Kelas 1-6 (index 0-5)
+  { label:'SMP', color:'#0d9488', range:[6,8]  },  // Kelas 7-9 (index 6-8)
+  { label:'SMA', color:'#d97706', range:[9,11] }   // Kelas 10-12 (index 9-11)
 ];
 
 const TMPL = [
@@ -1770,9 +1770,9 @@ async function sendChat(){
   chatHist.push({role:'user',content:msg});
   const ld=addBubble('ai','Sedang berpikir...',true);
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('/api/chat',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildCtx(),messages:chatHist})
     });
     const data=await res.json();
@@ -1824,9 +1824,9 @@ async function genWeeklyAI(){
     else if(ci===curIdx)curNone.push(s.n);
   }));
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('/api/chat',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,
         messages:[{role:'user',content:`Kamu adalah konsultan parenting & coach anak profesional. Buat laporan mingguan (4-5 kalimat, Bahasa Indonesia, hangat & memotivasi) untuk orang tua dari ${c.name}, ${c.age} tahun, ${TMPL[curIdx].title} (${jLabel}).
 Skill dikuasai minggu ini: ${done.slice(-5).join(', ')||'belum ada baru'}.
@@ -1861,9 +1861,9 @@ async function genPDF(){
         else if(sk.status==='learning')learn.push(s.n);
         else if(ci===curIdx)curNone.push(s.n);
       }));
-      const res=await fetch('https://api.anthropic.com/v1/messages',{
+      const res=await fetch('/api/chat',{
         method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01'},
+        headers:{'Content-Type':'application/json'},
         body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
           messages:[{role:'user',content:`Kamu konsultan parenting & coach anak profesional. Buat analisis perkembangan bulanan untuk laporan PDF (Bahasa Indonesia, formal tapi hangat, 5-6 kalimat) untuk ${c.name}, ${c.age} tahun, ${TMPL[curIdx].title} (${jLabel}).
 Skill dikuasai: ${done.slice(0,15).join('; ')||'belum ada'}.
