@@ -1679,6 +1679,8 @@ function buildCtx(){
   const c=child(); if(!c)return'';
   const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
   const curIdx=Math.min(c.grade-1,TMPL.length-1);
+  // Hitung estimasi usia berdasarkan kelas jika age tidak valid
+  const estimasiUsia = c.age && c.age>0 ? c.age : (c.grade + 5);
   let done=[],learn=[],curNone=[];
   TMPL.forEach((cls,ci)=>cls.skills.forEach((s,si)=>{
     const sk=getSk(ci,si);
@@ -1693,13 +1695,18 @@ function buildCtx(){
     :'Fokus: spesialisasi keahlian, entrepreneurship, persiapan kuliah, karir & kehidupan mandiri.';
   return `Kamu adalah konsultan parenting DAN coach anak profesional untuk orang tua Indonesia. Kamu ahli mendampingi tumbuh kembang anak dari SD hingga SMA secara holistik.
 
-DATA ANAK:
-- Nama: ${c.name} | Usia: ${c.age} tahun | ${TMPL[curIdx].title} (${jLabel})
+DATA ANAK (BACA DENGAN TELITI):
+- Nama: ${c.name}
+- KELAS saat ini: ${TMPL[curIdx].title} — jenjang ${jLabel} (BUKAN usia!)
+- Usia: ${estimasiUsia} tahun
 - ${jCtx}
-- Total poin: ${c.points||0} | Skill dikuasai: ${done.length}
-- Dikuasai (terbaru): ${done.slice(-8).join('; ')||'belum ada'}
+- Total poin reward: ${c.points||0}
+- Jumlah skill dikuasai: ${done.length} skill
+- Skill dikuasai (terbaru): ${done.slice(-8).join('; ')||'belum ada'}
 - Sedang dipelajari: ${learn.join('; ')||'belum ada'}
 - Belum dimulai di kelasnya: ${curNone.join(', ')||'semua selesai!'}
+
+PENTING: Ketika menyebut ${c.name}, gunakan "Kelas ${c.grade} ${jLabel}" BUKAN "usia ${c.grade} tahun". Kelas dan usia adalah dua hal berbeda.
 
 KEAHLIANMU:
 • Parenting berbasis tahapan perkembangan anak (SD/SMP/SMA)
@@ -1709,7 +1716,7 @@ KEAHLIANMU:
 • Tech literacy, coding, AI untuk generasi muda
 • Entrepreneurship & financial literacy anak
 
-Jawab Bahasa Indonesia, hangat & praktis. Maks 200 kata. Sesuaikan saran dengan jenjang ${jLabel} usia ${c.age} tahun.`;
+Jawab Bahasa Indonesia, hangat & praktis. Maks 200 kata. Sesuaikan saran dengan jenjang ${jLabel}, ${TMPL[curIdx].title}, usia sekitar ${estimasiUsia} tahun.`;
 }
 
 function addAIGreeting(){
@@ -1828,11 +1835,11 @@ async function genWeeklyAI(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,
-        messages:[{role:'user',content:`Kamu adalah konsultan parenting & coach anak profesional. Buat laporan mingguan (4-5 kalimat, Bahasa Indonesia, hangat & memotivasi) untuk orang tua dari ${c.name}, ${c.age} tahun, ${TMPL[curIdx].title} (${jLabel}).
+        messages:[{role:'user',content:`Kamu adalah konsultan parenting & coach anak profesional. Buat laporan mingguan (4-5 kalimat, Bahasa Indonesia, hangat & memotivasi) untuk orang tua dari ${c.name}, ${TMPL[curIdx].title}, usia ${c.age||c.grade+5} tahun (${jLabel}).
 Skill dikuasai minggu ini: ${done.slice(-5).join(', ')||'belum ada baru'}.
 Sedang dipelajari: ${learn.join(', ')||'belum ada'}.
 Belum dimulai di kelasnya: ${curNone.slice(0,3).join(', ')||'semua selesai'}.
-Berikan: (1) apresiasi pencapaian, (2) 2 saran konkret minggu depan sesuai jenjang ${jLabel}, (3) 1 tips parenting relevan untuk usia ${c.age} tahun.`}]
+Berikan: (1) apresiasi pencapaian, (2) 2 saran konkret minggu depan sesuai jenjang ${jLabel}, (3) 1 tips parenting relevan untuk ${TMPL[curIdx].title} usia ${c.age||c.grade+5} tahun.`}]
       })
     });
     const d=await res.json();
@@ -1865,7 +1872,7 @@ async function genPDF(){
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
-          messages:[{role:'user',content:`Kamu konsultan parenting & coach anak profesional. Buat analisis perkembangan bulanan untuk laporan PDF (Bahasa Indonesia, formal tapi hangat, 5-6 kalimat) untuk ${c.name}, ${c.age} tahun, ${TMPL[curIdx].title} (${jLabel}).
+          messages:[{role:'user',content:`Kamu konsultan parenting & coach anak profesional. Buat analisis perkembangan bulanan untuk laporan PDF (Bahasa Indonesia, formal tapi hangat, 5-6 kalimat) untuk ${c.name}, ${TMPL[curIdx].title}, usia ${c.age||c.grade+5} tahun (${jLabel}).
 Skill dikuasai: ${done.slice(0,15).join('; ')||'belum ada'}.
 Sedang belajar: ${learn.slice(0,5).join(', ')||'belum ada'}.
 Belum dimulai di kelasnya: ${curNone.slice(0,3).join(', ')||'semua selesai'}.
@@ -1897,7 +1904,7 @@ Sertakan: (1) apresiasi pencapaian, (2) analisis kekuatan yang menonjol, (3) are
   doc.setTextColor(...textCol);
   doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text(c.name,M+7,y+10);
   doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text(`${TMPL[curIdx].title} (${jLabel})  |  Usia ${c.age} tahun  |  Poin: ${c.points||0}`,M+7,y+20);
+  doc.text(`${TMPL[curIdx].title} (${jLabel})  |  Usia ${c.age||c.grade+5} tahun  |  Poin: ${c.points||0}`,M+7,y+20);
   doc.setTextColor(0,0,0);
 
   y=92;
