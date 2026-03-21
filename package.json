@@ -1,0 +1,9 @@
+{
+  "name": "parentingai",
+  "version": "1.0.0",
+  "description": "ParentingAI - Asisten Tumbuh Kembang Anak",
+  "scripts": {
+    "build": "bash build.sh",
+    "dev": "npx serve public"
+  }
+}
