@@ -1,13 +1,8 @@
 {
   "outputDirectory": "public",
-  "functions": {
-    "api/env.js": {
-      "memory": 128,
-      "maxDuration": 5
-    }
-  },
   "routes": [
-    { "src": "/api/env", "dest": "/api/env.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/api/env",  "dest": "/api/env.js"  },
+    { "src": "/api/chat", "dest": "/api/chat.js" },
+    { "src": "/(.*)",     "dest": "/index.html"  }
   ]
 }
