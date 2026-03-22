@@ -10,17 +10,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-// Load config dari Vercel API route — blocking agar tersedia sebelum app init
-(function(){
-  var x = new XMLHttpRequest();
-  x.open('GET', '/api/env', false); // synchronous
-  try {
-    x.send();
-    if(x.status === 200) eval(x.responseText);
-  } catch(e) {
-    console.warn('env load failed:', e);
-  }
-})();
+// Config diisi oleh build.sh saat deploy ke Vercel
+window.ENV_SUPABASE_URL         = "%%SUPABASE_URL%%";
+window.ENV_SUPABASE_KEY         = "%%SUPABASE_ANON_KEY%%";
+window.ENV_ANTHROPIC_KEY        = "%%ANTHROPIC_KEY%%";
+window.ENV_DUITKU_MERCHANT_KEY  = "%%DUITKU_MERCHANT_KEY%%";
+window.ENV_DUITKU_MERCHANT_CODE = "%%DUITKU_MERCHANT_CODE%%";
+window.ENV_OWNER_WA             = "%%OWNER_WA%%";
+window.ENV_OWNER_BANK           = "%%OWNER_BANK%%";
 </script>
 <style>
 /* ===== TOKENS ===== */
@@ -1515,24 +1512,36 @@ function updateSubUI(){
   const body=document.getElementById('subCardBody');
   const btn=document.getElementById('subActionBtn');
 
-  if(s.isPremium && s.status==='trial'){
-    const days=s.trialEndsAt?Math.max(0,Math.ceil((new Date(s.trialEndsAt)-new Date())/86400000)):0;
-    if(banner){banner.className='sub-banner trial';banner.classList.remove('hidden');}
-    if(bannerTxt) bannerTxt.textContent=`⏳ Trial berakhir dalam ${days} hari`;
-    if(pill){pill.textContent='Trial';pill.style.background='rgba(255,255,255,.25)';}
-    if(body) body.textContent=`Anda sedang dalam masa trial ${TRIAL_DAYS} hari. Nikmati semua fitur premium gratis sampai ${s.trialEndsAt?new Date(s.trialEndsAt).toLocaleDateString('id-ID',{day:'numeric',month:'long'}):'—'}.`;
-    if(btn){btn.textContent='⬆️ Upgrade Sekarang – Rp 49.000/bln';btn.style.display='block';}
-  } else if(s.isPremium && s.status==='active'){
+  const now=new Date();
+  const trialEnd=s.trialEndsAt?new Date(s.trialEndsAt):null;
+  const periodEnd=s.periodEnd?new Date(s.periodEnd):null;
+  const trialDaysLeft=trialEnd?Math.max(0,Math.ceil((trialEnd-now)/86400000)):0;
+  const isTrialActive=s.status==='trial'&&trialEnd&&trialEnd>now;
+  const isTrialExpired=s.status==='trial'&&trialEnd&&trialEnd<=now;
+  const isPremiumActive=s.status==='active'&&periodEnd&&periodEnd>now;
+
+  if(isPremiumActive){
     if(banner){banner.className='sub-banner';banner.classList.remove('hidden');}
     if(bannerTxt) bannerTxt.textContent='✨ Premium Aktif';
-    if(pill){pill.textContent='Premium';pill.style.background='rgba(255,255,255,.25)';}
-    if(body) body.textContent=`Premium aktif hingga ${s.periodEnd?new Date(s.periodEnd).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}):'—'}.`;
+    if(pill){pill.textContent='Premium';}
+    if(body) body.textContent=`Aktif hingga ${periodEnd.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}.`;
     if(btn){btn.textContent='✅ Perpanjang / Kelola';btn.style.display='block';}
+
+  } else if(isTrialActive){
+    if(banner){banner.className='sub-banner trial';banner.classList.remove('hidden');}
+    if(bannerTxt) bannerTxt.textContent=`⏳ Trial – sisa ${trialDaysLeft} hari`;
+    if(pill){pill.textContent='Trial';}
+    if(body) body.innerHTML=`Anda sedang dalam masa <strong>trial gratis ${TRIAL_DAYS} hari</strong>. Semua fitur AI aktif hingga <strong>${trialEnd.toLocaleDateString('id-ID',{day:'numeric',month:'long'})}</strong>.<br><br>Upgrade sebelum trial habis agar tidak terputus.`;
+    if(btn){btn.textContent='⬆️ Upgrade Sekarang – Rp 49.000/bln';btn.style.display='block';}
+
   } else {
+    // Free atau trial expired
     if(banner){banner.className='sub-banner free';banner.classList.remove('hidden');}
-    if(bannerTxt) bannerTxt.textContent='Anda menggunakan akun Gratis';
-    if(pill){pill.textContent='Gratis';}
-    if(body) body.innerHTML='Akun Gratis — fitur AI terkunci.<br><small style="opacity:.8">Upgrade untuk akses penuh semua fitur AI.</small>';
+    if(bannerTxt) bannerTxt.innerHTML=`🔒 ${isTrialExpired?'Trial Habis':'Akun Gratis'} — <strong>Upgrade untuk akses AI</strong>`;
+    if(pill){pill.textContent=isTrialExpired?'Trial Habis':'Gratis';}
+    if(body) body.innerHTML=isTrialExpired
+      ?`Masa trial 7 hari Anda telah berakhir. Upgrade ke Premium untuk kembali menggunakan AI Konsultan, laporan PDF, dan semua fitur lainnya.`
+      :`Akun Gratis — fitur AI terkunci. Upgrade ke Premium untuk akses penuh.`;
     if(btn){btn.textContent='⬆️ Upgrade ke Premium – Rp 49.000/bln';btn.style.display='block';}
   }
 }
@@ -1676,17 +1685,30 @@ async function saveReward(){
 // ============================================================
 // SUBSCRIPTION & PAYMENT
 // ============================================================
+// Helper: apakah user boleh akses AI?
+// Trial = BOLEH, Premium aktif = BOLEH, Free/expired = TIDAK
+function canUseAI(){
+  const s = state.subscription;
+  if(s.status === 'active' && s.periodEnd && new Date(s.periodEnd) > new Date()) return true;
+  if(s.status === 'trial' && s.trialEndsAt && new Date(s.trialEndsAt) > new Date()) return true;
+  return false;
+}
+
 function showUpgradePrompt(){
-  // Show upgrade prompt inside chat
-  const msgs=document.getElementById('chatMsgs');
-  const d=document.createElement('div');
+  const s = state.subscription;
+  const msgs = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  const isExpiredTrial = s.status === 'trial' && s.trialEndsAt && new Date(s.trialEndsAt) <= new Date();
+  const msg = isExpiredTrial
+    ? 'Masa trial 7 hari Anda telah berakhir. Upgrade ke Premium untuk lanjut menggunakan AI Konsultan.'
+    : 'Fitur AI Konsultan hanya tersedia untuk pengguna Premium. Coba gratis 7 hari tanpa kartu kredit!';
   d.innerHTML=`<div class="upgrade-prompt">
-    <h4>🔒 Fitur Premium</h4>
-    <p>AI Konsultan tersedia untuk pengguna Premium.<br>Trial gratis 7 hari, batalkan kapan saja.</p>
-    <button class="btn-auth" style="margin:0;padding:10px 20px;font-size:13px;max-width:240px" onclick="openModal('upgradeModal')">⬆️ Upgrade – Rp 49.000/bln</button>
+    <h4>🔒 Untuk Pengguna Premium</h4>
+    <p>${msg}</p>
+    <button class="btn-auth" style="margin:0;padding:10px 20px;font-size:13px;max-width:260px" onclick="openModal('upgradeModal')">⬆️ Upgrade ke Premium – Rp 49.000/bln</button>
   </div>`;
   msgs.appendChild(d);
-  msgs.scrollTop=msgs.scrollHeight;
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
 async function startPayment(method){
@@ -1859,12 +1881,46 @@ function addAIGreeting(){
   msgs.innerHTML=''; chatHist=[];
   let td=0; TMPL.forEach((_,ci)=>{td+=cntDone(ci);});
   const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
+  const s=state.subscription;
+
+  if(!canUseAI()){
+    // User Free atau trial habis — tampilkan upgrade prompt langsung
+    const isExpired = s.status==='trial' && s.trialEndsAt && new Date(s.trialEndsAt)<=new Date();
+    const d=document.createElement('div');
+    d.innerHTML=`<div class="upgrade-prompt">
+      <h4>${isExpired?'⏰ Trial Anda Telah Berakhir':'🔒 Untuk Pengguna Premium'}</h4>
+      <p>${isExpired
+        ? `Masa trial 7 hari Anda sudah selesai. Upgrade ke Premium untuk kembali menggunakan AI Konsultan.`
+        : `Fitur AI Konsultan tersedia untuk pengguna Premium. Daftar sekarang dan coba gratis 7 hari!`
+      }</p>
+      <button class="btn-auth" style="margin:0;padding:10px 20px;font-size:13px;max-width:280px" onclick="openModal('upgradeModal')">⬆️ Upgrade ke Premium – Rp 49.000/bln</button>
+    </div>`;
+    msgs.appendChild(d);
+    // Sembunyikan quick chips & input
+    document.getElementById('qchips').innerHTML='';
+    document.getElementById('chatIn').disabled=true;
+    document.getElementById('chatIn').placeholder='Upgrade ke Premium untuk menggunakan AI Konsultan';
+    document.getElementById('sbtn').disabled=true;
+    return;
+  }
+
+  // User trial atau premium — aktif
   const jMsg=jLabel==='SD'
     ?'Saya siap bantu membangun fondasi karakter & skill dasar yang kuat 🌱'
     :jLabel==='SMP'
     ?'Saya siap bantu menemukan minat bakat & skill produktif untuk masa depannya 🎯'
     :'Saya siap bantu persiapkan jalur kuliah, karir & kehidupan mandirinya 🚀';
-  addBubble('ai',`Halo! Saya konsultan parenting & coach anak Anda 👋\n\n<strong>${c.name}</strong> (${TMPL[Math.min(c.grade-1,11)].title}) sudah punya <strong>${td} skill dikuasai</strong>. Keren!\n\n${jMsg}\n\nAda yang ingin ditanyakan?`);
+
+  // Re-enable input jika sebelumnya di-disable
+  document.getElementById('chatIn').disabled=false;
+  document.getElementById('chatIn').placeholder='Tanya tentang anak Anda...';
+  document.getElementById('sbtn').disabled=false;
+
+  const trialInfo = s.status==='trial'
+    ? `\n\n⏳ Anda sedang dalam masa **trial gratis**. Nikmati semua fitur AI selama trial berlangsung!`
+    : '';
+
+  addBubble('ai',`Halo! Saya konsultan parenting & coach anak Anda 👋\n\n<strong>${c.name}</strong> (${TMPL[Math.min(c.grade-1,11)].title}) sudah punya <strong>${td} skill dikuasai</strong>. Keren!\n\n${jMsg}${trialInfo}\n\nAda yang ingin ditanyakan?`);
   renderQchips(jLabel);
 }
 
@@ -1904,7 +1960,7 @@ async function sendChat(){
   const btn=document.getElementById('sbtn');
   const msg=inp.value.trim();
   if(!msg)return;
-  if(!state.subscription.isPremium){showUpgradePrompt();return;}
+  if(!canUseAI()){showUpgradePrompt();return;}
   if(!ANTHROPIC_KEY){toast('⚠️ API Key belum dikonfigurasi oleh admin');return;}
   inp.value=''; btn.disabled=true;
   addBubble('user',msg);
@@ -1951,7 +2007,7 @@ function renderNotifList(){
 }
 
 async function genWeeklyAI(){
-  if(!state.subscription.isPremium){openModal('upgradeModal');return;}
+  if(!canUseAI()){openModal('upgradeModal');return;}
   if(!ANTHROPIC_KEY){toast('⚠️ API Key belum dikonfigurasi oleh admin');return;}
   toast('🔄 Membuat laporan mingguan...');
   const c=child(); if(!c)return;
@@ -1993,7 +2049,7 @@ async function genPDF(){
   const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
   const curIdx=Math.min(c.grade-1,TMPL.length-1);
   let aiAnalysis='Gunakan fitur AI Konsultan untuk analisis mendalam tentang perkembangan anak Anda.';
-  if(ANTHROPIC_KEY&&state.subscription.isPremium){
+  if(ANTHROPIC_KEY&&canUseAI()){
     try{
       let done=[],learn=[],curNone=[];
       TMPL.forEach((cls,ci)=>cls.skills.forEach((s,si)=>{
