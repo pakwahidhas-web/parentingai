@@ -785,6 +785,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
   </div>
 </div>
 
+<!-- TRIAL NOTIFICATION MODAL -->
+<div class="overlay hidden" id="trialNotifModal">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div id="trialNotifIco" style="font-size:52px;margin-bottom:12px">⏰</div>
+    <h3 id="trialNotifTitle" style="font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;margin-bottom:8px">Trial Anda Segera Berakhir</h3>
+    <p id="trialNotifMsg" style="font-size:13px;color:var(--mut);line-height:1.6;margin-bottom:20px"></p>
+    <button class="btn-auth" style="margin:0 0 10px;width:100%" onclick="closeModal('trialNotifModal');openModal('upgradeModal')">
+      ⬆️ Upgrade Sekarang – Rp 49.000/bln
+    </button>
+    <button style="background:none;border:none;color:var(--mut);font-size:12px;cursor:pointer;width:100%;padding:6px" onclick="closeModal('trialNotifModal')">
+      Nanti saja
+    </button>
+  </div>
+</div>
+
 <!-- MANUAL PAYMENT MODAL -->
 <div class="overlay hidden" id="manualPayModal" onclick="bgClose(event,'manualPayModal')">
   <div class="modal">
@@ -1265,8 +1280,7 @@ async function loadUserData() {
       state.subscription={status:'trial',plan:'monthly',isPremium:true,trialEndsAt:trialEnd,periodEnd:null};
     }
     updateSubUI();
-
-    // Load children
+    checkTrialNotifications(); // cek notifikasi H-3, H-1, expired
     const {data:children}=await supa.from('children').select('*').eq('parent_id',currentUser.id).order('created_at');
     if(!children||children.length===0){
       state.children=[];
@@ -1629,8 +1643,76 @@ function updateSubUI(){
 }
 
 // ============================================================
-// SKILL MODAL
+// TRIAL NOTIFICATIONS
 // ============================================================
+function checkTrialNotifications(){
+  const s = state.subscription;
+  if(!s.trialEndsAt) return;
+
+  const now      = new Date();
+  const trialEnd = new Date(s.trialEndsAt);
+  const daysLeft = Math.ceil((trialEnd - now) / 86400000);
+  const notifKey = `trial_notif_${currentUser.id}`;
+  const lastNotif = localStorage.getItem(notifKey) || '';
+
+  // Sudah premium aktif — tidak perlu notif
+  if(s.status === 'active' && s.periodEnd && new Date(s.periodEnd) > now) return;
+
+  // Trial EXPIRED — popup langsung
+  if(daysLeft <= 0 && s.status !== 'active'){
+    if(lastNotif !== 'expired'){
+      localStorage.setItem(notifKey, 'expired');
+      setTimeout(()=>{
+        showTrialPopup(
+          '😢',
+          'Trial Anda Telah Berakhir',
+          'Masa trial 7 hari gratis Anda sudah selesai. Upgrade ke Premium untuk kembali menggunakan AI Konsultan, laporan PDF, dan semua fitur unggulan ParentingAI.',
+          true
+        );
+      }, 1500);
+    }
+    return;
+  }
+
+  // H-1 (1 hari lagi)
+  if(daysLeft === 1 && lastNotif !== 'h1' && lastNotif !== 'expired'){
+    localStorage.setItem(notifKey, 'h1');
+    setTimeout(()=>{
+      showTrialPopup(
+        '⚠️',
+        'Trial Berakhir Besok!',
+        'Tinggal 1 hari lagi masa trial Anda. Upgrade sekarang agar akses AI Konsultan dan semua fitur tidak terputus.',
+        false
+      );
+    }, 2000);
+    return;
+  }
+
+  // H-3 (3 hari lagi)
+  if(daysLeft <= 3 && daysLeft > 1 && lastNotif !== 'h3' && lastNotif !== 'h1' && lastNotif !== 'expired'){
+    localStorage.setItem(notifKey, 'h3');
+    setTimeout(()=>{
+      showTrialPopup(
+        '⏰',
+        `Trial Berakhir dalam ${daysLeft} Hari`,
+        `Masa trial gratis Anda akan berakhir dalam ${daysLeft} hari. Upgrade ke Premium sekarang dengan harga Rp 49.000/bulan untuk tetap menikmati semua fitur AI.`,
+        false
+      );
+    }, 2500);
+  }
+}
+
+function showTrialPopup(ico, title, msg, isExpired){
+  document.getElementById('trialNotifIco').textContent  = ico;
+  document.getElementById('trialNotifTitle').textContent = title;
+  document.getElementById('trialNotifMsg').textContent   = msg;
+  // Kalau expired, hapus tombol "Nanti saja"
+  const skipBtn = document.querySelector('#trialNotifModal button:last-child');
+  if(skipBtn) skipBtn.style.display = isExpired ? 'none' : 'block';
+  openModal('trialNotifModal');
+  // Push ke notif panel juga
+  pushNotif(ico + ' ' + title);
+}
 function openSkillModal(ci,si){
   modalCI=ci; modalSI=si;
   const sk=getSk(ci,si);
@@ -1664,11 +1746,11 @@ async function saveSkill(){
   renderClass(state.activeClass);
   updatePts();
 
-  // Save to Supabase
+  // Save to Supabase — upsert berdasarkan kombinasi child_id+class_idx+skill_idx
   const {error}=await supa.from('skills').upsert({
     child_id:c.id, class_idx:modalCI, skill_idx:modalSI,
     status:modalSt, stars:modalStars, note, updated_at:new Date().toISOString()
-  });
+  }, { onConflict: 'child_id,class_idx,skill_idx' });
   if(error){toast('⚠️ Gagal simpan: '+error.message);return;}
 
   // Update points
