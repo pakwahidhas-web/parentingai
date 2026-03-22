@@ -1,12 +1,9 @@
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
-
-  // Webhook dari Duitku
   if (req.method === 'POST' && req.query.webhook === '1') {
     return handleWebhook(req, res);
   }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -27,8 +24,8 @@ export default async function handler(req, res) {
     const timestamp = Date.now().toString();
     const appUrl    = process.env.APP_URL || 'https://parentingai.vercel.app';
 
-    // Signature untuk header: MD5(merchantCode + timestamp + apiKey)
-    const signature = crypto.createHash('md5')
+    // ✅ Signature BENAR: SHA256(merchantCode + timestamp + apiKey)
+    const signature = crypto.createHash('sha256')
       .update(`${merchantCode}${timestamp}${apiKey}`)
       .digest('hex');
 
@@ -56,7 +53,6 @@ export default async function handler(req, res) {
       expiryPeriod: 1440,
     };
 
-    // API baru Duitku — credentials di header
     const response = await fetch('https://api-prod.duitku.com/api/merchant/createInvoice', {
       method: 'POST',
       headers: {
@@ -78,20 +74,12 @@ export default async function handler(req, res) {
     }
 
     if (data.paymentUrl) {
-      return res.status(200).json({
-        paymentUrl: data.paymentUrl,
-        reference:  data.reference,
-        orderId,
-      });
+      return res.status(200).json({ paymentUrl: data.paymentUrl, reference: data.reference, orderId });
     } else {
-      return res.status(400).json({
-        error:      data.statusMessage || data.message || 'Gagal buat invoice',
-        statusCode: data.statusCode,
-      });
+      return res.status(400).json({ error: data.statusMessage || data.message || 'Gagal buat invoice', raw: data });
     }
 
   } catch (err) {
-    console.error('payment.js error:', err);
     return res.status(500).json({ error: err.message });
   }
 }
@@ -104,12 +92,12 @@ async function handleWebhook(req, res) {
 
   const { merchantOrderId, amount, additionalParam: userId, resultCode, reference, signature: sig } = req.body || {};
 
+  // Webhook signature tetap MD5 sesuai docs Duitku callback
   const expected = crypto.createHash('md5')
     .update(`${merchantCode}${amount}${merchantOrderId}${apiKey}`)
     .digest('hex');
 
   if (sig !== expected) {
-    console.error('Webhook signature invalid');
     return res.status(400).send('FAIL');
   }
 
@@ -118,11 +106,7 @@ async function handleWebhook(req, res) {
   try {
     await fetch(`${supabaseUrl}/rest/v1/payment_log?order_id=eq.${merchantOrderId}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-      },
+      headers: { 'Content-Type':'application/json', 'apikey':supabaseKey, 'Authorization':`Bearer ${supabaseKey}` },
       body: JSON.stringify({ status, transaction_id: reference }),
     });
 
@@ -131,23 +115,17 @@ async function handleWebhook(req, res) {
       const expiry = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       await fetch(`${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${userId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
+        headers: { 'Content-Type':'application/json', 'apikey':supabaseKey, 'Authorization':`Bearer ${supabaseKey}` },
         body: JSON.stringify({
-          status: 'active', plan: 'monthly', price_idr: Number(amount),
+          status:'active', plan:'monthly', price_idr:Number(amount),
           current_period_start: now.toISOString(),
           current_period_end:   expiry.toISOString(),
           updated_at:           now.toISOString(),
         }),
       });
-      console.log('✅ Premium aktif untuk', userId, 'sampai', expiry);
     }
-
     return res.status(200).send('SUCCESS');
-  } catch (e) {
+  } catch(e) {
     return res.status(500).send('FAIL');
   }
 }
