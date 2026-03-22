@@ -761,7 +761,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
     <!-- Payment methods -->
     <div style="font-size:12px;font-weight:600;color:var(--mut);margin-bottom:8px">Pilih metode pembayaran:</div>
     <div class="pay-opts">
-      <div class="pay-opt" onclick="startPayment('duitku')">
+      <div class="pay-opt" onclick="startPayment('duitku')" id="duitkuBtn">
         <div class="pay-icon">💳</div>
         <div><div class="pay-label">Duitku (Otomatis)</div><div class="pay-sub">QRIS, Transfer Bank, GoPay, OVO, Dana, ShopeePay</div></div>
       </div>
@@ -1733,7 +1733,7 @@ async function startPayment(method){
         });
       } catch(dbErr){ console.warn('payment_log insert:', dbErr); }
 
-      // Panggil Duitku via API route kita
+      // Panggil Duitku via Vercel API route
       const res = await fetch('/api/payment', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -1745,21 +1745,30 @@ async function startPayment(method){
           userId: currentUser.id
         })
       });
-      const data = await res.json();
 
-      if(data.paymentUrl){
+      // Cek apakah response adalah JSON sebelum parse
+      const contentType = res.headers.get('content-type') || '';
+      let data;
+      if(contentType.includes('application/json')){
+        data = await res.json();
+      } else {
+        const txt = await res.text();
+        throw new Error('Server: ' + txt.substring(0,80));
+      }
+
+      if(data && data.paymentUrl){
         window.open(data.paymentUrl, '_blank');
-        toast('✅ Halaman pembayaran dibuka. Selesaikan pembayaran di tab baru.');
+        toast('✅ Halaman pembayaran dibuka. Selesaikan di tab baru.');
         showPaymentWaiting(orderId);
       } else {
-        throw new Error(data.error || 'Gagal membuat invoice Duitku');
+        throw new Error(data?.error || data?.statusMessage || 'Gagal membuat invoice Duitku');
       }
-    } catch(e) {
-      toast('⚠️ Gagal: '+e.message+'. Coba transfer manual.');
-      setTimeout(()=>startPayment('manual'),600);
+    } catch(e){
+      console.error('Duitku error:', e);
+      toast('⚠️ '+e.message);
     }
   } else {
-    // Manual transfer
+    // Transfer Manual
     openModal('manualPayModal');
     document.getElementById('payAccNum').textContent = OWNER_BANK;
     document.getElementById('payUniqueCode').textContent = `Rp 49.${String(code).padStart(3,'0')} (kode unik Anda)`;
