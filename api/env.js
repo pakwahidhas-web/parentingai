@@ -17,10 +17,14 @@ export default function handler(req, res) {
   };
 
   res.status(200).send(`
-window.ENV_SUPABASE_URL        = ${JSON.stringify(config.SUPABASE_URL)};
-window.ENV_SUPABASE_KEY        = ${JSON.stringify(config.SUPABASE_ANON_KEY)};
-window.ENV_ANTHROPIC_KEY       = ${JSON.stringify(config.ANTHROPIC_KEY)};
-window.ENV_MIDTRANS_CLIENT_KEY = ${JSON.stringify(config.MIDTRANS_CLIENT_KEY)};
+window.ENV_SUPABASE_URL          = "REPLACE_SUPABASE_URL";
+window.ENV_SUPABASE_KEY          = "REPLACE_SUPABASE_ANON_KEY";
+window.ENV_ANTHROPIC_KEY         = "REPLACE_ANTHROPIC_KEY";
+window.ENV_DUITKU_MERCHANT_KEY   = "REPLACE_DUITKU_MERCHANT_KEY";
+window.ENV_DUITKU_MERCHANT_CODE  = "REPLACE_DUITKU_MERCHANT_CODE";
+window.ENV_OWNER_WA              = "REPLACE_OWNER_WA";
+window.ENV_OWNER_BANK            = "REPLACE_OWNER_BANK";
+
 window.ENV_OWNER_WA            = ${JSON.stringify(config.OWNER_WA)};
 window.ENV_OWNER_BANK          = ${JSON.stringify(config.OWNER_BANK)};
   `.trim());
