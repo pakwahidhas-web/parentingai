@@ -764,9 +764,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
     <!-- Payment methods -->
     <div style="font-size:12px;font-weight:600;color:var(--mut);margin-bottom:8px">Pilih metode pembayaran:</div>
     <div class="pay-opts">
-      <div class="pay-opt" onclick="startPayment('midtrans')">
+      <div class="pay-opt" onclick="startPayment('duitku')">
         <div class="pay-icon">💳</div>
-        <div><div class="pay-label">Midtrans (Indonesia)</div><div class="pay-sub">Transfer bank, GoPay, OVO, QRIS, Kartu Kredit</div></div>
+        <div><div class="pay-label">Duitku (Otomatis)</div><div class="pay-sub">QRIS, Transfer Bank, GoPay, OVO, Dana, ShopeePay</div></div>
       </div>
       <div class="pay-opt" onclick="startPayment('manual')">
         <div class="pay-icon">🏦</div>
@@ -808,7 +808,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 const SUPA_URL       = window.ENV_SUPABASE_URL        || '';
 const SUPA_KEY       = window.ENV_SUPABASE_KEY         || '';
 const ANTHROPIC_KEY  = window.ENV_ANTHROPIC_KEY        || '';
-const MIDTRANS_CLIENT= window.ENV_MIDTRANS_CLIENT_KEY  || '';
+const DUITKU_KEY    = window.ENV_DUITKU_MERCHANT_KEY  || ''; // Duitku Merchant Key
+const DUITKU_CODE   = window.ENV_DUITKU_MERCHANT_CODE || ''; // Duitku Merchant Code
 const APP_PRICE      = 49000;
 const TRIAL_DAYS     = 7;
 const OWNER_WA       = window.ENV_OWNER_WA             || '6281234567890';
@@ -1690,60 +1691,88 @@ function showUpgradePrompt(){
 
 async function startPayment(method){
   closeModal('upgradeModal');
-  if(method==='midtrans'){
-    // Cek apakah Midtrans sudah dikonfigurasi
-    if(!MIDTRANS_CLIENT){
-      toast('⚠️ Midtrans belum dikonfigurasi. Gunakan transfer manual.');
-      setTimeout(()=>openModal('manualPayModal'),500);
-      // Fill manual pay info
-      const code=Math.floor(Math.random()*900)+100;
-      document.getElementById('payAccNum').textContent=OWNER_BANK;
-      document.getElementById('payUniqueCode').textContent=`Rp 49.${code} (sertakan kode ini)`;
+  const orderId=`PAI-${currentUser.id.slice(0,8)}-${Date.now()}`;
+  const code=Math.floor(Math.random()*900)+100;
+
+  if(method==='duitku'){
+    if(!DUITKU_KEY || !DUITKU_CODE){
+      toast('⚠️ Duitku belum dikonfigurasi. Gunakan transfer manual.');
+      setTimeout(()=>startPayment('manual'),400);
       return;
     }
-    // Midtrans Snap flow
+    toast('🔄 Menghubungkan ke Duitku...');
     try {
-      // Buat order ID unik
-      const orderId=`PAI-${currentUser.id.slice(0,8)}-${Date.now()}`;
-      // Simpan order ke DB dulu
+      // Simpan order ke DB
       await supa.from('payment_log').insert({
         user_id:currentUser.id, order_id:orderId,
-        amount:APP_PRICE, status:'pending', payload:{}
+        amount:APP_PRICE, status:'pending_duitku',
+        payload:{method:'duitku'}
+      }).catch(()=>{});
+
+      // Panggil Duitku via API route kita
+      const res = await fetch('/api/payment', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          orderId,
+          amount: APP_PRICE,
+          productDetails: 'ParentingAI Premium - 1 Bulan',
+          email: currentUser.email,
+          userId: currentUser.id
+        })
       });
-      // Load Midtrans Snap script
-      if(!window.snap){
-        await new Promise((res,rej)=>{
-          const s=document.createElement('script');
-          s.src='https://app.midtrans.com/snap/snap.js';
-          s.setAttribute('data-client-key',MIDTRANS_CLIENT);
-          s.onload=res; s.onerror=rej;
-          document.head.appendChild(s);
-        });
+      const data = await res.json();
+
+      if(data.paymentUrl){
+        // Buka halaman payment Duitku di tab baru
+        window.open(data.paymentUrl, '_blank');
+        toast('✅ Halaman pembayaran dibuka. Selesaikan pembayaran di tab baru.');
+        // Tampilkan instruksi menunggu
+        showPaymentWaiting(orderId);
+      } else {
+        throw new Error(data.error || 'Gagal membuat invoice Duitku');
       }
-      toast('🔄 Menghubungkan ke Midtrans...');
-      // Note: Snap token perlu dibuat dari backend/Supabase Edge Function
-      // Untuk demo, tampilkan manual pay dulu
-      toast('ℹ️ Gunakan transfer manual untuk saat ini');
-      setTimeout(()=>openModal('manualPayModal'),600);
-      const code=Math.floor(Math.random()*900)+100;
-      document.getElementById('payAccNum').textContent=OWNER_BANK;
-      document.getElementById('payUniqueCode').textContent=`Rp 49.${String(code).padStart(3,'0')} (kode unik)`;
-    } catch(e){
-      toast('⚠️ Gagal memuat Midtrans: '+e.message);
+    } catch(e) {
+      toast('⚠️ Gagal: '+e.message+'. Coba transfer manual.');
+      setTimeout(()=>startPayment('manual'),600);
     }
   } else {
     // Manual transfer
     openModal('manualPayModal');
-    const code=Math.floor(Math.random()*900)+100;
-    document.getElementById('payAccNum').textContent=OWNER_BANK;
-    document.getElementById('payUniqueCode').textContent=`Rp 49.${String(code).padStart(3,'0')} (kode unik Anda)`;
-    // Simpan ke DB
+    document.getElementById('payAccNum').textContent = OWNER_BANK;
+    document.getElementById('payUniqueCode').textContent = `Rp 49.${String(code).padStart(3,'0')} (kode unik Anda)`;
     await supa.from('payment_log').insert({
-      user_id:currentUser.id,
-      order_id:`MANUAL-${currentUser.id.slice(0,8)}-${Date.now()}`,
-      amount:APP_PRICE, status:'pending_manual', payload:{method:'manual',code}
+      user_id:currentUser.id, order_id:`MANUAL-${orderId}`,
+      amount:APP_PRICE, status:'pending_manual',
+      payload:{method:'manual', uniqueCode:code}
     }).catch(()=>{});
   }
+}
+
+function showPaymentWaiting(orderId){
+  // Tampilkan banner menunggu konfirmasi pembayaran
+  const banner = document.getElementById('subBanner');
+  const txt = document.getElementById('subBannerText');
+  if(banner && txt){
+    banner.className='sub-banner trial';
+    banner.classList.remove('hidden');
+    txt.textContent='⏳ Menunggu konfirmasi pembayaran Duitku...';
+  }
+  // Poll status setiap 5 detik (max 5 menit)
+  let tries = 0;
+  const poll = setInterval(async()=>{
+    tries++;
+    if(tries > 60){ clearInterval(poll); return; }
+    try {
+      const {data} = await supa.from('payment_log')
+        .select('status').eq('order_id', orderId).single();
+      if(data?.status === 'success'){
+        clearInterval(poll);
+        toast('🎉 Pembayaran berhasil! Premium aktif.');
+        await loadUserData(); // reload subscription
+      }
+    } catch(e){}
+  }, 5000);
 }
 
 async function confirmManualPay(){
