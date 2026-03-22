@@ -250,19 +250,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 
 /* JENJANG BAR */
 .jbtn{padding:6px 16px;border-radius:24px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif}
+.jbtn-pra{border-color:#ec4899;color:#ec4899;background:transparent}
+.jbtn-pra.active{background:#ec4899;color:#fff}
 .jbtn-sd{border-color:#7c3aed;color:#7c3aed;background:transparent}
 .jbtn-sd.active{background:#7c3aed;color:#fff}
 .jbtn-smp{border-color:#0d9488;color:#0d9488;background:transparent}
 .jbtn-smp.active{background:#0d9488;color:#fff}
 .jbtn-sma{border-color:#d97706;color:#d97706;background:transparent}
 .jbtn-sma.active{background:#d97706;color:#fff}
+.clshdr.pra{background:linear-gradient(135deg,#ec4899,#db2777)}
 .clshdr.smp{background:linear-gradient(135deg,#0d9488,#0f766e)}
 .clshdr.sma{background:linear-gradient(135deg,#d97706,#b45309)}
-.overall-bars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.overall-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px}
 .ovbar{background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--r);padding:10px 12px}
 .ovbar .obt{font-size:10px;font-weight:700;color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
 .ovbar .obv{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;margin-bottom:4px}
-.ovbar.sd .obv{color:#7c3aed}.ovbar.smp .obv{color:#0d9488}.ovbar.sma .obv{color:#d97706}
+.ovbar.pra .obv{color:#ec4899}.ovbar.sd .obv{color:#7c3aed}.ovbar.smp .obv{color:#0d9488}.ovbar.sma .obv{color:#d97706}
 
 /* ===== LANDING PAGE ===== */
 #landingScreen{position:fixed;inset:0;overflow-y:auto;background:#fff;z-index:900;transition:opacity .4s}
@@ -345,7 +348,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 
   <!-- HERO -->
   <div class="lnd-hero">
-    <div class="lnd-badge">✨ Berbasis AI · P21 Framework · Kelas 1 SD s/d Kelas 12 SMA</div>
+    <div class="lnd-badge">✨ Berbasis AI · P21 Framework · Playgroup s/d Kelas 12 SMA</div>
     <h1>Dampingi Tumbuh Kembang Anak<br><span>dengan 21st Century Skills</span></h1>
     <p>Satu-satunya aplikasi parenting di Indonesia yang mengintegrasikan <strong>P21 Framework</strong> (Critical Thinking, Creativity, Communication, Collaboration + Digital Literacy) ke dalam 108 life skill terstruktur dari SD hingga SMA — dilengkapi AI Konsultan yang siap membantu kapan saja.</p>
     <div class="lnd-hero-btns">
@@ -357,7 +360,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
   <!-- FEATURES -->
   <div class="lnd-features">
     <div class="lnd-feat"><div class="ico">🧩</div><h3>P21 Framework</h3><p>108 skill dirancang berdasarkan framework 21st Century Skills (P21) — Critical Thinking, Creativity, Communication, Collaboration, Digital Literacy & Life Skills.</p></div>
-    <div class="lnd-feat"><div class="ico">🌱</div><h3>Terstruktur per Kelas</h3><p>Kurikulum life skill dari Kelas 1 SD hingga Kelas 12 SMA, disesuaikan tahapan perkembangan anak dan jenjang pendidikan.</p></div>
+    <div class="lnd-feat"><div class="ico">🌱</div><h3>Terstruktur per Kelas</h3><p>Kurikulum life skill dari Playgroup, TK A, TK B hingga Kelas 12 SMA — 135 skill terstruktur sesuai tahap perkembangan anak.</p></div>
     <div class="lnd-feat"><div class="ico">✨</div><h3>AI Konsultan 24/7</h3><p>Tanya apa saja tentang tumbuh kembang anak — AI kami memahami P21 framework dan tahu persis posisi anak Anda.</p></div>
     <div class="lnd-feat"><div class="ico">👨‍👩‍👧‍👦</div><h3>Multi Anak</h3><p>Kelola semua anak dalam satu akun. Data setiap anak tersimpan terpisah dan aman di cloud.</p></div>
     <div class="lnd-feat"><div class="ico">📄</div><h3>Laporan PDF Bulanan</h3><p>Laporan perkembangan lengkap berisi analisis AI, mapping P21 skills yang dikuasai, dan rekomendasi bulan depan.</p></div>
@@ -520,6 +523,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
         <div class="pbarw"><label><span>Progress keseluruhan</span><span id="oPct">0%</span></label><div class="pbar"><div class="pbarfill" id="oBar" style="width:0%"></div></div></div>
         <!-- JENJANG BREAKDOWN -->
         <div class="overall-bars">
+          <div class="ovbar pra"><div class="obt">Prasekolah</div><div class="obv" id="praPct">0%</div><div class="pbar"><div class="pbarfill" id="praBar" style="width:0%;background:#ec4899"></div></div></div>
           <div class="ovbar sd"><div class="obt">SD (Kelas 1–6)</div><div class="obv" id="sdPct">0%</div><div class="pbar"><div class="pbarfill" id="sdBar" style="width:0%;background:#7c3aed"></div></div></div>
           <div class="ovbar smp"><div class="obt">SMP (Kelas 7–9)</div><div class="obv" id="smpPct">0%</div><div class="pbar"><div class="pbarfill" id="smpBar" style="width:0%;background:#0d9488"></div></div></div>
           <div class="ovbar sma"><div class="obt">SMA (Kelas 10–12)</div><div class="obv" id="smaPct">0%</div><div class="pbar"><div class="pbarfill" id="smaBar" style="width:0%;background:#d97706"></div></div></div>
@@ -668,22 +672,27 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
     <div class="msec"><label>Nama Anak</label><input type="text" class="fin" id="ncName" placeholder="Nama lengkap"></div>
     <div class="msec"><label>Kelas Saat Ini</label>
       <select class="fin" id="ncGrade">
+        <optgroup label="── Prasekolah ──">
+          <option value="-1">Playgroup (2-3 thn)</option>
+          <option value="0">TK A (4 thn)</option>
+          <option value="1">TK B (5-6 thn)</option>
+        </optgroup>
         <optgroup label="── SD ──">
-          <option value="1">Kelas 1 SD</option><option value="2">Kelas 2 SD</option>
-          <option value="3">Kelas 3 SD</option><option value="4">Kelas 4 SD</option>
-          <option value="5">Kelas 5 SD</option><option value="6">Kelas 6 SD</option>
+          <option value="2">Kelas 1 SD</option><option value="3">Kelas 2 SD</option>
+          <option value="4">Kelas 3 SD</option><option value="5">Kelas 4 SD</option>
+          <option value="6">Kelas 5 SD</option><option value="7">Kelas 6 SD</option>
         </optgroup>
         <optgroup label="── SMP ──">
-          <option value="7">Kelas 7 SMP</option><option value="8">Kelas 8 SMP</option>
-          <option value="9">Kelas 9 SMP</option>
+          <option value="8">Kelas 7 SMP</option><option value="9">Kelas 8 SMP</option>
+          <option value="10">Kelas 9 SMP</option>
         </optgroup>
         <optgroup label="── SMA ──">
-          <option value="10">Kelas 10 SMA</option><option value="11">Kelas 11 SMA</option>
-          <option value="12">Kelas 12 SMA</option>
+          <option value="11">Kelas 10 SMA</option><option value="12">Kelas 11 SMA</option>
+          <option value="13">Kelas 12 SMA</option>
         </optgroup>
       </select>
     </div>
-    <div class="msec"><label>Usia</label><input type="number" class="fin" id="ncAge" placeholder="Usia (tahun)" min="5" max="19"></div>
+    <div class="msec"><label>Usia</label><input type="number" class="fin" id="ncAge" placeholder="Usia (tahun)" min="2" max="19"></div>
     <div class="msec"><label>Avatar</label>
       <div class="ava-pick">
         <div class="avab sel" id="av-👦" onclick="pickAva('👦')">👦</div>
@@ -838,12 +847,63 @@ function initSupa() {
 // ============================================================
 // Jenjang: 0=SD(0-4), 1=SMP(5-7), 2=SMA(8-11)
 const JENJANG = [
-  { label:'SD',  color:'#7c3aed', range:[0,5]  },  // Kelas 1-6 (index 0-5)
-  { label:'SMP', color:'#0d9488', range:[6,8]  },  // Kelas 7-9 (index 6-8)
-  { label:'SMA', color:'#d97706', range:[9,11] }   // Kelas 10-12 (index 9-11)
+  { label:'Pra',  color:'#ec4899', range:[0,2]  },  // Playgroup/TK A/TK B (index 0-2)
+  { label:'SD',   color:'#7c3aed', range:[3,8]  },  // Kelas 1-6 (index 3-8)
+  { label:'SMP',  color:'#0d9488', range:[9,11] },  // Kelas 7-9 (index 9-11)
+  { label:'SMA',  color:'#d97706', range:[12,14]}   // Kelas 10-12 (index 12-14)
 ];
 
 const TMPL = [
+  // ═══════════ PRASEKOLAH ═══════════
+  // Referensi: Finland ECEC 2022, Singapore NEL Framework, Japan Yochien, China幼儿园
+  { title:'Playgroup', sub:'Usia 2-3 Tahun', ico:'🌸', focus:'Sensori, motorik & kelekatan aman', jenjang:'Pra',
+    p21:['Sensory & Motor','Social-Emotional','Communication'],
+    skills:[
+      {n:'Motorik Kasar Dasar',i:'🏃',p21:'Physical Development'},
+      {n:'Motorik Halus & Meraba',i:'🤏',p21:'Physical Development'},
+      {n:'Bicara 2-3 Kata',i:'🗣️',p21:'Communication'},
+      {n:'Mengenal Nama Sendiri',i:'🪞',p21:'Self-Awareness'},
+      {n:'Bermain Paralel',i:'🧸',p21:'Social Skills'},
+      {n:'Mengenal Warna Dasar',i:'🎨',p21:'Cognitive'},
+      {n:'Makan Sendiri',i:'🥄',p21:'Independence'},
+      {n:'Toilet Training',i:'🚽',p21:'Life Skills'},
+      {n:'Ekspresi Emosi Dasar',i:'😊',p21:'Social-Emotional'}
+    ]},
+  // TK A — usia 4 tahun
+  // Finland: play, curiosity, self-expression | Singapore NEL: 6 learning areas
+  // Japan Yochien: health, human relationships, environment, language, expression
+  { title:'TK A', sub:'Usia 4 Tahun', ico:'🌻', focus:'Bermain, imajinasi & kemandirian awal', jenjang:'Pra',
+    p21:['Creativity','Social-Emotional','Language & Literacy'],
+    skills:[
+      {n:'Mewarnai & Menggambar',i:'🖍️',p21:'Creativity'},
+      {n:'Bernyanyi & Bergerak',i:'🎵',p21:'Aesthetic Expression'},
+      {n:'Bermain Peran (Pretend Play)',i:'🎭',p21:'Creativity & Social'},
+      {n:'Mengenal Huruf A-Z',i:'🔤',p21:'Language & Literacy'},
+      {n:'Mengenal Angka 1-10',i:'🔢',p21:'Numeracy'},
+      {n:'Berpakaian Sendiri',i:'👕',p21:'Independence'},
+      {n:'Bermain Bersama & Berbagi',i:'🤝',p21:'Social Skills'},
+      {n:'Mengenal Alam Sekitar',i:'🌿',p21:'Discovery of World'},
+      {n:'Menjaga Kebersihan Diri',i:'🪥',p21:'Life Skills'}
+    ]},
+  // TK B — usia 5-6 tahun
+  // Singapore NEL: aesthetic, discovery, literacy, motor, numeracy, social-emotional (PRAISE)
+  // Finland: transversal competence, multiliteracy, ICT basic
+  // China: 5 domains — health, language, social, science, arts
+  // Japan: comprehensive guidance through play, group harmony, self-regulation
+  { title:'TK B', sub:'Usia 5-6 Tahun', ico:'🎓', focus:'Literasi awal, numerasi & kesiapan SD', jenjang:'Pra',
+    p21:['Language & Literacy','Numeracy','Social-Emotional','Creativity'],
+    skills:[
+      {n:'Membaca Suku Kata Dasar',i:'📖',p21:'Language & Literacy'},
+      {n:'Menulis Nama Sendiri',i:'✏️',p21:'Language & Literacy'},
+      {n:'Berhitung 1-20',i:'🔢',p21:'Numeracy'},
+      {n:'Mengenal Bentuk & Pola',i:'🔷',p21:'Logical Thinking'},
+      {n:'Bercerita & Presentasi',i:'📢',p21:'Communication'},
+      {n:'Kreasi Seni & Kerajinan',i:'🎨',p21:'Creativity & Innovation'},
+      {n:'Empati & Resolusi Konflik',i:'💛',p21:'Social-Emotional'},
+      {n:'Eksplorasi Sains Sederhana',i:'🔬',p21:'Discovery of World'},
+      {n:'Kemandirian & Tanggung Jawab',i:'⭐',p21:'Life & Career Skills'}
+    ]},
+
   // ═══════════ SD ═══════════
   // P21: Fondasi Learning & Life Skills — motorik, keberanian, kebiasaan
   { title:'Kelas 1 SD', sub:'Tahap Fondasi', ico:'🌱', focus:'Motorik, keberanian & kebiasaan baik', jenjang:'SD',
@@ -1290,6 +1350,26 @@ function handleLogInsert(row) {
 // HELPERS
 // ============================================================
 function child(){ return state.children[state.activeChild]||null; }
+
+// Grade → TMPL index
+// Prasekolah: grade 0=Playgroup, 1=TK A, 2=TK B
+// SD: grade 1-6 → index 3-8
+// SMP: grade 7-9 → index 9-11
+// SMA: grade 10-12 → index 12-14
+function gradeToIdx(grade){
+  if(grade<=0) return Math.max(0, grade+2); // -2→0(PG), -1→1(TKA), 0→2(TKB) - safety
+  if(grade<=2) return grade; // grade 1→1? No: 0=PG,1=TKA,2=TKB so SD starts at 3
+  // For input grade 1-12:
+  if(grade<=6) return grade+2;   // SD: 1→3, 2→4, ..., 6→8
+  if(grade<=9) return grade+2;   // SMP: 7→9, 8→10, 9→11
+  return grade+2;                // SMA: 10→12, 11→13, 12→14
+}
+function gradeToJenjang(grade){
+  if(grade<1) return 'Pra';
+  if(grade<=6) return 'SD';
+  if(grade<=9) return 'SMP';
+  return 'SMA';
+}
 function getSk(ci,si){
   const c=child(); if(!c)return{status:'none',stars:0,note:''};
   return c.skills[`${ci}_${si}`]||{status:'none',stars:0,note:''};
@@ -1330,12 +1410,13 @@ function renderChildBar(){
 function switchChild(i){
   state.activeChild=i;
   const c=state.children[i];
-  // Auto-select jenjang based on child's grade
-  const g=c.grade||1;
-  if(g<=6) activeJenjang=0;
-  else if(g<=9) activeJenjang=1;
-  else activeJenjang=2;
-  state.activeClass=Math.min(g-1, TMPL.length-1);
+  const g=c.grade!=null?c.grade:1;
+  // Pra=0(grade -1,0,1), SD=1(grade 2-7), SMP=2(grade 8-10), SMA=3(grade 11-13)
+  if(g<=1)       activeJenjang=0;
+  else if(g<=7)  activeJenjang=1;
+  else if(g<=10) activeJenjang=2;
+  else           activeJenjang=3;
+  state.activeClass=gradeToIdx(g);
   renderAll(); chatHist=[]; addAIGreeting();
 }
 
@@ -1348,7 +1429,7 @@ function updatePts(){
 // ============================================================
 // JENJANG & CLASS TABS
 // ============================================================
-let activeJenjang = 0; // 0=SD, 1=SMP, 2=SMA
+let activeJenjang = 0; // 0=Pra, 1=SD, 2=SMP, 3=SMA
 
 function renderJenjangBar(){
   const bar=document.getElementById('jenjangBar');
@@ -1376,8 +1457,9 @@ function renderCtabs(){
   const [s,e]=JENJANG[activeJenjang].range;
   document.getElementById('ctabs').innerHTML=TMPL.slice(s,e+1).map((t,rel)=>{
     const abs=s+rel;
+    const label=t.title.replace(' SD','').replace(' SMP','').replace(' SMA','');
     return `<div class="ctab ${abs===state.activeClass?'active':''}"
-      onclick="selClass(${abs},this)">${t.title.replace(' SD','').replace(' SMP','').replace(' SMA','')}</div>`;
+      onclick="selClass(${abs},this)">${label}</div>`;
   }).join('');
 }
 
@@ -1445,7 +1527,7 @@ function renderClass(idx){
 function updateHomeReco(){
   if(!child()){document.getElementById('homeReco').innerHTML='Tambah anak untuk memulai.';return;}
   const c=child();
-  const curIdx=Math.min(c.grade-1, TMPL.length-1);
+  const curIdx=gradeToIdx(c.grade);
   const curTmpl=TMPL[curIdx];
   const learning=curTmpl.skills.filter((_,i)=>getSk(curIdx,i).status==='learning');
   const none=curTmpl.skills.filter((_,i)=>getSk(curIdx,i).status==='none');
@@ -1632,8 +1714,9 @@ async function addChild(){
   state.children.push({id:data.id,name,grade,age,avatar:selAva,points:0,skills:{},log:[],rewards:rws});
   state.activeChild=state.children.length-1;
   // Auto-select jenjang
-  activeJenjang=grade<=6?0:grade<=9?1:2;
-  state.activeClass=Math.min(grade-1,TMPL.length-1);
+  // grade from select: -1=PG, 0=TKA, 1=TKB, 2-7=SD, 8-10=SMP, 11-13=SMA
+  activeJenjang=grade<=1?0:grade<=7?1:grade<=10?2:3;
+  state.activeClass=gradeToIdx(grade);
   closeModal('addChildModal');
   renderAll(); chatHist=[]; addAIGreeting();
   toast('👶 '+name+' ditambahkan!');
@@ -1833,10 +1916,10 @@ async function activatePremium(userId, months=1){
 // ============================================================
 function buildCtx(){
   const c=child(); if(!c)return'';
-  const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
-  const curIdx=Math.min(c.grade-1,TMPL.length-1);
+  const jLabel=gradeToJenjang(c.grade);
+  const curIdx=gradeToIdx(c.grade);
   // Hitung estimasi usia berdasarkan kelas jika age tidak valid
-  const estimasiUsia = c.age && c.age>0 ? c.age : (c.grade + 5);
+  const estimasiUsia = c.age && c.age>0 ? c.age : (c.grade<=1 ? c.grade+3 : c.grade+5);
   let done=[],learn=[],curNone=[];
   TMPL.forEach((cls,ci)=>cls.skills.forEach((s,si)=>{
     const sk=getSk(ci,si);
@@ -1844,7 +1927,9 @@ function buildCtx(){
     else if(sk.status==='learning')learn.push(`${cls.title}: ${s.n}`);
     else if(ci===curIdx)curNone.push(s.n);
   }));
-  const jCtx=jLabel==='SD'
+  const jCtx=jLabel==='Pra'
+    ?'Fokus: sensori, motorik, bermain, imajinasi, kemandirian awal & kesiapan sekolah (Play-based Learning).'
+    :jLabel==='SD'
     ?'Fokus: karakter, motorik, kebiasaan baik, fondasi akademik & kreativitas.'
     :jLabel==='SMP'
     ?'Fokus: identitas diri, minat bakat, skill produktif, literasi digital & persiapan karir awal.'
@@ -1891,7 +1976,7 @@ function addAIGreeting(){
   const msgs=document.getElementById('chatMsgs');
   msgs.innerHTML=''; chatHist=[];
   let td=0; TMPL.forEach((_,ci)=>{td+=cntDone(ci);});
-  const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
+  const jLabel=gradeToJenjang(c.grade);
   const s=state.subscription;
 
   if(!canUseAI()){
@@ -1916,7 +2001,9 @@ function addAIGreeting(){
   }
 
   // User trial atau premium — aktif
-  const jMsg=jLabel==='SD'
+  const jMsg=jLabel==='Pra'
+    ?'Saya siap bantu stimulasi tumbuh kembang si kecil lewat bermain & eksplorasi 🌸'
+    :jLabel==='SD'
     ?'Saya siap bantu membangun fondasi karakter & skill dasar yang kuat 🌱'
     :jLabel==='SMP'
     ?'Saya siap bantu menemukan minat bakat & skill produktif untuk masa depannya 🎯'
@@ -1931,12 +2018,17 @@ function addAIGreeting(){
     ? `\n\n⏳ Anda sedang dalam masa **trial gratis**. Nikmati semua fitur AI selama trial berlangsung!`
     : '';
 
-  addBubble('ai',`Halo! Saya konsultan parenting & coach anak Anda 👋\n\n<strong>${c.name}</strong> (${TMPL[Math.min(c.grade-1,11)].title}) sudah punya <strong>${td} skill dikuasai</strong>. Keren!\n\n${jMsg}${trialInfo}\n\nAda yang ingin ditanyakan?`);
+  addBubble('ai',`Halo! Saya konsultan parenting & coach anak Anda 👋\n\n<strong>${c.name}</strong> (${TMPL[gradeToIdx(c.grade)].title}) sudah punya <strong>${td} skill dikuasai</strong>. Keren!\n\n${jMsg}${trialInfo}\n\nAda yang ingin ditanyakan?`);
   renderQchips(jLabel);
 }
 
 function renderQchips(jLabel){
-  const chips = jLabel==='SD' ? [
+  const chips = jLabel==='Pra' ? [
+    'Aktivitas bermain apa yang cocok untuk usianya?',
+    'Bagaimana stimulasi motorik terbaik untuk si kecil?',
+    'Cara mendeteksi keterlambatan perkembangan anak',
+    'Tips persiapkan anak masuk TK / SD'
+  ] : jLabel==='SD' ? [
     'Skill apa yang harus diprioritaskan bulan ini?',
     'Bagaimana cara memotivasi anak SD belajar skill baru?',
     'Tips jadwal harian anak SD yang seimbang',
@@ -2022,8 +2114,8 @@ async function genWeeklyAI(){
   if(!ANTHROPIC_KEY){toast('⚠️ API Key belum dikonfigurasi oleh admin');return;}
   toast('🔄 Membuat laporan mingguan...');
   const c=child(); if(!c)return;
-  const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
-  const curIdx=Math.min(c.grade-1,TMPL.length-1);
+  const jLabel=gradeToJenjang(c.grade);
+  const curIdx=gradeToIdx(c.grade);
   let done=[],learn=[],curNone=[];
   TMPL.forEach((cls,ci)=>cls.skills.forEach((s,si)=>{
     const sk=getSk(ci,si);
@@ -2057,8 +2149,8 @@ Berikan: (1) apresiasi pencapaian, (2) 2 saran konkret minggu depan sesuai jenja
 async function genPDF(){
   const c=child(); if(!c){toast('⚠️ Pilih anak dulu');return;}
   toast('📄 Membuat PDF laporan lengkap...');
-  const jLabel=c.grade<=6?'SD':c.grade<=9?'SMP':'SMA';
-  const curIdx=Math.min(c.grade-1,TMPL.length-1);
+  const jLabel=gradeToJenjang(c.grade);
+  const curIdx=gradeToIdx(c.grade);
   let aiAnalysis='Gunakan fitur AI Konsultan untuk analisis mendalam tentang perkembangan anak Anda.';
   if(ANTHROPIC_KEY&&canUseAI()){
     try{
