@@ -2,8 +2,9 @@
   "outputDirectory": "public",
   "buildCommand": "bash build.sh",
   "routes": [
-    { "src": "/api/chat",    "dest": "/api/chat.js"    },
-    { "src": "/api/payment", "dest": "/api/payment.js" },
-    { "src": "/(.*)",        "dest": "/index.html"     }
+    { "src": "/api/chat",         "dest": "/api/chat.js"         },
+    { "src": "/api/payment",      "dest": "/api/payment.js"      },
+    { "src": "/api/test-duitku",  "dest": "/api/test-duitku.js"  },
+    { "src": "/(.*)",             "dest": "/index.html"          }
   ]
 }
