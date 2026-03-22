@@ -1725,11 +1725,13 @@ async function startPayment(method){
     toast('🔄 Menghubungkan ke Duitku...');
     try {
       // Simpan order ke DB
-      await supa.from('payment_log').insert({
-        user_id:currentUser.id, order_id:orderId,
-        amount:APP_PRICE, status:'pending_duitku',
-        payload:{method:'duitku'}
-      }).catch(()=>{});
+      try {
+        await supa.from('payment_log').insert({
+          user_id:currentUser.id, order_id:orderId,
+          amount:APP_PRICE, status:'pending_duitku',
+          payload:{method:'duitku'}
+        });
+      } catch(dbErr){ console.warn('payment_log insert:', dbErr); }
 
       // Panggil Duitku via API route kita
       const res = await fetch('/api/payment', {
@@ -1746,10 +1748,8 @@ async function startPayment(method){
       const data = await res.json();
 
       if(data.paymentUrl){
-        // Buka halaman payment Duitku di tab baru
         window.open(data.paymentUrl, '_blank');
         toast('✅ Halaman pembayaran dibuka. Selesaikan pembayaran di tab baru.');
-        // Tampilkan instruksi menunggu
         showPaymentWaiting(orderId);
       } else {
         throw new Error(data.error || 'Gagal membuat invoice Duitku');
@@ -1763,11 +1763,13 @@ async function startPayment(method){
     openModal('manualPayModal');
     document.getElementById('payAccNum').textContent = OWNER_BANK;
     document.getElementById('payUniqueCode').textContent = `Rp 49.${String(code).padStart(3,'0')} (kode unik Anda)`;
-    await supa.from('payment_log').insert({
-      user_id:currentUser.id, order_id:`MANUAL-${orderId}`,
-      amount:APP_PRICE, status:'pending_manual',
-      payload:{method:'manual', uniqueCode:code}
-    }).catch(()=>{});
+    try {
+      await supa.from('payment_log').insert({
+        user_id:currentUser.id, order_id:`MANUAL-${orderId}`,
+        amount:APP_PRICE, status:'pending_manual',
+        payload:{method:'manual', uniqueCode:code}
+      });
+    } catch(dbErr){ console.warn('payment_log insert:', dbErr); }
   }
 }
 
