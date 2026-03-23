@@ -1273,10 +1273,16 @@ async function loadUserData() {
       };
     } else {
       // Buat subscription trial manual jika trigger belum jalan
-      const trialEnd=new Date(Date.now()+TRIAL_DAYS*86400000).toISOString();
+      // Gunakan created_at dari profil sebagai titik mulai (bukan waktu sekarang)
+      // sehingga trial selalu 7 hari dari TANGGAL DAFTAR, bukan tanggal buka app
+      const {data:profileData} = await supa.from('profiles').select('created_at').eq('id',currentUser.id).single();
+      const registeredAt = profileData?.created_at
+        ? new Date(profileData.created_at)
+        : new Date(currentUser.created_at || Date.now());
+      const trialEnd = new Date(registeredAt.getTime() + TRIAL_DAYS * 86400000).toISOString();
       await supa.from('subscriptions').upsert({
         user_id:currentUser.id, status:'trial', plan:'monthly', trial_ends_at:trialEnd
-      });
+      }, { onConflict: 'user_id' });
       state.subscription={status:'trial',plan:'monthly',isPremium:true,trialEndsAt:trialEnd,periodEnd:null};
     }
     updateSubUI();
