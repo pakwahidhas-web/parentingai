@@ -922,7 +922,8 @@ const TMPL = [
       {n:'Kreasi Seni & Kerajinan',i:'🎨',p21:'Creativity & Innovation'},
       {n:'Empati & Resolusi Konflik',i:'💛',p21:'Social-Emotional'},
       {n:'Eksplorasi Sains Sederhana',i:'🔬',p21:'Discovery of World'},
-      {n:'Kemandirian & Tanggung Jawab',i:'⭐',p21:'Life & Career Skills'}
+      {n:'Kemandirian & Tanggung Jawab',i:'⭐',p21:'Life & Career Skills'},
+      {n:'Mengenal Transportasi Umum',i:'🚌',p21:'Life Skills'}
     ]},
 
   // ═══════════ SD ═══════════
@@ -933,7 +934,7 @@ const TMPL = [
       {n:"Baca Al-Qur\'an",i:'📖',p21:'Life & Career'},
       {n:'English Dasar',i:'🔤',p21:'Communication'},
       {n:'Menggambar & Mewarnai',i:'🎨',p21:'Creativity'},
-      {n:'Naik Sepeda',i:'🚲',p21:'Life Skills'},
+      {n:'Naik Sepeda & Mobilitas',i:'🚲',p21:'Life Skills'},
       {n:'Berenang',i:'🏊',p21:'Life Skills'},
       {n:'Kerajinan Tangan',i:'✂️',p21:'Creativity & Innovation'},
       {n:'Memelihara Hewan',i:'🐟',p21:'Social Skills'},
@@ -962,7 +963,7 @@ const TMPL = [
       {n:'Fotografi Dasar',i:'📷',p21:'Media Literacy'},
       {n:'Editing Video Sederhana',i:'🎬',p21:'Media Literacy'},
       {n:'Membaca Peta & Navigasi',i:'🗺️',p21:'Critical Thinking'},
-      {n:'Jelajah Alam',i:'🏕️',p21:'Life Skills'},
+      {n:'Jelajah Alam & Navigasi',i:'🏕️',p21:'Life Skills'},
       {n:'Eksperimen Sains Sederhana',i:'🔬',p21:'Critical Thinking'},
       {n:'Presentasi Lisan',i:'🗣️',p21:'Communication'}
     ]},
@@ -974,6 +975,7 @@ const TMPL = [
       {n:'Presentasi Slide (PowerPoint)',i:'📊',p21:'Communication'},
       {n:'Literasi Informasi (riset)',i:'🔍',p21:'Information Literacy'},
       {n:'P3K & Keselamatan Diri',i:'🩹',p21:'Life Skills'},
+      {n:'Naik Transportasi Umum',i:'🚆',p21:'Life Skills'},
       {n:'Manajemen Waktu',i:'⏰',p21:'Productivity & Accountability'},
       {n:'Desain Grafis Dasar',i:'🖥️',p21:'Creativity & ICT'},
       {n:'Berjualan & Negosiasi',i:'🛒',p21:'Career Skills'},
@@ -989,6 +991,7 @@ const TMPL = [
       {n:'Problem Solving Sistematis',i:'🧠',p21:'Critical Thinking'},
       {n:'Pengambilan Keputusan',i:'⚖️',p21:'Critical Thinking'},
       {n:'Digital Marketing Dasar',i:'📣',p21:'Media Literacy'},
+      {n:'Perjalanan Mandiri Dalam Kota',i:'🗺️',p21:'Life Skills'},
       {n:'Mindset Growth & Resiliensi',i:'💪',p21:'Initiative & Self-Direction'},
       {n:'Global Awareness',i:'🌍',p21:'Global Literacy'}
     ]},
@@ -996,6 +999,7 @@ const TMPL = [
     p21:['Leadership','Initiative & Self-Direction','Communication'],
     skills:[
       {n:'Kepemimpinan Tim',i:'👑',p21:'Leadership & Responsibility'},
+      {n:'Perjalanan Antar Kota Mandiri',i:'🚄',p21:'Life Skills'},
       {n:'Manajemen Stres & Emosi',i:'🧘',p21:'Life Skills'},
       {n:'Debat & Argumentasi',i:'🗣️',p21:'Communication'},
       {n:'Riset & Mind Mapping',i:'🗂️',p21:'Information Literacy'},
@@ -1029,6 +1033,7 @@ const TMPL = [
       {n:'Video Cinematography',i:'🎬',p21:'Media Literacy'},
       {n:'Elektronika & Arduino',i:'🔌',p21:'ICT Literacy'},
       {n:'Kolaborasi Global Online',i:'🌐',p21:'Collaboration'},
+      {n:'Traveling Solo Antar Kota',i:'🧳',p21:'Life Skills'},
       {n:'Meditasi & Mindfulness',i:'🧠',p21:'Life Skills'},
       {n:'Business Plan Sederhana',i:'📋',p21:'Career Skills'},
       {n:'Volunteerism & Sosial',i:'🤲',p21:'Social Responsibility'},
@@ -1073,6 +1078,7 @@ const TMPL = [
       {n:'Keuangan Lanjut & Investasi',i:'💰',p21:'Financial Literacy'},
       {n:'AI Tools & Produktivitas',i:'🤖',p21:'ICT & Productivity'},
       {n:'Diplomasi & Negosiasi',i:'🕊️',p21:'Communication & Social'},
+      {n:'Traveling Internasional Mandiri',i:'✈️',p21:'Life Skills'},
       {n:'Film / Serial Konten',i:'🎥',p21:'Media Literacy'},
       {n:'Social Entrepreneurship',i:'🌏',p21:'Global & Civic Literacy'}
     ]},
@@ -2024,10 +2030,10 @@ function buildCtx(){
   const jCtx=jLabel==='Pra'
     ?'Fokus: sensori, motorik, bermain, imajinasi, kemandirian awal & kesiapan sekolah (Play-based Learning).'
     :jLabel==='SD'
-    ?'Fokus: karakter, motorik, kebiasaan baik, fondasi akademik & kreativitas.'
+    ?'Fokus: karakter, motorik, kebiasaan baik, fondasi akademik, kreativitas & kemandirian mobilitas (naik transportasi umum, navigasi).'
     :jLabel==='SMP'
-    ?'Fokus: identitas diri, minat bakat, skill produktif, literasi digital & persiapan karir awal.'
-    :'Fokus: spesialisasi keahlian, entrepreneurship, persiapan kuliah, karir & kehidupan mandiri.';
+    ?'Fokus: identitas diri, minat bakat, skill produktif, literasi digital, persiapan karir & traveling mandiri antar kota.'
+    :'Fokus: spesialisasi keahlian, entrepreneurship, persiapan kuliah, karir, kehidupan mandiri & traveling internasional.';
   // P21 skills untuk kelas ini
   const p21Focus = TMPL[curIdx].p21 ? TMPL[curIdx].p21.join(', ') : '';
   const p21Done = done.filter((_,i)=>{
