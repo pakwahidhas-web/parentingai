@@ -228,11 +228,10 @@ tr:hover td{background:#fafbfc}
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────
-// Password diambil dari URL param untuk keamanan ekstra
-// Akses: /admin-pai2024.html?key=YOUR_PASS
-const ADMIN_PASS   = '%%ADMIN_PASS%%';     // diisi oleh build.sh
-const SUPA_URL_CFG = '%%SUPABASE_URL%%';   // diisi oleh build.sh
-const SUPA_KEY_CFG = '%%SUPABASE_ANON_KEY%%'; // diisi oleh build.sh
+// Isi nilai ini langsung sesuai Supabase project Anda
+const ADMIN_PASS   = 'Kh@faljaya73';        // contoh: PaiAdmin2024
+const SUPA_URL_CFG = 'https://rhngvnwmnqffefdjcrgz.supabase.co';          // contoh: https://xxxxx.supabase.co
+const SUPA_KEY_CFG = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJobmd2bndtbnFmZmVmZGpjcmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwODg5MDEsImV4cCI6MjA4OTY2NDkwMX0.aaK--KvF2Wk90twQh-sPUuV6FWmk2LyvCcv1o_67Glw';     // contoh: eyJhbGci...
 
 let supa=null, allUsers=[], allSubs=[], allPays=[];
 let chartRev=null, chartStatus=null;
