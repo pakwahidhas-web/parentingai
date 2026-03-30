@@ -2,9 +2,14 @@
   "outputDirectory": "public",
   "buildCommand": "bash build.sh",
   "routes": [
-    { "src": "/api/chat",         "dest": "/api/chat.js"         },
-    { "src": "/api/payment",      "dest": "/api/payment.js"      },
-    { "src": "/api/test-duitku",  "dest": "/api/test-duitku.js"  },
-    { "src": "/(.*)",             "dest": "/index.html"          }
+    { "src": "/api/chat",          "dest": "/api/chat.js"          },
+    { "src": "/api/payment",       "dest": "/api/payment.js"       },
+    { "src": "/api/send-reminder", "dest": "/api/send-reminder.js" },
+    { "src": "/api/test-duitku",   "dest": "/api/test-duitku.js"   },
+    { "src": "/(.*\\.html)",       "dest": "/$1"                   },
+    { "src": "/(.*\\.pdf)",        "dest": "/$1"                   },
+    { "src": "/(.*\\.js)",         "dest": "/$1"                   },
+    { "src": "/(.*\\.css)",        "dest": "/$1"                   },
+    { "src": "/(.*)",              "dest": "/index.html"           }
   ]
 }
