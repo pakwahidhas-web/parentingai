@@ -6,6 +6,12 @@
 <title>Admin — ParentingAI</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Config diinjeksi oleh build.sh saat deploy
+window.ENV_SUPABASE_URL  = "%%SUPABASE_URL%%";
+window.ENV_SUPABASE_KEY  = "%%SUPABASE_ANON_KEY%%";
+window.ENV_ADMIN_PASS    = "%%ADMIN_PASS%%";
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
@@ -228,10 +234,9 @@ tr:hover td{background:#fafbfc}
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────
-// Isi nilai ini langsung sesuai Supabase project Anda
-const ADMIN_PASS   = 'Kh@faljaya73';        // contoh: PaiAdmin2024
-const SUPA_URL_CFG = 'https://rhngvnwmnqffefdjcrgz.supabase.co';          // contoh: https://xxxxx.supabase.co
-const SUPA_KEY_CFG = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJobmd2bndtbnFmZmVmZGpjcmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwODg5MDEsImV4cCI6MjA4OTY2NDkwMX0.aaK--KvF2Wk90twQh-sPUuV6FWmk2LyvCcv1o_67Glw';     // contoh: eyJhbGci...
+const ADMIN_PASS   = window.ENV_ADMIN_PASS    || '%%ADMIN_PASS%%';
+const SUPA_URL_CFG = window.ENV_SUPABASE_URL  || '%%SUPABASE_URL%%';
+const SUPA_KEY_CFG = window.ENV_SUPABASE_KEY  || '%%SUPABASE_ANON_KEY%%';
 
 let supa=null, allUsers=[], allSubs=[], allPays=[];
 let chartRev=null, chartStatus=null;
@@ -245,8 +250,9 @@ function doLogin(){
   if(pass !== expectedPass){
     err.textContent='Password salah.'; err.style.display='block'; return;
   }
-  if(!SUPA_URL_CFG || SUPA_URL_CFG==='%%SUPABASE_URL%%'){
-    err.textContent='Konfigurasi server belum lengkap.'; err.style.display='block'; return;
+  if(!SUPA_URL_CFG || SUPA_URL_CFG.includes('SUPABASE_URL') || SUPA_URL_CFG.includes('GANTI')){
+    err.textContent='Konfigurasi Supabase belum diisi. Tambahkan ADMIN_PASS di Vercel Environment Variables lalu redeploy.';
+    err.style.display='block'; return;
   }
   supa = window.supabase.createClient(SUPA_URL_CFG, SUPA_KEY_CFG);
   sessionStorage.setItem('admin_auth','1');
@@ -264,7 +270,7 @@ function doLogout(){
 
 // Auto-login jika sudah auth di session ini
 window.addEventListener('DOMContentLoaded', ()=>{
-  if(sessionStorage.getItem('admin_auth')==='1' && SUPA_URL_CFG && SUPA_URL_CFG!=='%%SUPABASE_URL%%'){
+  if(sessionStorage.getItem('admin_auth')==='1' && SUPA_URL_CFG && !SUPA_URL_CFG.includes('SUPABASE_URL') && !SUPA_URL_CFG.includes('GANTI')){
     supa = window.supabase.createClient(SUPA_URL_CFG, SUPA_KEY_CFG);
     document.getElementById('loginWrap').style.display='none';
     document.getElementById('appWrap').style.display='block';
