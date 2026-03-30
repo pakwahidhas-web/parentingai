@@ -4,12 +4,13 @@
   "routes": [
     { "src": "/api/chat",          "dest": "/api/chat.js"          },
     { "src": "/api/payment",       "dest": "/api/payment.js"       },
+    { "src": "/api/bundle",        "dest": "/api/bundle.js"        },
     { "src": "/api/send-reminder", "dest": "/api/send-reminder.js" },
     { "src": "/api/test-duitku",   "dest": "/api/test-duitku.js"   },
+    { "src": "/beli",              "dest": "/beli.html"            },
     { "src": "/(.*\\.html)",       "dest": "/$1"                   },
     { "src": "/(.*\\.pdf)",        "dest": "/$1"                   },
     { "src": "/(.*\\.js)",         "dest": "/$1"                   },
-    { "src": "/(.*\\.css)",        "dest": "/$1"                   },
     { "src": "/(.*)",              "dest": "/index.html"           }
   ]
 }
