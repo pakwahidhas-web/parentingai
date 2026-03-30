@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beli Ebook & Akses App — ParentingAI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--purple:#4c1d95;--purple2:#7c3aed;--green:#059669;--amber:#d97706;--gray:#f1f5f9;--txt:#1e293b;--mut:#64748b;--bdr:#e2e8f0;--rx:12px}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8f7ff;color:var(--txt);min-height:100vh}
+a{color:inherit;text-decoration:none}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.hdr-brand{font-size:18px;font-weight:800}
+.hdr-back{font-size:13px;opacity:.8;cursor:pointer;border:1px solid rgba(255,255,255,.3);padding:6px 14px;border-radius:20px}
+.hdr-back:hover{opacity:1;background:rgba(255,255,255,.1)}
+
+/* HERO */
+.hero{text-align:center;padding:40px 24px 32px;max-width:680px;margin:0 auto}
+.hero h1{font-size:28px;font-weight:800;color:var(--purple);line-height:1.3;margin-bottom:8px}
+.hero p{font-size:15px;color:var(--mut);line-height:1.6}
+
+/* PACKAGES */
+.pkg-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:860px;margin:0 auto;padding:0 20px 40px}
+@media(max-width:700px){.pkg-wrap{grid-template-columns:1fr}}
+.pkg{background:#fff;border-radius:16px;padding:24px;border:2px solid var(--bdr);transition:transform .15s,border-color .15s;position:relative}
+.pkg:hover{transform:translateY(-3px)}
+.pkg.featured{border-color:var(--purple2);box-shadow:0 4px 24px rgba(124,58,237,.18)}
+.pkg-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--purple2);color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:20px;white-space:nowrap}
+.pkg-ico{font-size:36px;margin-bottom:10px}
+.pkg-name{font-size:16px;font-weight:700;color:var(--purple);margin-bottom:4px}
+.pkg-price{font-size:28px;font-weight:800;color:var(--txt);margin-bottom:2px}
+.pkg-price span{font-size:13px;font-weight:400;color:var(--mut)}
+.pkg-orig{font-size:12px;color:var(--mut);text-decoration:line-through;margin-bottom:12px}
+.pkg-feats{list-style:none;margin-bottom:20px}
+.pkg-feats li{font-size:13px;padding:4px 0;border-bottom:1px solid #f8f8f8;color:var(--txt)}
+.pkg-feats li:last-child{border:none}
+.pkg-btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+.pkg-btn-main{background:var(--purple2);color:#fff}
+.pkg-btn-main:hover{background:#6d28d9}
+.pkg-btn-out{background:#f8f7ff;color:var(--purple2);border:2px solid var(--purple2)}
+.pkg-btn-out:hover{background:#ede9fe}
+
+/* REDEEM SECTION */
+.redeem-wrap{background:#fff;border-radius:16px;border:2px solid var(--bdr);max-width:480px;margin:0 auto 40px;padding:28px;text-align:center}
+.redeem-wrap h3{font-size:17px;font-weight:700;color:var(--purple);margin-bottom:6px}
+.redeem-wrap p{font-size:13px;color:var(--mut);margin-bottom:16px}
+.code-input{width:100%;padding:12px 16px;border:2px solid var(--bdr);border-radius:10px;font-size:16px;font-weight:700;text-align:center;letter-spacing:2px;text-transform:uppercase;outline:none;margin-bottom:12px;font-family:monospace}
+.code-input:focus{border-color:var(--purple2)}
+.redeem-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.redeem-btn:hover{background:#047857}
+.redeem-msg{margin-top:10px;font-size:13px;padding:8px 12px;border-radius:8px;display:none}
+.redeem-ok{background:#dcfce7;color:#166534}
+.redeem-err{background:#fee2e2;color:#991b1b}
+
+/* SUCCESS PAGE */
+.success-wrap{text-align:center;padding:48px 24px;max-width:520px;margin:0 auto}
+.success-ico{font-size:64px;margin-bottom:16px}
+.success-wrap h2{font-size:24px;font-weight:800;color:var(--purple);margin-bottom:8px}
+.success-wrap p{font-size:14px;color:var(--mut);line-height:1.7;margin-bottom:16px}
+.code-box{background:#f8f7ff;border:2px solid var(--purple2);border-radius:12px;padding:16px;margin:16px 0}
+.code-box .lbl{font-size:12px;color:var(--mut);margin-bottom:6px}
+.code-box .code{font-size:24px;font-weight:800;letter-spacing:3px;color:var(--purple);font-family:monospace}
+.copy-btn{padding:8px 20px;background:var(--purple2);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px}
+.goto-btn{display:inline-block;margin-top:16px;padding:14px 32px;background:var(--purple2);color:#fff;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:none}
+
+/* TRUST */
+.trust{background:#fff;padding:32px 24px;text-align:center}
+.trust h3{font-size:17px;font-weight:700;margin-bottom:16px;color:var(--purple)}
+.trust-row{display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+.trust-item{text-align:center}
+.trust-item div:first-child{font-size:28px;margin-bottom:4px}
+.trust-item div:last-child{font-size:12px;color:var(--mut);max-width:80px}
+
+/* FOOTER */
+.footer{text-align:center;padding:24px;font-size:12px;color:var(--mut)}
+
+/* SPINNER */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<script>
+window.ENV_SUPABASE_URL  = "%%SUPABASE_URL%%";
+window.ENV_SUPABASE_KEY  = "%%SUPABASE_ANON_KEY%%";
+</script>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-brand">🌱 ParentingAI</div>
+  <div class="hdr-back" onclick="location.href='/'">← Kembali ke App</div>
+</div>
+
+<!-- SUCCESS PAGE (ditampilkan jika ?status=success) -->
+<div id="successPage" style="display:none">
+  <div class="success-wrap">
+    <div class="success-ico">🎉</div>
+    <h2>Pembayaran Berhasil!</h2>
+    <p>Terima kasih sudah membeli. Kode akses Anda sudah siap — simpan baik-baik!</p>
+    <div class="code-box">
+      <div class="lbl">Kode Akses Ebook & App Anda:</div>
+      <div class="code" id="successCode">Memuat...</div>
+      <button class="copy-btn" onclick="copyCode()">📋 Salin Kode</button>
+    </div>
+    <p style="font-size:12px;color:#94a3b8">Kode ini juga dikirim ke email Anda. Gunakan kode ini di halaman aplikasi untuk mengaktifkan akses premium.</p>
+    <button class="goto-btn" onclick="location.href='/'">Buka App & Masukkan Kode →</button>
+  </div>
+</div>
+
+<!-- MAIN STORE -->
+<div id="mainPage">
+  <div class="hero">
+    <h1>Panduan Lengkap Tumbuh Kembang Anak 🌱</h1>
+    <p>Ebook PDF 135 Life Skill + Akses Aplikasi AI Konsultan.<br>Dipercaya ribuan orang tua Indonesia.</p>
+  </div>
+
+  <div class="pkg-wrap">
+    <!-- EBOOK ONLY -->
+    <div class="pkg">
+      <div class="pkg-ico">📚</div>
+      <div class="pkg-name">Ebook Saja</div>
+      <div class="pkg-price">Rp 49.000</div>
+      <div class="pkg-orig">&nbsp;</div>
+      <ul class="pkg-feats">
+        <li>✅ PDF 135 Life Skill</li>
+        <li>✅ 1.350+ Aktivitas Belajar</li>
+        <li>✅ Panduan Playgroup–Kelas 12</li>
+        <li>✅ Download selamanya</li>
+        <li style="color:#94a3b8">❌ Akses App Premium</li>
+        <li style="color:#94a3b8">❌ AI Konsultan</li>
+      </ul>
+      <button class="pkg-btn pkg-btn-out" onclick="buyPackage('ebook')">Beli Ebook</button>
+    </div>
+
+    <!-- BUNDLE STARTER -->
+    <div class="pkg featured">
+      <div class="pkg-badge">⭐ Paling Populer</div>
+      <div class="pkg-ico">📚✨</div>
+      <div class="pkg-name">Bundle Starter</div>
+      <div class="pkg-price">Rp 79.000</div>
+      <div class="pkg-orig">Nilai: Rp 98.000</div>
+      <ul class="pkg-feats">
+        <li>✅ PDF 135 Life Skill</li>
+        <li>✅ 1.350+ Aktivitas Belajar</li>
+        <li>✅ Download selamanya</li>
+        <li>✅ <strong>Akses App 1 Bulan</strong></li>
+        <li>✅ <strong>AI Konsultan 24/7</strong></li>
+        <li>✅ <strong>Laporan PDF bulanan</strong></li>
+      </ul>
+      <button class="pkg-btn pkg-btn-main" onclick="buyPackage('starter')">Beli Bundle Starter</button>
+    </div>
+
+    <!-- BUNDLE PLUS -->
+    <div class="pkg">
+      <div class="pkg-ico">📚🚀</div>
+      <div class="pkg-name">Bundle Plus</div>
+      <div class="pkg-price">Rp 149.000</div>
+      <div class="pkg-orig">Nilai: Rp 196.000</div>
+      <ul class="pkg-feats">
+        <li>✅ PDF 135 Life Skill</li>
+        <li>✅ 1.350+ Aktivitas Belajar</li>
+        <li>✅ Download selamanya</li>
+        <li>✅ <strong>Akses App 3 Bulan</strong></li>
+        <li>✅ <strong>AI Konsultan 24/7</strong></li>
+        <li>✅ <strong>Laporan PDF bulanan</strong></li>
+      </ul>
+      <button class="pkg-btn pkg-btn-out" onclick="buyPackage('plus')">Beli Bundle Plus</button>
+    </div>
+  </div>
+
+  <!-- REDEEM KODE -->
+  <div style="padding:0 20px 16px;max-width:860px;margin:0 auto">
+    <div class="redeem-wrap">
+      <h3>🔑 Sudah punya kode akses?</h3>
+      <p>Masukkan kode yang Anda terima setelah pembelian untuk mengaktifkan ebook & app premium Anda.</p>
+      <input class="code-input" id="redeemInput" placeholder="XXXX-XXXX-XXXX" maxlength="14" oninput="formatCode(this)">
+      <button class="redeem-btn" onclick="redeemCode()">Aktifkan Kode</button>
+      <div class="redeem-msg" id="redeemMsg"></div>
+    </div>
+  </div>
+
+  <!-- TRUST SIGNALS -->
+  <div class="trust">
+    <h3>Dipercaya Orang Tua Indonesia</h3>
+    <div class="trust-row">
+      <div class="trust-item"><div>📖</div><div>135 Life Skill terstruktur</div></div>
+      <div class="trust-item"><div>🔬</div><div>Berbasis riset P21 dunia</div></div>
+      <div class="trust-item"><div>🔒</div><div>Pembayaran aman via Duitku</div></div>
+      <div class="trust-item"><div>📱</div><div>Akses seumur hidup</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL MODAL -->
+<div id="emailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:340px;max-width:90vw">
+    <h3 style="font-size:17px;font-weight:700;color:#4c1d95;margin-bottom:6px">Masukkan Email Anda</h3>
+    <p style="font-size:13px;color:#64748b;margin-bottom:16px">Kode akses akan dikirim ke email ini setelah pembayaran.</p>
+    <input type="email" id="emailInput" placeholder="email@anda.com" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;margin-bottom:8px">
+    <input type="text" id="nameInput" placeholder="Nama Anda (opsional)" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;margin-bottom:12px">
+    <div id="emailErr" style="font-size:12px;color:#dc2626;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeEmailModal()" style="flex:1;padding:10px;background:#f1f5f9;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Batal</button>
+      <button onclick="proceedPayment()" id="payBtn" style="flex:2;padding:10px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Bayar Sekarang →</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>© 2025 ParentingAI · <a href="/?privacy=1" style="color:#7c3aed">Kebijakan Privasi</a> · <a href="/?terms=1" style="color:#7c3aed">Syarat & Ketentuan</a></p>
+  <p style="margin-top:4px">Pembayaran aman via QRIS, GoPay, OVO, Dana, Transfer Bank</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL = window.ENV_SUPABASE_URL || '';
+const SUPA_KEY = window.ENV_SUPABASE_KEY || '';
+let supa = null;
+let selectedPackage = '';
+
+// Init Supabase untuk cek user login
+window.addEventListener('DOMContentLoaded', async () => {
+  // Cek status page
+  const params = new URLSearchParams(location.search);
+
+  if (params.get('status') === 'success') {
+    const orderId = params.get('order') || '';
+    document.getElementById('mainPage').style.display = 'none';
+    document.getElementById('successPage').style.display = 'block';
+    if (orderId) await loadCodeByOrder(orderId);
+    return;
+  }
+});
+
+// ── LOAD CODE setelah bayar ──────────────────────────────
+async function loadCodeByOrder(orderId) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/bundle_codes?order_id=eq.${orderId}&select=code,package_id,months`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    const data = await r.json();
+    if (data.length) {
+      document.getElementById('successCode').textContent = data[0].code;
+    } else {
+      document.getElementById('successCode').textContent = 'Sedang diproses...';
+    }
+  } catch(e) {
+    document.getElementById('successCode').textContent = 'Cek email Anda';
+  }
+}
+
+function copyCode() {
+  const code = document.getElementById('successCode').textContent;
+  navigator.clipboard.writeText(code).then(() => toast('✅ Kode disalin!'));
+}
+
+// ── BELI PAKET ─────────────────────────────────────────
+function buyPackage(pkgId) {
+  selectedPackage = pkgId;
+  document.getElementById('emailModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('emailInput').focus(), 100);
+}
+
+function closeEmailModal() {
+  document.getElementById('emailModal').style.display = 'none';
+}
+
+async function proceedPayment() {
+  const email = document.getElementById('emailInput').value.trim();
+  const name  = document.getElementById('nameInput').value.trim();
+  const err   = document.getElementById('emailErr');
+
+  if (!email || !email.includes('@')) {
+    err.textContent = 'Email tidak valid'; err.style.display = 'block'; return;
+  }
+  err.style.display = 'none';
+
+  const btn = document.getElementById('payBtn');
+  btn.innerHTML = '<span class="spinner"></span> Memproses...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/bundle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ packageId: selectedPackage, email, name })
+    });
+    const data = await res.json();
+
+    if (data.paymentUrl) {
+      location.href = data.paymentUrl;
+    } else {
+      err.textContent = data.error || 'Gagal memproses pembayaran';
+      err.style.display = 'block';
+      btn.innerHTML = 'Bayar Sekarang →';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    err.textContent = 'Error: ' + e.message;
+    err.style.display = 'block';
+    btn.innerHTML = 'Bayar Sekarang →';
+    btn.disabled = false;
+  }
+}
+
+// ── REDEEM KODE ─────────────────────────────────────────
+function formatCode(input) {
+  let val = input.value.replace(/[^A-Z0-9a-z]/g, '').toUpperCase();
+  if (val.length > 4)  val = val.slice(0,4) + '-' + val.slice(4);
+  if (val.length > 9)  val = val.slice(0,9) + '-' + val.slice(9);
+  input.value = val.slice(0, 14);
+}
+
+async function redeemCode() {
+  const code = document.getElementById('redeemInput').value.trim();
+  const msg  = document.getElementById('redeemMsg');
+
+  if (code.length < 14) {
+    msg.textContent = 'Format kode harus XXXX-XXXX-XXXX';
+    msg.className = 'redeem-msg redeem-err';
+    msg.style.display = 'block'; return;
+  }
+
+  // Cek apakah user sudah login
+  if (SUPA_URL && SUPA_KEY) {
+    try {
+      const supa2 = window.supabase?.createClient(SUPA_URL, SUPA_KEY);
+      if (supa2) {
+        const { data: { session } } = await supa2.auth.getSession();
+        if (!session) {
+          // Simpan kode ke localStorage dan redirect ke login
+          localStorage.setItem('pending_code', code);
+          toast('Login dulu untuk mengaktifkan kode');
+          setTimeout(() => location.href = '/?redeem=1', 1500);
+          return;
+        }
+        // User sudah login — redeem langsung
+        const res = await fetch('/api/bundle?action=redeem', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, userId: session.user.id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          msg.textContent = '✅ ' + data.message;
+          msg.className = 'redeem-msg redeem-ok';
+          if (data.hasApp) setTimeout(() => location.href = '/', 2000);
+        } else {
+          msg.textContent = '❌ ' + (data.error || 'Kode tidak valid');
+          msg.className = 'redeem-msg redeem-err';
+        }
+        msg.style.display = 'block';
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // Fallback: simpan kode dan redirect ke app
+  localStorage.setItem('pending_code', code);
+  toast('Kode disimpan — login dulu untuk mengaktifkan');
+  setTimeout(() => location.href = '/', 1500);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeEmailModal();
+  if (e.key === 'Enter' && document.getElementById('emailModal').style.display === 'flex') proceedPayment();
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</body>
+</html>
