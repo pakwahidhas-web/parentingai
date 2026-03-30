@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — ParentingAI</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+#loginWrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-card{background:#fff;border-radius:16px;padding:36px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.login-card h2{font-size:20px;font-weight:700;color:#4c1d95;margin-bottom:6px;text-align:center}
+.login-card p{font-size:12px;color:#94a3b8;text-align:center;margin-bottom:24px}
+input,select{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none;font-family:inherit}
+input:focus,select:focus{border-color:#7c3aed}
+.btn-login{width:100%;padding:12px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-login:hover{background:#6d28d9}
+.err{background:#fee2e2;color:#991b1b;padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:10px;display:none}
+#appWrap{display:none}
+.topbar{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar h1{font-size:16px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.btn-sm{padding:6px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-refresh{background:rgba(255,255,255,.2);color:#fff}
+.btn-logout{background:rgba(255,255,255,.15);color:#fff}
+.main{padding:20px 24px;max-width:1280px;margin:0 auto}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
+@media(max-width:500px){.g4{grid-template-columns:1fr 1fr}}
+.card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.kpi-num{font-size:30px;font-weight:800;line-height:1.1;margin-bottom:2px}
+.kpi-label{font-size:12px;color:#64748b}
+.kpi-sub{font-size:11px;color:#94a3b8;margin-top:3px}
+.purple{color:#7c3aed}.green{color:#059669}.amber{color:#d97706}.red{color:#dc2626}.pink{color:#ec4899}.blue{color:#2563eb}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-active{background:#dcfce7;color:#166534}
+.b-trial{background:#fef3c7;color:#92400e}
+.b-free{background:#f1f5f9;color:#475569}
+.b-expired{background:#fee2e2;color:#991b1b}
+.b-success{background:#dcfce7;color:#166534}
+.b-pending{background:#fef3c7;color:#92400e}
+.b-manual{background:#ede9fe;color:#4c1d95}
+.b-failed{background:#fee2e2;color:#991b1b}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f8fafc;padding:8px 10px;text-align:left;font-weight:600;color:#64748b;font-size:11px;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+tr:hover td{background:#fafbfc}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:7px 16px;border-radius:20px;background:#e2e8f0;border:none;font-size:12px;font-weight:600;cursor:pointer;color:#475569;transition:all .15s}
+.tab:hover{background:#d1d5db}
+.tab.on{background:#7c3aed;color:#fff}
+.sec{display:none}.sec.on{display:block}
+.search{padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;width:220px}
+.act-box{background:#f8f7ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:14px;margin-bottom:12px}
+.act-box h4{font-size:13px;font-weight:700;color:#4c1d95;margin-bottom:10px}
+.row-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.inp-sm{padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;flex:1;min-width:160px}
+.btn-g{background:#059669;color:#fff;padding:7px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-b{background:#2563eb;color:#fff;padding:7px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-p{background:#7c3aed;color:#fff;padding:7px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-r{background:#dc2626;color:#fff;padding:7px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.tbl-btn{padding:4px 10px;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;margin-right:4px}
+.tbl-btn-g{background:#dcfce7;color:#166534}
+.tbl-btn-b{background:#dbeafe;color:#1d4ed8}
+.tbl-btn-r{background:#fee2e2;color:#991b1b}
+.empty{text-align:center;padding:32px;color:#94a3b8;font-size:13px}
+.summary-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;font-size:12px;line-height:1.9}
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:999}
+.toast{background:#1e293b;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;margin-top:8px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.chart-wrap{position:relative;width:100%;height:220px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap">
+  <div class="login-card">
+    <div style="text-align:center;font-size:40px;margin-bottom:8px">🌱</div>
+    <h2>ParentingAI Admin</h2>
+    <p>Dashboard Pendapatan & Manajemen User</p>
+    <div id="loginErr" class="err"></div>
+    <input type="password" id="adminPass" placeholder="Password Admin" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">Masuk Dashboard</button>
+    <p style="font-size:10px;color:#cbd5e1;text-align:center;margin-top:12px">URL ini bersifat rahasia. Jangan dibagikan.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appWrap">
+  <div class="topbar">
+    <h1>🌱 ParentingAI — Admin Dashboard</h1>
+    <div class="topbar-right">
+      <span id="lastRefresh" style="font-size:11px;opacity:.7"></span>
+      <button class="btn-sm btn-refresh" onclick="loadAll()">⟳ Refresh</button>
+      <button class="btn-sm btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- KPI -->
+    <div class="g4">
+      <div class="card"><div class="kpi-num purple" id="kTotal">—</div><div class="kpi-label">Total User</div><div class="kpi-sub" id="kTotalSub"></div></div>
+      <div class="card"><div class="kpi-num amber" id="kTrial">—</div><div class="kpi-label">🟡 Trial Aktif</div><div class="kpi-sub" id="kTrialSub"></div></div>
+      <div class="card"><div class="kpi-num green" id="kPremium">—</div><div class="kpi-label">✅ Premium</div><div class="kpi-sub" id="kPremiumSub"></div></div>
+      <div class="card"><div class="kpi-num red" id="kExpired">—</div><div class="kpi-label">⏰ Trial Habis</div><div class="kpi-sub" id="kExpiredSub"></div></div>
+    </div>
+
+    <!-- Revenue -->
+    <div class="g3">
+      <div class="card"><div class="kpi-label" style="margin-bottom:6px">💰 Total Pendapatan</div><div class="kpi-num green" id="rTotal">—</div><div class="kpi-sub" id="rTotalSub"></div></div>
+      <div class="card"><div class="kpi-label" style="margin-bottom:6px">📅 Bulan Ini</div><div class="kpi-num purple" id="rMonth">—</div><div class="kpi-sub" id="rMonthSub"></div></div>
+      <div class="card"><div class="kpi-label" style="margin-bottom:6px">📈 MRR Proyeksi</div><div class="kpi-num amber" id="rMRR">—</div><div class="kpi-sub" id="rMRRSub"></div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="g2">
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">Pendapatan 6 Bulan</div>
+        <div class="chart-wrap"><canvas id="chartRev"></canvas></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">Distribusi Status User</div>
+        <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab on" onclick="switchTab('users',this)">👥 Semua User</button>
+      <button class="tab" onclick="switchTab('premium',this)">✅ Premium</button>
+      <button class="tab" onclick="switchTab('trial',this)">🟡 Trial</button>
+      <button class="tab" onclick="switchTab('expired',this)">⏰ Expired</button>
+      <button class="tab" onclick="switchTab('payments',this)">💳 Pembayaran</button>
+      <button class="tab" onclick="switchTab('actions',this)">⚙️ Aksi</button>
+    </div>
+
+    <!-- Semua User -->
+    <div id="sec-users" class="sec on card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:13px;font-weight:700">Semua User</div>
+        <input class="search" id="userSearch" placeholder="🔍 Cari email atau nama..." oninput="filterTable()">
+      </div>
+      <div id="tblUsers" style="overflow-x:auto"></div>
+    </div>
+
+    <!-- Premium -->
+    <div id="sec-premium" class="sec card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">✅ User Premium Aktif</div>
+      <div id="tblPremium" style="overflow-x:auto"></div>
+    </div>
+
+    <!-- Trial -->
+    <div id="sec-trial" class="sec card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">🟡 Trial Aktif</div>
+      <div id="tblTrial" style="overflow-x:auto"></div>
+    </div>
+
+    <!-- Expired -->
+    <div id="sec-expired" class="sec card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">⏰ Trial Habis — Target Konversi</div>
+      <div id="tblExpired" style="overflow-x:auto"></div>
+    </div>
+
+    <!-- Payments -->
+    <div id="sec-payments" class="sec card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">💳 Riwayat Pembayaran</div>
+      <div id="tblPayments" style="overflow-x:auto"></div>
+    </div>
+
+    <!-- Actions -->
+    <div id="sec-actions" class="sec">
+      <div class="g2">
+        <div>
+          <div class="act-box">
+            <h4>✅ Aktifkan Premium Manual</h4>
+            <div class="row-act">
+              <input class="inp-sm" id="actEmail" placeholder="Email user">
+              <select class="inp-sm" id="actMonths" style="flex:0;min-width:100px">
+                <option value="1">1 Bulan</option>
+                <option value="3">3 Bulan</option>
+                <option value="6">6 Bulan</option>
+                <option value="12">12 Bulan</option>
+              </select>
+            </div>
+            <button class="btn-g" onclick="activateManual()">Aktifkan Premium</button>
+          </div>
+          <div class="act-box">
+            <h4>⏳ Perpanjang Trial</h4>
+            <div class="row-act">
+              <input class="inp-sm" id="trialEmail" placeholder="Email user">
+              <select class="inp-sm" id="trialDays" style="flex:0;min-width:100px">
+                <option value="3">+3 Hari</option>
+                <option value="7">+7 Hari</option>
+                <option value="14">+14 Hari</option>
+                <option value="30">+30 Hari</option>
+              </select>
+            </div>
+            <button class="btn-b" onclick="extendTrialManual()">Perpanjang Trial</button>
+          </div>
+        </div>
+        <div>
+          <div class="act-box">
+            <h4>📊 Export Data</h4>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn-b" onclick="exportCSV('users')">📥 Export Semua User (.csv)</button>
+              <button class="btn-g" onclick="exportCSV('payments')">📥 Export Pembayaran (.csv)</button>
+              <button class="btn-p" onclick="exportCSV('expired')">📥 Export Trial Expired (.csv)</button>
+            </div>
+          </div>
+          <div class="card" style="margin-top:0">
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px">📋 Ringkasan Bisnis</div>
+            <div class="summary-box" id="bizSummary">Memuat...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-wrap"><div class="toast" id="toast"></div></div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────
+// Password diambil dari URL param untuk keamanan ekstra
+// Akses: /admin-pai2024.html?key=YOUR_PASS
+const ADMIN_PASS   = '%%ADMIN_PASS%%';     // diisi oleh build.sh
+const SUPA_URL_CFG = '%%SUPABASE_URL%%';   // diisi oleh build.sh
+const SUPA_KEY_CFG = '%%SUPABASE_ANON_KEY%%'; // diisi oleh build.sh
+
+let supa=null, allUsers=[], allSubs=[], allPays=[];
+let chartRev=null, chartStatus=null;
+
+// ── LOGIN ──────────────────────────────────────────────────
+function doLogin(){
+  const pass = document.getElementById('adminPass').value;
+  const err  = document.getElementById('loginErr');
+  const expectedPass = ADMIN_PASS || 'admin123';
+
+  if(pass !== expectedPass){
+    err.textContent='Password salah.'; err.style.display='block'; return;
+  }
+  if(!SUPA_URL_CFG || SUPA_URL_CFG==='%%SUPABASE_URL%%'){
+    err.textContent='Konfigurasi server belum lengkap.'; err.style.display='block'; return;
+  }
+  supa = window.supabase.createClient(SUPA_URL_CFG, SUPA_KEY_CFG);
+  sessionStorage.setItem('admin_auth','1');
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  loadAll();
+}
+
+function doLogout(){
+  sessionStorage.removeItem('admin_auth');
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('adminPass').value='';
+}
+
+// Auto-login jika sudah auth di session ini
+window.addEventListener('DOMContentLoaded', ()=>{
+  if(sessionStorage.getItem('admin_auth')==='1' && SUPA_URL_CFG && SUPA_URL_CFG!=='%%SUPABASE_URL%%'){
+    supa = window.supabase.createClient(SUPA_URL_CFG, SUPA_KEY_CFG);
+    document.getElementById('loginWrap').style.display='none';
+    document.getElementById('appWrap').style.display='block';
+    loadAll();
+  }
+});
+
+// ── LOAD DATA ──────────────────────────────────────────────
+async function loadAll(){
+  document.getElementById('lastRefresh').textContent='Memuat...';
+  try{
+    const [{data:profiles},{data:subs},{data:pays}] = await Promise.all([
+      supa.from('profiles').select('*').order('created_at',{ascending:false}),
+      supa.from('subscriptions').select('*'),
+      supa.from('payment_log').select('*').order('created_at',{ascending:false}),
+    ]);
+    allUsers = profiles||[];
+    allSubs  = subs||[];
+    allPays  = pays||[];
+    renderAll();
+    document.getElementById('lastRefresh').textContent='Update: '+new Date().toLocaleTimeString('id-ID');
+  } catch(e){ showToast('Error: '+e.message); }
+}
+
+// ── HELPERS ────────────────────────────────────────────────
+function getSub(uid){ return allSubs.find(s=>s.user_id===uid)||null; }
+function getStatus(sub){
+  if(!sub) return 'free';
+  const now=new Date();
+  if(sub.status==='active'&&sub.current_period_end&&new Date(sub.current_period_end)>now) return 'active';
+  if(sub.status==='trial'&&sub.trial_ends_at&&new Date(sub.trial_ends_at)>now) return 'trial';
+  if(sub.status==='trial'&&sub.trial_ends_at&&new Date(sub.trial_ends_at)<=now) return 'expired';
+  return 'free';
+}
+function rp(n){ if(!n)return'Rp 0'; return'Rp '+Number(n).toLocaleString('id-ID'); }
+function fmtD(d){ if(!d)return'—'; return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}); }
+function dLeft(d){ return d?Math.max(0,Math.ceil((new Date(d)-new Date())/86400000)):0; }
+function badge(st){
+  const m={active:'b-active',trial:'b-trial',expired:'b-expired',free:'b-free',success:'b-success',pending:'b-pending',pending_manual:'b-manual',pending_duitku:'b-manual',failed:'b-failed'};
+  const l={active:'✅ Premium',trial:'🟡 Trial',expired:'⏰ Expired',free:'⚪ Gratis',success:'✅ Sukses',pending:'⏳ Pending',pending_manual:'📝 Manual',pending_duitku:'💳 Duitku',failed:'❌ Gagal'};
+  return`<span class="badge ${m[st]||'b-free'}">${l[st]||st}</span>`;
+}
+
+// ── RENDER ALL ─────────────────────────────────────────────
+function renderAll(){
+  renderKPI(); renderRevenue(); renderCharts();
+  renderTableUsers(allUsers);
+  renderTablePremium();
+  renderTableTrial();
+  renderTableExpired();
+  renderTablePayments();
+  renderBizSummary();
+}
+
+function renderKPI(){
+  const now=new Date();
+  const total   = allUsers.length;
+  const premium = allUsers.filter(u=>getStatus(getSub(u.id))==='active').length;
+  const trial   = allUsers.filter(u=>getStatus(getSub(u.id))==='trial').length;
+  const expired = allUsers.filter(u=>getStatus(getSub(u.id))==='expired').length;
+  const free    = total-premium-trial-expired;
+  document.getElementById('kTotal').textContent=total;
+  document.getElementById('kTotalSub').textContent=`${free} gratis, ${expired} expired`;
+  document.getElementById('kTrial').textContent=trial;
+  document.getElementById('kTrialSub').textContent='potensi konversi';
+  document.getElementById('kPremium').textContent=premium;
+  document.getElementById('kPremiumSub').textContent='berbayar aktif';
+  document.getElementById('kExpired').textContent=expired;
+  document.getElementById('kExpiredSub').textContent='belum upgrade';
+}
+
+function renderRevenue(){
+  const startMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+  const sukses=allPays.filter(p=>p.status==='success');
+  const total=sukses.reduce((s,p)=>s+(p.amount||0),0);
+  const month=sukses.filter(p=>new Date(p.created_at)>=startMonth).reduce((s,p)=>s+(p.amount||0),0);
+  const premium=allUsers.filter(u=>getStatus(getSub(u.id))==='active').length;
+  const mrr=premium*49000;
+  document.getElementById('rTotal').textContent=rp(total);
+  document.getElementById('rTotalSub').textContent=`dari ${sukses.length} transaksi`;
+  document.getElementById('rMonth').textContent=rp(month);
+  document.getElementById('rMonthSub').textContent=`${sukses.filter(p=>new Date(p.created_at)>=startMonth).length} transaksi`;
+  document.getElementById('rMRR').textContent=rp(mrr);
+  document.getElementById('rMRRSub').textContent=`ARR: ${rp(mrr*12)}`;
+}
+
+function renderCharts(){
+  // Revenue 6 bulan
+  const months=[],revs=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    months.push(d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'}));
+    const s=new Date(d.getFullYear(),d.getMonth(),1);
+    const e=new Date(d.getFullYear(),d.getMonth()+1,0);
+    revs.push(allPays.filter(p=>p.status==='success'&&new Date(p.created_at)>=s&&new Date(p.created_at)<=e).reduce((t,p)=>t+(p.amount||0),0));
+  }
+  if(chartRev)chartRev.destroy();
+  chartRev=new Chart(document.getElementById('chartRev'),{
+    type:'bar',
+    data:{labels:months,datasets:[{label:'Pendapatan',data:revs,backgroundColor:'rgba(124,58,237,.75)',borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>'Rp '+(v/1000).toFixed(0)+'k',font:{size:10}}},x:{ticks:{font:{size:10}}}}}
+  });
+  // Donut status
+  const prem=allUsers.filter(u=>getStatus(getSub(u.id))==='active').length;
+  const tri =allUsers.filter(u=>getStatus(getSub(u.id))==='trial').length;
+  const exp =allUsers.filter(u=>getStatus(getSub(u.id))==='expired').length;
+  const fr  =allUsers.length-prem-tri-exp;
+  if(chartStatus)chartStatus.destroy();
+  chartStatus=new Chart(document.getElementById('chartStatus'),{
+    type:'doughnut',
+    data:{labels:['Premium','Trial','Expired','Gratis'],
+      datasets:[{data:[prem,tri,exp,fr],backgroundColor:['#059669','#d97706','#dc2626','#94a3b8'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12,padding:8}}}}
+  });
+}
+
+function tableHdr(...cols){
+  return`<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+}
+function noData(el){ document.getElementById(el).innerHTML=`<div class="empty">Tidak ada data</div>`; }
+
+function renderTableUsers(users){
+  if(!users.length){noData('tblUsers');return;}
+  let html=tableHdr('Nama','Email','Status','Daftar','Info','Aksi');
+  users.forEach(u=>{
+    const sub=getSub(u.id); const st=getStatus(sub);
+    const info=st==='trial'?`<span style="font-size:10px;color:#92400e">sisa ${dLeft(sub?.trial_ends_at)} hari</span>`
+              :st==='active'?`<span style="font-size:10px;color:#166534">s/d ${fmtD(sub?.current_period_end)}</span>`:'';
+    html+=`<tr>
+      <td style="font-weight:600">${u.full_name||'—'}</td>
+      <td style="color:#64748b">${u.email||'—'}</td>
+      <td>${badge(st)}<br>${info}</td>
+      <td style="color:#94a3b8">${fmtD(u.created_at)}</td>
+      <td style="font-size:11px;color:#64748b">${sub?rp(sub.price_idr)+'/bln':'—'}</td>
+      <td>
+        <button class="tbl-btn tbl-btn-g" onclick="quickAct('${u.email}','activate',1)">+1bln</button>
+        <button class="tbl-btn tbl-btn-b" onclick="quickAct('${u.email}','trial',7)">+7hr</button>
+      </td></tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('tblUsers').innerHTML=html;
+}
+
+function filterTable(){
+  const q=document.getElementById('userSearch').value.toLowerCase();
+  renderTableUsers(q?allUsers.filter(u=>(u.email||'').toLowerCase().includes(q)||(u.full_name||'').toLowerCase().includes(q)):allUsers);
+}
+
+function renderTablePremium(){
+  const us=allUsers.filter(u=>getStatus(getSub(u.id))==='active');
+  if(!us.length){document.getElementById('tblPremium').innerHTML='<div class="empty">Belum ada user premium</div>';return;}
+  let html=tableHdr('Nama','Email','Mulai','Berakhir','Harga','Aksi');
+  us.forEach(u=>{
+    const sub=getSub(u.id);
+    html+=`<tr><td style="font-weight:600">${u.full_name||'—'}</td><td>${u.email}</td>
+      <td>${fmtD(sub?.current_period_start)}</td><td>${fmtD(sub?.current_period_end)}</td>
+      <td>${rp(sub?.price_idr)}</td>
+      <td><button class="tbl-btn tbl-btn-g" onclick="quickAct('${u.email}','activate',1)">Perpanjang</button></td></tr>`;
+  });
+  document.getElementById('tblPremium').innerHTML=html+'</tbody></table>';
+}
+
+function renderTableTrial(){
+  const us=allUsers.filter(u=>getStatus(getSub(u.id))==='trial');
+  if(!us.length){document.getElementById('tblTrial').innerHTML='<div class="empty">Tidak ada trial aktif</div>';return;}
+  let html=tableHdr('Nama','Email','Sisa Hari','Berakhir','Daftar','Aksi');
+  us.sort((a,b)=>dLeft(getSub(a.id)?.trial_ends_at)-dLeft(getSub(b.id)?.trial_ends_at));
+  us.forEach(u=>{
+    const sub=getSub(u.id); const days=dLeft(sub?.trial_ends_at);
+    const c=days<=1?'color:#dc2626;font-weight:700':days<=3?'color:#d97706;font-weight:600':'';
+    html+=`<tr><td style="font-weight:600">${u.full_name||'—'}</td><td>${u.email}</td>
+      <td style="${c}">${days} hari</td><td>${fmtD(sub?.trial_ends_at)}</td>
+      <td style="color:#94a3b8">${fmtD(u.created_at)}</td>
+      <td>
+        <button class="tbl-btn tbl-btn-g" onclick="quickAct('${u.email}','activate',1)">Aktifkan</button>
+        <button class="tbl-btn tbl-btn-b" onclick="quickAct('${u.email}','trial',7)">+7hr</button>
+      </td></tr>`;
+  });
+  document.getElementById('tblTrial').innerHTML=html+'</tbody></table>';
+}
+
+function renderTableExpired(){
+  const us=allUsers.filter(u=>getStatus(getSub(u.id))==='expired');
+  if(!us.length){document.getElementById('tblExpired').innerHTML='<div class="empty">Tidak ada expired</div>';return;}
+  let html=tableHdr('Nama','Email','Expired','Hari Lalu','Daftar','Aksi');
+  us.forEach(u=>{
+    const sub=getSub(u.id);
+    const ago=Math.ceil((new Date()-new Date(sub?.trial_ends_at))/86400000);
+    html+=`<tr><td style="font-weight:600">${u.full_name||'—'}</td><td>${u.email}</td>
+      <td style="color:#dc2626">${fmtD(sub?.trial_ends_at)}</td>
+      <td style="color:#dc2626">${ago} hari lalu</td>
+      <td style="color:#94a3b8">${fmtD(u.created_at)}</td>
+      <td>
+        <button class="tbl-btn tbl-btn-g" onclick="quickAct('${u.email}','activate',1)">Aktifkan</button>
+        <button class="tbl-btn" style="background:#fce7f3;color:#9d174d" onclick="quickAct('${u.email}','trial',3)">+3hr</button>
+      </td></tr>`;
+  });
+  document.getElementById('tblExpired').innerHTML=html+'</tbody></table>';
+}
+
+function renderTablePayments(){
+  if(!allPays.length){document.getElementById('tblPayments').innerHTML='<div class="empty">Belum ada pembayaran</div>';return;}
+  let html=tableHdr('Order ID','Email','Status','Jumlah','Tanggal','Referensi');
+  allPays.slice(0,100).forEach(p=>{
+    const u=allUsers.find(u=>u.id===p.user_id);
+    html+=`<tr>
+      <td style="font-size:10px;color:#64748b;font-family:monospace">${(p.order_id||'—').substring(0,20)}</td>
+      <td>${u?.email||'—'}</td>
+      <td>${badge(p.status)}</td>
+      <td style="font-weight:600;color:${p.status==='success'?'#059669':'#64748b'}">${rp(p.amount)}</td>
+      <td style="color:#94a3b8">${fmtD(p.created_at)}</td>
+      <td style="font-size:10px;color:#94a3b8">${p.transaction_id||'—'}</td></tr>`;
+  });
+  document.getElementById('tblPayments').innerHTML=html+'</tbody></table>';
+}
+
+function renderBizSummary(){
+  const premium=allUsers.filter(u=>getStatus(getSub(u.id))==='active').length;
+  const trial  =allUsers.filter(u=>getStatus(getSub(u.id))==='trial').length;
+  const expired=allUsers.filter(u=>getStatus(getSub(u.id))==='expired').length;
+  const mrr=premium*49000;
+  const sukses=allPays.filter(p=>p.status==='success');
+  const totalRev=sukses.reduce((s,p)=>s+(p.amount||0),0);
+  const potential=(trial+expired)*49000;
+  document.getElementById('bizSummary').innerHTML=
+    `<b>MRR saat ini:</b> ${rp(mrr)}<br>
+     <b>ARR proyeksi:</b> ${rp(mrr*12)}<br>
+     <b>Total lifetime revenue:</b> ${rp(totalRev)}<br>
+     <b>Potensi konversi (trial+expired):</b> ${rp(potential)}/bln<br>
+     <b>Konversi rate:</b> ${trial+expired>0?Math.round(premium/(premium+trial+expired)*100):0}%<br>
+     <div style="margin-top:8px;padding:8px;background:#dcfce7;border-radius:6px;font-size:11px;color:#166534">
+       💡 Konversi ${expired} expired = +${rp(expired*49000)}/bln tambahan
+     </div>`;
+}
+
+// ── ADMIN ACTIONS ──────────────────────────────────────────
+async function quickAct(email,type,val){
+  const u=allUsers.find(u=>u.email===email);
+  if(!u){showToast('User tidak ditemukan');return;}
+  if(type==='activate') await doActivate(u.id,val);
+  else await doExtendTrial(u.id,val);
+  showToast(`✅ ${type==='activate'?'Premium '+val+' bulan':'Trial +'+val+' hari'} untuk ${email}`);
+  await loadAll();
+}
+
+async function activateManual(){
+  const email=document.getElementById('actEmail').value.trim();
+  const months=parseInt(document.getElementById('actMonths').value);
+  if(!email){showToast('Isi email dulu');return;}
+  const u=allUsers.find(u=>u.email===email);
+  if(!u){showToast('User tidak ditemukan: '+email);return;}
+  await doActivate(u.id,months);
+  showToast(`✅ ${email} Premium ${months} bulan`);
+  document.getElementById('actEmail').value='';
+  await loadAll();
+}
+
+async function extendTrialManual(){
+  const email=document.getElementById('trialEmail').value.trim();
+  const days=parseInt(document.getElementById('trialDays').value);
+  if(!email){showToast('Isi email dulu');return;}
+  const u=allUsers.find(u=>u.email===email);
+  if(!u){showToast('User tidak ditemukan: '+email);return;}
+  await doExtendTrial(u.id,days);
+  showToast(`✅ Trial ${email} +${days} hari`);
+  document.getElementById('trialEmail').value='';
+  await loadAll();
+}
+
+async function doActivate(uid,months){
+  const now=new Date(), exp=new Date(now.getTime()+months*30*86400000);
+  await supa.from('subscriptions').upsert({
+    user_id:uid,status:'active',plan:'monthly',price_idr:49000,
+    current_period_start:now.toISOString(),current_period_end:exp.toISOString(),
+    updated_at:now.toISOString()
+  },{onConflict:'user_id'});
+  await supa.from('payment_log').insert({
+    user_id:uid,order_id:`MANUAL-ADMIN-${Date.now()}`,
+    amount:49000*months,status:'success',
+    payload:{method:'manual_admin',months}
+  });
+}
+
+async function doExtendTrial(uid,days){
+  const sub=getSub(uid);
+  const cur=sub?.trial_ends_at?new Date(sub.trial_ends_at):new Date();
+  const newEnd=new Date(Math.max(cur.getTime(),new Date().getTime())+days*86400000);
+  await supa.from('subscriptions').upsert({
+    user_id:uid,status:'trial',plan:'monthly',
+    trial_ends_at:newEnd.toISOString(),updated_at:new Date().toISOString()
+  },{onConflict:'user_id'});
+}
+
+// ── EXPORT CSV ─────────────────────────────────────────────
+function exportCSV(type){
+  let hdr=[],rows=[];
+  if(type==='users'){
+    hdr=['Nama','Email','Status','Daftar','Trial End','Premium Until','Harga'];
+    rows=allUsers.map(u=>{
+      const sub=getSub(u.id);const st=getStatus(sub);
+      return[u.full_name||'',u.email||'',st,fmtD(u.created_at),fmtD(sub?.trial_ends_at),fmtD(sub?.current_period_end),sub?.price_idr||0];
+    });
+  }else if(type==='payments'){
+    hdr=['Order ID','Email','Status','Jumlah','Tanggal','Referensi'];
+    rows=allPays.map(p=>{const u=allUsers.find(u=>u.id===p.user_id);
+      return[p.order_id||'',u?.email||'',p.status||'',p.amount||0,fmtD(p.created_at),p.transaction_id||''];});
+  }else{
+    hdr=['Nama','Email','Trial Expired','Hari Lalu'];
+    rows=allUsers.filter(u=>getStatus(getSub(u.id))==='expired').map(u=>{
+      const sub=getSub(u.id);
+      const ago=Math.ceil((new Date()-new Date(sub?.trial_ends_at))/86400000);
+      return[u.full_name||'',u.email||'',fmtD(sub?.trial_ends_at),ago];
+    });
+  }
+  const csv=[hdr,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));
+  a.download=`parentingai_${type}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('📥 CSV didownload!');
+}
+
+// ── UI ─────────────────────────────────────────────────────
+function switchTab(name,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('sec-'+name).classList.add('on');
+  el.classList.add('on');
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
