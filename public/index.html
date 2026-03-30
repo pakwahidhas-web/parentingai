@@ -413,6 +413,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
   <div class="lnd-footer">
     <p>© 2025 ParentingAI · Dibuat dengan ❤️ untuk orang tua Indonesia</p>
     <p style="margin-top:6px">Pertanyaan? <a href="mailto:hello@parentingai.id" style="color:var(--purple)">hello@parentingai.id</a></p>
+    <p style="margin-top:8px;font-size:11px"><a href="#" onclick="showPolicy('privacy')" style="color:var(--mut)">Kebijakan Privasi</a> &nbsp;·&nbsp; <a href="#" onclick="showPolicy('terms')" style="color:var(--mut)">Syarat & Ketentuan</a></p>
   </div>
 </div>
 
@@ -788,6 +789,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
     <div class="mact">
       <button class="btn btn-g" onclick="closeModal('upgradeModal')">Nanti Saja</button>
     </div>
+  </div>
+</div>
+
+
+<!-- POLICY MODAL -->
+<div class="overlay hidden" id="policyModal" onclick="bgClose(event,'policyModal')">
+  <div class="modal" style="max-width:600px;max-height:80vh;overflow-y:auto">
+    <div class="mhdr" style="position:sticky;top:0;background:var(--surf);z-index:1;border-bottom:1px solid var(--bdr);padding-bottom:12px;margin-bottom:0">
+      <div class="m-ico" id="policyIco">📋</div>
+      <div><h3 id="policyTitle">Kebijakan Privasi</h3><p class="msub">ParentingAI</p></div>
+      <button onclick="closeModal('policyModal')" style="margin-left:auto;background:none;border:none;font-size:20px;cursor:pointer;color:var(--mut)">×</button>
+    </div>
+    <div id="policyContent" style="font-size:13px;line-height:1.7;color:var(--txt);padding:16px 0"></div>
   </div>
 </div>
 
@@ -2248,10 +2262,37 @@ Berikan: (1) apresiasi pencapaian, (2) 2 saran konkret minggu depan sesuai jenja
 // ============================================================
 async function genPDF(){
   const c=child(); if(!c){toast('⚠️ Pilih anak dulu');return;}
-  toast('📄 Membuat PDF laporan lengkap...');
+  if(!canUseAI()){openModal('upgradeModal');return;}
+  toast('📄 Membuat laporan PDF...');
   const jLabel=gradeToJenjang(c.grade);
   const curIdx=gradeToIdx(c.grade);
-  let aiAnalysis='Gunakan fitur AI Konsultan untuk analisis mendalam tentang perkembangan anak Anda.';
+  const now=new Date();
+  const nowStr=now.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  const monthStr=now.toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+
+  // ── Hitung statistik ──────────────────────────────────────
+  let td=0,tl=0,ta=0;
+  TMPL.forEach((_,ci)=>{td+=cntDone(ci);tl+=cntLearn(ci);ta+=TMPL[ci].skills.length;});
+  const op=Math.round(td/ta*100);
+  const curDone=cntDone(curIdx), curTotal=TMPL[curIdx].skills.length;
+  const curPct=Math.round(curDone/curTotal*100);
+
+  // Per-jenjang stats
+  const jStats=JENJANG.map(j=>{
+    const [s,e]=j.range; let jd=0,jt=0;
+    for(let ci=s;ci<=e;ci++){jd+=cntDone(ci);jt+=TMPL[ci].skills.length;}
+    return {label:j.label,done:jd,total:jt,pct:jt>0?Math.round(jd/jt*100):0};
+  });
+
+  // ── Warna jenjang ─────────────────────────────────────────
+  const hCol  = jLabel==='Pra'?[236,72,153]:jLabel==='SD'?[124,58,237]:jLabel==='SMP'?[13,148,136]:[217,119,6];
+  const hColL = jLabel==='Pra'?[251,234,240]:jLabel==='SD'?[237,233,254]:jLabel==='SMP'?[204,251,241]:[254,243,199];
+  const hColT = jLabel==='Pra'?[157,23,77]:jLabel==='SD'?[76,29,149]:jLabel==='SMP'?[19,78,74]:[120,53,15];
+  const jCols = [[236,72,153],[124,58,237],[13,148,136],[217,119,6]];
+
+  // ── AI Analisis ────────────────────────────────────────────
+  let aiAnalysis='Gunakan fitur AI Konsultan untuk mendapatkan analisis mendalam.';
+  let aiStrengths=[], aiRecommendations=[], aiMotivation='';
   if(ANTHROPIC_KEY&&canUseAI()){
     try{
       let done=[],learn=[],curNone=[];
@@ -2261,153 +2302,472 @@ async function genPDF(){
         else if(sk.status==='learning')learn.push(s.n);
         else if(ci===curIdx)curNone.push(s.n);
       }));
-      const res=await fetch('/api/chat',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
-          messages:[{role:'user',content:`Kamu konsultan parenting & coach anak profesional. Buat analisis perkembangan bulanan untuk laporan PDF (Bahasa Indonesia, formal tapi hangat, 5-6 kalimat) untuk ${c.name}, ${TMPL[curIdx].title}, usia ${c.age||c.grade+5} tahun (${jLabel}).
-Skill dikuasai: ${done.slice(0,15).join('; ')||'belum ada'}.
-Sedang belajar: ${learn.slice(0,5).join(', ')||'belum ada'}.
-Belum dimulai di kelasnya: ${curNone.slice(0,3).join(', ')||'semua selesai'}.
-Sertakan: (1) apresiasi pencapaian, (2) analisis kekuatan yang menonjol, (3) area yang perlu dikembangkan, (4) saran prioritas bulan depan sesuai jenjang ${jLabel}, (5) pesan motivasi untuk anak dan orang tua.`}]
+      const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,
+          messages:[{role:'user',content:`Buat analisis perkembangan untuk laporan PDF ParentingAI. Bahasa Indonesia formal tapi hangat. Data:
+Anak: ${c.name} | ${TMPL[curIdx].title} (${jLabel}) | Usia: ${c.age||c.grade+5} thn
+Progress: ${td}/${ta} skill dikuasai (${op}%) | Kelas ini: ${curDone}/${curTotal} (${curPct}%)
+Dikuasai: ${done.slice(0,12).join('; ')||'belum ada'}
+Sedang belajar: ${learn.slice(0,5).join(', ')||'belum ada'}
+Belum dimulai: ${curNone.slice(0,4).join(', ')||'semua selesai'}
+
+Berikan dalam format JSON dengan field:
+{
+  "ringkasan": "2-3 kalimat ringkasan pencapaian keseluruhan",
+  "kekuatan": ["kekuatan 1 (1 kalimat)", "kekuatan 2", "kekuatan 3"],
+  "rekomendasi": ["prioritas 1 bulan depan (konkret)", "prioritas 2", "prioritas 3"],
+  "motivasi": "1 kalimat pesan motivasi untuk anak dan orang tua"
+}
+Hanya JSON, tidak ada teks lain.`}]
         })
       });
       const d=await res.json();
-      aiAnalysis=d.content?.[0]?.text||aiAnalysis;
+      const txt=d.content?.[0]?.text||'{}';
+      try{
+        const parsed=JSON.parse(txt.replace(/```json|```/g,'').trim());
+        aiAnalysis=parsed.ringkasan||aiAnalysis;
+        aiStrengths=parsed.kekuatan||[];
+        aiRecommendations=parsed.rekomendasi||[];
+        aiMotivation=parsed.motivasi||'';
+      }catch(e){aiAnalysis=txt.substring(0,400);}
     }catch(e){}
   }
+
+  // ── Buat PDF ───────────────────────────────────────────────
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210,M=18; let y=20;
-  const now=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
-  const hCol=jLabel==='SD'?[124,58,237]:jLabel==='SMP'?[13,148,136]:[217,119,6];
-  const fillCol=jLabel==='SD'?[237,233,254]:jLabel==='SMP'?[204,251,241]:[254,243,199];
-  const textCol=jLabel==='SD'?[76,29,149]:jLabel==='SMP'?[19,78,74]:[120,53,15];
-  const jenjangCols=[[124,58,237],[13,148,136],[217,119,6]];
+  const W=210, M=16; let y=0;
 
-  doc.setFillColor(...hCol);doc.rect(0,0,W,44,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(17);doc.setFont('helvetica','bold');
-  doc.text('LAPORAN PERKEMBANGAN BULANAN',M,15);
-  doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text('ParentingAI — Konsultan Parenting & Coach Anak SD s/d SMA',M,25);
-  doc.text('Dicetak: '+now,M,34);
+  // ══════════════════════════════════════════════════════════
+  // HALAMAN 1 — COVER + RINGKASAN
+  // ══════════════════════════════════════════════════════════
 
-  y=54;
-  doc.setFillColor(...fillCol);doc.roundedRect(M,y,W-2*M,28,3,3,'F');
-  doc.setTextColor(...textCol);
-  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text(c.name,M+7,y+10);
-  doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text(`${TMPL[curIdx].title} (${jLabel})  |  Usia ${c.age||c.grade+5} tahun  |  Poin: ${c.points||0}`,M+7,y+20);
-  doc.setTextColor(0,0,0);
+  // Header banner
+  doc.setFillColor(...hCol);
+  doc.rect(0,0,W,52,'F');
 
-  y=92;
-  let td=0,tl=0,ta=0;
-  TMPL.forEach((_,ci)=>{td+=cntDone(ci);tl+=cntLearn(ci);ta+=TMPL[ci].skills.length;});
-  const op=Math.round(td/ta*100);
-  doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
-  doc.text('RINGKASAN PROGRES KESELURUHAN (Kelas 1-12)',M,y);y+=7;
-  [[td,'Dikuasai',[34,197,94]],[tl,'Belajar',[245,158,11]],[ta-td-tl,'Belum',[148,163,184]]].forEach(([n,lb,col],i)=>{
-    const bx=M+i*58;
-    doc.setFillColor(...col);doc.roundedRect(bx,y,52,20,2,2,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');
-    doc.text(String(n),bx+26,y+11,{align:'center'});
-    doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text(lb,bx+26,y+17,{align:'center'});
+  // Logo area — lingkaran putih
+  doc.setFillColor(255,255,255);
+  doc.circle(M+8, 26, 8, 'F');
+  doc.setTextColor(...hCol);
+  doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text('P',M+8,28.5,{align:'center'});
+
+  // Judul header
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(18);doc.setFont('helvetica','bold');
+  doc.text('Laporan Perkembangan',M+20,18);
+  doc.setFontSize(11);doc.setFont('helvetica','normal');
+  doc.text('ParentingAI — 135 Life Skill Tracker',M+20,26);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text(monthStr+' · Dicetak '+nowStr,M+20,34);
+
+  // Badge jenjang
+  doc.setFillColor(255,255,255,0.2);
+  doc.roundedRect(W-M-40,8,36,16,4,4,'F');
+  doc.setTextColor(...hCol);
+  doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text(TMPL[curIdx].title,W-M-22,14.5,{align:'center'});
+  doc.text(jLabel,W-M-22,20.5,{align:'center'});
+
+  // Decorative wave
+  doc.setFillColor(...hColL);
+  doc.rect(0,50,W,6,'F');
+
+  y=66;
+
+  // ── Profil anak ─────────────────────────────────────────
+  doc.setFillColor(248,250,252);
+  doc.roundedRect(M,y-4,W-2*M,24,4,4,'F');
+  doc.setDrawColor(...hCol);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(M,y-4,W-2*M,24,4,4,'S');
+
+  // Avatar lingkaran
+  doc.setFillColor(...hCol);
+  doc.circle(M+12,y+8,8,'F');
+  const initials=(c.name||'A').substring(0,2).toUpperCase();
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text(initials,M+12,y+10.5,{align:'center'});
+
+  doc.setTextColor(15,23,42);
+  doc.setFontSize(14);doc.setFont('helvetica','bold');
+  doc.text(c.name||'—',M+24,y+6);
+
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.setTextColor(100,116,139);
+  const infoTxt=`${TMPL[curIdx].title} · Jenjang ${jLabel} · Usia ${c.age||c.grade+5} tahun · ${c.points||0} poin reward`;
+  doc.text(infoTxt,M+24,y+13);
+
+  // Badge progress kelas ini
+  doc.setFillColor(...hCol);
+  doc.roundedRect(W-M-28,y,24,12,2,2,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(12);doc.setFont('helvetica','bold');
+  doc.text(curPct+'%',W-M-16,y+7.5,{align:'center'});
+  doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text('kelas ini',W-M-16,y+12.5,{align:'center'});
+
+  y+=32;
+
+  // ── Stat boxes ──────────────────────────────────────────
+  const stats=[
+    [String(td),'Skill Dikuasai',[34,197,94]],
+    [String(tl),'Sedang Belajar',[245,158,11]],
+    [String(ta-td-tl),'Belum Mulai',[148,163,184]],
+    [op+'%','Total Progress',...[hCol]],
+  ];
+  const bw=(W-2*M-9)/4;
+  stats.forEach(([val,lbl,col],i)=>{
+    const bx=M+i*(bw+3);
+    doc.setFillColor(255,255,255);
+    doc.setDrawColor(226,232,240);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(bx,y,bw,20,3,3,'FD');
+    // top color accent
+    doc.setFillColor(...(Array.isArray(col[0])?col:col));
+    doc.roundedRect(bx,y,bw,3,3,3,'F');
+    doc.rect(bx,y+1,bw,2,'F');
+    // value
+    doc.setTextColor(15,23,42);
+    doc.setFontSize(14);doc.setFont('helvetica','bold');
+    doc.text(val,bx+bw/2,y+12,{align:'center'});
+    doc.setFontSize(6);doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);
+    doc.text(lbl,bx+bw/2,y+17.5,{align:'center'});
   });
-  y+=28;
-  doc.setFontSize(8);doc.setTextColor(100,116,139);doc.text(`Progress total: ${op}%`,M,y);y+=4;
+  y+=26;
+
+  // ── Progress bar keseluruhan ──────────────────────────────
+  doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
+  doc.text('Progress Keseluruhan',M,y);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);
+  doc.text(op+'%',W-M,y,{align:'right'});
+  y+=4;
   doc.setFillColor(226,232,240);doc.roundedRect(M,y,W-2*M,5,2,2,'F');
   doc.setFillColor(...hCol);doc.roundedRect(M,y,(W-2*M)*op/100,5,2,2,'F');
-  y+=12;
+  y+=10;
 
-  doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
-  doc.text('PROGRESS PER JENJANG',M,y);y+=6;
-  JENJANG.forEach((j,ji)=>{
-    const [s,e]=j.range; let jd=0,jt=0;
-    for(let ci=s;ci<=e;ci++){jd+=cntDone(ci);jt+=TMPL[ci].skills.length;}
-    const jp=jt>0?Math.round(jd/jt*100):0;
-    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...jenjangCols[ji]);
-    doc.text(`${j.label}: ${jd}/${jt} skill (${jp}%)`,M,y);
-    doc.setFillColor(226,232,240);doc.roundedRect(M+44,y-4,W-2*M-46,5,2,2,'F');
-    doc.setFillColor(...jenjangCols[ji]);doc.roundedRect(M+44,y-4,(W-2*M-46)*jp/100,5,2,2,'F');
-    y+=10;
+  // ── Progress per jenjang ──────────────────────────────────
+  doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
+  doc.text('Progress per Jenjang',M,y);y+=5;
+  jStats.forEach((j,ji)=>{
+    const col=jCols[ji];
+    doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(...col);
+    doc.text(j.label,M,y+3.5);
+    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);
+    doc.text(`${j.done}/${j.total}`,M+14,y+3.5);
+    doc.setFillColor(226,232,240);doc.roundedRect(M+26,y,W-2*M-40,5,2,2,'F');
+    doc.setFillColor(...col);doc.roundedRect(M+26,y,(W-2*M-40)*j.pct/100,5,2,2,'F');
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...col);
+    doc.text(j.pct+'%',W-M,y+3.8,{align:'right'});
+    y+=8;
   });
   y+=4;
 
+  // ── AI Analisis ───────────────────────────────────────────
+  if(y>200){doc.addPage();y=20;}
+  doc.setFillColor(...hColL);
+  doc.setDrawColor(...hColL);
+  doc.roundedRect(M,y,W-2*M,7,2,2,'F');
+  doc.setTextColor(...hColT);
+  doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text('✦  Analisis AI Konsultan',M+4,y+5);
+  y+=11;
+
+  // Ringkasan
+  if(aiAnalysis){
+    const lines=doc.splitTextToSize(aiAnalysis,W-2*M-4);
+    doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
+    doc.text(lines,M+2,y);
+    y+=lines.length*4.8+4;
+  }
+
+  // Kekuatan
+  if(aiStrengths.length){
+    if(y>255){doc.addPage();y=20;}
+    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...hColT);
+    doc.text('Kekuatan yang Menonjol:',M+2,y);y+=5;
+    aiStrengths.forEach(s=>{
+      if(y>268){doc.addPage();y=20;}
+      doc.setFillColor(...hCol);doc.circle(M+3,y-0.5,1,'F');
+      const ll=doc.splitTextToSize(s,W-2*M-10);
+      doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
+      doc.text(ll,M+7,y);y+=ll.length*4.2+1;
+    });
+    y+=3;
+  }
+
+  // Rekomendasi
+  if(aiRecommendations.length){
+    if(y>250){doc.addPage();y=20;}
+    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...hColT);
+    doc.text('Prioritas Bulan Depan:',M+2,y);y+=5;
+    aiRecommendations.forEach((r,i)=>{
+      if(y>268){doc.addPage();y=20;}
+      doc.setFillColor(...hCol);
+      doc.roundedRect(M+2,y-3.5,5,5,1,1,'F');
+      doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','bold');
+      doc.text(String(i+1),M+4.5,y-0.3,{align:'center'});
+      const ll=doc.splitTextToSize(r,W-2*M-12);
+      doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
+      doc.text(ll,M+10,y);y+=ll.length*4.2+1.5;
+    });
+    y+=2;
+  }
+
+  // Motivasi
+  if(aiMotivation){
+    if(y>260){doc.addPage();y=20;}
+    doc.setFillColor(...hCol);
+    doc.roundedRect(M,y,W-2*M,14,3,3,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(8.5);doc.setFont('helvetica','bold');
+    doc.text('💬',M+4,y+6);
+    const ml=doc.splitTextToSize(aiMotivation,W-2*M-18);
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text(ml,M+10,y+6);
+    y+=18;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // HALAMAN 2 — DETAIL SKILL PER JENJANG
+  // ══════════════════════════════════════════════════════════
+  doc.addPage(); y=20;
+
+  // Sub-header
+  doc.setFillColor(...hColL);
+  doc.rect(0,0,W,14,'F');
+  doc.setTextColor(...hColT);
+  doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text('Detail Skill per Jenjang',M,9);
+  doc.setFontSize(7);doc.setFont('helvetica','normal');
+  doc.text(c.name+' · '+TMPL[curIdx].title,W-M,9,{align:'right'});
+
   JENJANG.forEach((j,ji)=>{
     const [s,e]=j.range;
-    if(y>250){doc.addPage();y=20;}
-    doc.setFillColor(...jenjangCols[ji]);doc.roundedRect(M,y,W-2*M,9,2,2,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
-    doc.text(`${j.label} — ${j.label==='SD'?'Kelas 1-6':j.label==='SMP'?'Kelas 7-9':'Kelas 10-12'}`,M+4,y+6);
+    const col=jCols[ji];
+    if(y>258){doc.addPage();y=20;}
+
+    // Jenjang header
+    doc.setFillColor(...col);
+    doc.roundedRect(M,y,W-2*M,9,2,2,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(9);doc.setFont('helvetica','bold');
+    const jRange=j.label==='Pra'?'Playgroup - TK B':j.label==='SD'?'Kelas 1-6':j.label==='SMP'?'Kelas 7-9':'Kelas 10-12';
+    doc.text(`${j.label}  —  ${jRange}`,M+4,y+6);
+    const jst=jStats[ji];
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text(`${jst.done}/${jst.total} skill  (${jst.pct}%)`,W-M-4,y+6,{align:'right'});
     y+=13;
+
     for(let ci=s;ci<=e;ci++){
       const cls=TMPL[ci];
       if(y>258){doc.addPage();y=20;}
-      const d2=cntDone(ci),t2=cls.skills.length;
-      doc.setFillColor(248,250,252);doc.roundedRect(M,y,W-2*M,8,1,1,'F');
-      doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(...jenjangCols[ji]);
-      doc.text(`${cls.title} — ${cls.sub}`,M+2,y+5.5);
-      doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);
-      doc.text(`${d2}/${t2}`,W-M-2,y+5.5,{align:'right'});
-      y+=10;
-      const dones=cls.skills.filter((_,si)=>getSk(ci,si).status==='done').map(s2=>s2.n);
-      const learns=cls.skills.filter((_,si)=>getSk(ci,si).status==='learning').map(s2=>s2.n);
-      if(dones.length){
-        if(y>265){doc.addPage();y=20;}
-        doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(21,128,61);
-        doc.text('v',M+2,y);doc.setFont('helvetica','normal');doc.setTextColor(15,23,42);
-        const ll=doc.splitTextToSize(dones.join(', '),W-2*M-12);
-        doc.text(ll,M+7,y);y+=ll.length*3.2+1.5;
-      }
-      if(learns.length){
-        if(y>265){doc.addPage();y=20;}
-        doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(146,64,14);
-        doc.text('~',M+2,y);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
-        const ll=doc.splitTextToSize(learns.join(', '),W-2*M-12);
-        doc.text(ll,M+7,y);y+=ll.length*3.2+1.5;
-      }
-      y+=2.5;
+      const d2=cntDone(ci),l2=cntLearn(ci),t2=cls.skills.length;
+      const p2=Math.round(d2/t2*100);
+
+      // Kelas row
+      doc.setFillColor(248,250,252);
+      doc.setDrawColor(226,232,240);
+      doc.setLineWidth(0.2);
+      doc.roundedRect(M,y,W-2*M,9,1,1,'FD');
+
+      // Left color accent
+      doc.setFillColor(...col);
+      doc.rect(M,y,1.5,9,'F');
+
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
+      doc.text(cls.title,M+4,y+3.5);
+      doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);
+      doc.text(cls.sub,M+4,y+7);
+
+      // Mini progress bar
+      const barW=40;
+      doc.setFillColor(226,232,240);doc.roundedRect(W-M-barW-16,y+3,barW,3,1,1,'F');
+      doc.setFillColor(...col);doc.roundedRect(W-M-barW-16,y+3,barW*p2/100,3,1,1,'F');
+      doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...col);
+      doc.text(p2+'%',W-M,y+5.5,{align:'right'});
+      y+=11;
+
+      // Skill list
+      cls.skills.forEach((sk2,si)=>{
+        if(y>268){doc.addPage();y=20;}
+        const skData=getSk(ci,si);
+        const isDone=skData.status==='done';
+        const isLrn=skData.status==='learning';
+        if(!isDone&&!isLrn)return; // only show active skills
+        const bullet = isDone ? '✓' : '→';
+        const bCol   = isDone ? [21,128,61] : [146,64,14];
+        doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...bCol);
+        doc.text(bullet,M+5,y);
+        doc.setFont('helvetica','normal');doc.setTextColor(isDone?15:80,isDone?23:60,isDone?42:30);
+        const starsStr=isDone&&skData.stars?(' ★'.repeat(skData.stars)):'';
+        doc.text(sk2.n+starsStr,M+9,y);
+        y+=3.8;
+      });
+      y+=2;
     }
     y+=4;
   });
 
-  if(y>230){doc.addPage();y=20;}
-  doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
-  doc.text('ANALISIS AI KONSULTAN',M,y);y+=6;
-  doc.setFillColor(...fillCol);
-  const aiLines=doc.splitTextToSize(aiAnalysis,W-2*M-10);
-  const aiBoxH=aiLines.length*4.5+14;
-  doc.roundedRect(M,y,W-2*M,aiBoxH,3,3,'F');
-  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(...textCol);
-  doc.text(aiLines,M+6,y+9);y+=aiBoxH+10;
+  // ══════════════════════════════════════════════════════════
+  // CATATAN AKTIVITAS
+  // ══════════════════════════════════════════════════════════
+  const logs=(c.log||[]).slice(0,10);
+  if(logs.length){
+    if(y>230){doc.addPage();y=20;}
+    doc.setFillColor(...hColL);
+    doc.roundedRect(M,y,W-2*M,7,2,2,'F');
+    doc.setTextColor(...hColT);
+    doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text('Catatan Aktivitas Terkini',M+4,y+5);
+    y+=11;
+    logs.forEach(l=>{
+      if(y>272){doc.addPage();y=20;}
+      doc.setFillColor(248,250,252);
+      doc.roundedRect(M,y-1,W-2*M,9,1,1,'F');
+      doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
+      const tx=(l.text||'').replace(/[^ -~À-ɏ]/g,' ').substring(0,70);
+      doc.text(tx||'—',M+3,y+3.5);
+      doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);
+      const note=(l.note||'').replace(/[^ -~À-ɏ]/g,' ').substring(0,50);
+      doc.text((l.time||'')+(note?' · '+note:''),M+3,y+7);
+      y+=10.5;
+    });
+  }
 
-  if(y>220){doc.addPage();y=20;}
-  doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
-  doc.text('CATATAN AKTIVITAS TERKINI',M,y);y+=7;
-  const logs=(c.log||[]).slice(0,8);
-  if(!logs.length){doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);doc.text('Belum ada catatan.',M+2,y);y+=8;}
-  else logs.forEach(l=>{
-    if(y>268){doc.addPage();y=20;}
-    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);
-    const tx=(l.text||'').replace(/[^\x20-\x7E]/g,'').substring(0,68);
-    doc.text(tx||'—',M+2,y);
-    doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);
-    doc.text((l.time||'')+((l.note)?' — '+(l.note||'').replace(/[^\x20-\x7E]/g,'').substring(0,40):''),M+2,y+4);
-    y+=9;
-  });
-
+  // ══════════════════════════════════════════════════════════
+  // FOOTER semua halaman
+  // ══════════════════════════════════════════════════════════
   const pages=doc.internal.getNumberOfPages();
   for(let i=1;i<=pages;i++){
     doc.setPage(i);
-    doc.setFontSize(7);doc.setTextColor(148,163,184);
-    doc.setDrawColor(226,232,240);doc.line(M,285,W-M,285);
-    doc.text(`ParentingAI | ${c.name} | ${TMPL[curIdx].title} | Hal. ${i}/${pages}`,W/2,289,{align:'center'});
+    doc.setDrawColor(226,232,240);
+    doc.setLineWidth(0.3);
+    doc.line(M,286,W-M,286);
+    doc.setFontSize(6.5);doc.setTextColor(148,163,184);
+    doc.text(`ParentingAI  ·  ${c.name}  ·  ${TMPL[curIdx].title}  ·  Hal. ${i}/${pages}`,W/2,290,{align:'center'});
+    // Watermark tipis pojok kanan atas
+    doc.setFontSize(7);doc.setTextColor(200,200,200);
+    doc.text('parentingai.vercel.app',W-M,7,{align:'right'});
   }
-  doc.save(`Laporan_${c.name}_${TMPL[curIdx].title.replace(/ /g,'_')}_${new Date().toISOString().slice(0,7)}.pdf`);
-  toast('✅ PDF berhasil didownload!');
+
+  doc.save(`Laporan_${c.name.replace(/ /g,'_')}_${monthStr.replace(/ /g,'_')}.pdf`);
+  toast('✅ Laporan PDF berhasil didownload!');
 }
 
+
+
+
+// ============================================================
+// PRIVACY POLICY & TERMS
+// ============================================================
+function showPolicy(type){
+  const isPrivacy = type === 'privacy';
+  document.getElementById('policyIco').textContent = isPrivacy ? '🔒' : '📋';
+  document.getElementById('policyTitle').textContent = isPrivacy ? 'Kebijakan Privasi' : 'Syarat & Ketentuan';
+  document.getElementById('policyContent').innerHTML = isPrivacy ? getPolicyPrivacy() : getPolicyTerms();
+  openModal('policyModal');
+}
+
+function getPolicyPrivacy(){
+  return `<p><strong>Terakhir diperbarui: Maret 2025</strong></p>
+  <p>ParentingAI ("kami", "aplikasi") berkomitmen melindungi privasi Anda. Kebijakan ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi data Anda.</p>
+  
+  <h4 style="margin-top:16px;color:var(--purple)">1. Data yang Kami Kumpulkan</h4>
+  <ul style="padding-left:16px;margin-top:6px">
+    <li><strong>Data akun:</strong> nama, email, dan password (dienkripsi)</li>
+    <li><strong>Data anak:</strong> nama, kelas, progres skill (tersimpan di akun Anda)</li>
+    <li><strong>Data penggunaan:</strong> skill yang dipelajari, catatan aktivitas, poin reward</li>
+    <li><strong>Data pembayaran:</strong> status langganan (detail pembayaran diproses oleh Duitku, kami tidak menyimpan data kartu)</li>
+  </ul>
+
+  <h4 style="margin-top:16px;color:var(--purple)">2. Cara Kami Menggunakan Data</h4>
+  <ul style="padding-left:16px;margin-top:6px">
+    <li>Menyediakan layanan tracking perkembangan anak</li>
+    <li>Menghasilkan laporan AI yang dipersonalisasi</li>
+    <li>Mengirim notifikasi terkait layanan (reminder trial, laporan mingguan)</li>
+    <li>Meningkatkan kualitas aplikasi</li>
+  </ul>
+
+  <h4 style="margin-top:16px;color:var(--purple)">3. Keamanan Data</h4>
+  <p>Data Anda disimpan di Supabase dengan enkripsi end-to-end dan Row Level Security — hanya Anda yang dapat mengakses data keluarga Anda. Kami tidak pernah menjual data Anda kepada pihak ketiga.</p>
+
+  <h4 style="margin-top:16px;color:var(--purple)">4. Data Anak</h4>
+  <p>Kami sangat serius dalam melindungi privasi anak. Data anak hanya berisi nama, kelas, dan progres skill — tidak ada data sensitif. Data ini hanya dapat diakses oleh pemilik akun (orang tua/wali).</p>
+
+  <h4 style="margin-top:16px;color:var(--purple)">5. Hak Anda</h4>
+  <ul style="padding-left:16px;margin-top:6px">
+    <li>Mengakses dan mengunduh data Anda kapan saja</li>
+    <li>Meminta penghapusan akun dan seluruh data</li>
+    <li>Membatalkan langganan kapan saja</li>
+  </ul>
+
+  <h4 style="margin-top:16px;color:var(--purple)">6. Kontak</h4>
+  <p>Pertanyaan terkait privasi: <a href="mailto:hello@parentingai.id" style="color:var(--purple)">hello@parentingai.id</a></p>`;
+}
+
+function getPolicyTerms(){
+  return `<p><strong>Terakhir diperbarui: Maret 2025</strong></p>
+  <p>Dengan menggunakan ParentingAI, Anda menyetujui syarat dan ketentuan berikut. Harap baca dengan seksama.</p>
+
+  <h4 style="margin-top:16px;color:var(--purple)">1. Layanan</h4>
+  <p>ParentingAI menyediakan platform tracking perkembangan anak berbasis AI. Layanan tersedia dalam dua paket: Gratis dan Premium. Kami berhak mengubah, memperbarui, atau menghentikan fitur kapan saja dengan pemberitahuan.</p>
+
+  <h4 style="margin-top:16px;color:var(--purple)">2. Akun Pengguna</h4>
+  <ul style="padding-left:16px;margin-top:6px">
+    <li>Anda bertanggung jawab atas keamanan akun dan password Anda</li>
+    <li>Satu akun untuk satu keluarga — boleh mengelola beberapa profil anak</li>
+    <li>Tidak boleh berbagi akun dengan orang lain di luar keluarga inti</li>
+    <li>Pengguna minimal berusia 18 tahun atau wali sah anak</li>
+  </ul>
+
+  <h4 style="margin-top:16px;color:var(--purple)">3. Langganan & Pembayaran</h4>
+  <ul style="padding-left:16px;margin-top:6px">
+    <li><strong>Trial:</strong> 7 hari gratis dengan akses fitur premium penuh</li>
+    <li><strong>Premium:</strong> Rp 49.000/bulan, diperpanjang otomatis setiap bulan</li>
+    <li><strong>Pembayaran:</strong> diproses melalui Duitku. Kami tidak menyimpan data kartu</li>
+    <li><strong>Pembatalan:</strong> dapat dilakukan kapan saja. Akses berlanjut hingga akhir periode yang dibayar</li>
+    <li><strong>Refund:</strong> tidak tersedia kecuali terjadi kesalahan teknis di pihak kami</li>
+  </ul>
+
+  <h4 style="margin-top:16px;color:var(--purple)">4. Penggunaan yang Diizinkan</h4>
+  <p>Aplikasi ini hanya untuk penggunaan pribadi dan non-komersial. Dilarang: menyalin konten kurikulum untuk disebarluaskan, menggunakan bot atau scraping, mencoba meretas atau mengganggu layanan.</p>
+
+  <h4 style="margin-top:16px;color:var(--purple)">5. Disclaimer Konten AI</h4>
+  <p>Konten yang dihasilkan AI Konsultan bersifat informatif dan tidak menggantikan saran profesional dokter anak, psikolog, atau tenaga pendidikan. Selalu konsultasikan kondisi khusus anak dengan profesional yang relevan.</p>
+
+  <h4 style="margin-top:16px;color:var(--purple)">6. Batasan Tanggung Jawab</h4>
+  <p>ParentingAI tidak bertanggung jawab atas kerugian tidak langsung yang timbul dari penggunaan aplikasi. Layanan disediakan "as is" tanpa jaminan tertulis.</p>
+
+  <h4 style="margin-top:16px;color:var(--purple)">7. Kontak</h4>
+  <p>Pertanyaan: <a href="mailto:hello@parentingai.id" style="color:var(--purple)">hello@parentingai.id</a></p>`;
+}
+
+// ============================================================
+// EBOOK DOWNLOAD
+// ============================================================
+function downloadEbook(){
+  if(!canUseAI() && state.subscription.status !== 'trial'){
+    openModal('upgradeModal');
+    toast('⚠️ Download ebook hanya untuk pengguna Premium');
+    return;
+  }
+  const btn = document.getElementById('ebookBtn');
+  if(btn){ btn.textContent = '⏳ Mengunduh...'; btn.disabled = true; }
+  // Download dari path publik (upload ebook ke Vercel public folder)
+  const link = document.createElement('a');
+  link.href = '/ParentingAI_Mini_Ebook.pdf';
+  link.download = 'ParentingAI_Panduan_135_Life_Skill.pdf';
+  link.click();
+  setTimeout(()=>{
+    if(btn){ btn.textContent = '✅ Terunduh!'; btn.disabled = false; 
+      setTimeout(()=>{ btn.textContent = '⬇ Download PDF'; }, 3000);
+    }
+    toast('✅ Mini Ebook berhasil didownload!');
+  }, 1500);
+}
 
 // ============================================================
 // UTILS
