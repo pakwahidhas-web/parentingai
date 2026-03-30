@@ -8,9 +8,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // Config diinjeksi oleh build.sh saat deploy
-window.ENV_SUPABASE_URL  = "%%SUPABASE_URL%%";
-window.ENV_SUPABASE_KEY  = "%%SUPABASE_ANON_KEY%%";
-window.ENV_ADMIN_PASS    = "%%ADMIN_PASS%%";
+window.ENV_SUPABASE_URL     = "%%SUPABASE_URL%%";
+window.ENV_SUPABASE_KEY     = "%%SUPABASE_ANON_KEY%%";
+window.ENV_SERVICE_KEY      = "%%SUPABASE_SERVICE_KEY%%";
+window.ENV_ADMIN_PASS       = "%%ADMIN_PASS%%";
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -234,9 +235,10 @@ tr:hover td{background:#fafbfc}
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────
-const ADMIN_PASS   = window.ENV_ADMIN_PASS    || '%%ADMIN_PASS%%';
-const SUPA_URL_CFG = window.ENV_SUPABASE_URL  || '%%SUPABASE_URL%%';
-const SUPA_KEY_CFG = window.ENV_SUPABASE_KEY  || '%%SUPABASE_ANON_KEY%%';
+const ADMIN_PASS   = window.ENV_ADMIN_PASS   || '%%ADMIN_PASS%%';
+const SUPA_URL_CFG = window.ENV_SUPABASE_URL || '%%SUPABASE_URL%%';
+// Pakai service_role key agar bisa bypass RLS dan baca semua data user
+const SUPA_KEY_CFG = window.ENV_SERVICE_KEY  || window.ENV_SUPABASE_KEY || '%%SUPABASE_SERVICE_KEY%%';
 
 let supa=null, allUsers=[], allSubs=[], allPays=[];
 let chartRev=null, chartStatus=null;
@@ -282,6 +284,12 @@ window.addEventListener('DOMContentLoaded', ()=>{
 async function loadAll(){
   document.getElementById('lastRefresh').textContent='Memuat...';
   try{
+    // Test apakah bisa baca data (cek RLS)
+    const testQ = await supa.from('profiles').select('count',{count:'exact',head:true});
+    if(testQ.error){
+      showToast('⚠️ Error: '+testQ.error.message+' — Pastikan pakai Service Role Key');
+      document.getElementById('lastRefresh').textContent='Error: '+testQ.error.message;
+    }
     const [{data:profiles},{data:subs},{data:pays}] = await Promise.all([
       supa.from('profiles').select('*').order('created_at',{ascending:false}),
       supa.from('subscriptions').select('*'),
