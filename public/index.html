@@ -471,6 +471,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
         <label>Konfirmasi Password</label>
         <input type="password" class="fin" id="regPass2" placeholder="Ulangi password" autocomplete="new-password">
       </div>
+      <div class="field" style="margin-bottom:4px">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>Kode Akses <span style="font-size:10px;color:var(--mut);font-weight:400">(opsional)</span></span>
+          <span style="font-size:10px;color:var(--purple)">Dari pembelian ebook</span>
+        </label>
+        <input type="text" class="fin" id="regCode" placeholder="XXXX-XXXX-XXXX"
+          style="text-transform:uppercase;letter-spacing:2px;font-family:monospace;font-weight:700;font-size:15px"
+          maxlength="14" oninput="fmtRedeemCode(this)">
+        <p style="font-size:11px;color:var(--mut);margin-top:4px">Punya kode dari WhatsApp? Isi di sini untuk langsung aktif Premium.</p>
+      </div>
       <button class="btn-auth" id="regBtn" onclick="doRegister()">Buat Akun</button>
     </div>
   </div>
@@ -613,6 +623,34 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
           </div>
           <div id="subCardBody" style="font-size:13px;opacity:.9;line-height:1.7">Memuat...</div>
           <button class="btn-auth" id="subActionBtn" style="margin-top:14px;padding:10px;font-size:13px" onclick="openModal('upgradeModal')">⬆️ Upgrade ke Premium</button>
+        </div>
+
+        <!-- REDEEM KODE AKSES -->
+        <div class="card" style="background:#f0fdf4;border:2px solid #059669">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <span style="font-size:24px">🔑</span>
+            <div>
+              <h3 style="color:#166534;font-size:15px">Punya Kode Akses?</h3>
+              <p style="font-size:12px;color:#4ade80;color:#166534;opacity:.8">Masukkan kode dari pembelian ebook</p>
+            </div>
+          </div>
+          <p style="font-size:13px;color:#166534;margin-bottom:12px;line-height:1.6">
+            Masukkan kode <b>XXXX-XXXX-XXXX</b> yang dikirim ke WhatsApp Anda setelah membeli di toko kami.
+          </p>
+          <div style="display:flex;gap:8px">
+            <input id="quickRedeemInput" type="text" placeholder="XXXX-XXXX-XXXX"
+              style="flex:1;padding:10px 12px;border:1.5px solid #86efac;border-radius:8px;font-size:15px;font-weight:700;text-align:center;letter-spacing:2px;text-transform:uppercase;font-family:monospace;outline:none;background:#fff"
+              maxlength="14" oninput="fmtRedeemCode(this)"
+              onkeydown="if(event.key==='Enter')quickRedeem()">
+            <button onclick="quickRedeem()"
+              style="padding:10px 18px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+              Aktifkan
+            </button>
+          </div>
+          <div id="quickRedeemMsg" style="margin-top:8px;font-size:12px;display:none"></div>
+          <p style="font-size:11px;color:#166534;opacity:.7;margin-top:8px;text-align:center">
+            Belum punya kode? <a href="https://lifecoach.myscalev.com/co-ebook-135lifeskill" style="color:#059669;font-weight:700">Beli di sini →</a>
+          </p>
         </div>
 
         <!-- ACCOUNT INFO -->
@@ -1222,10 +1260,11 @@ async function doLogin() {
 
 async function doRegister() {
   if(!supa){showAuthErr('⚠️ Aplikasi belum terhubung ke server. Hubungi admin.');return;}
-  const name=document.getElementById('regName').value.trim();
-  const email=document.getElementById('regEmail').value.trim();
-  const pass=document.getElementById('regPass').value;
-  const pass2=document.getElementById('regPass2').value;
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass  = document.getElementById('regPass').value;
+  const pass2 = document.getElementById('regPass2').value;
+  const code  = (document.getElementById('regCode')?.value || '').trim().toUpperCase();
   if(!name){showAuthErr('⚠️ Isi nama lengkap Anda');return;}
   if(!email){showAuthErr('⚠️ Isi alamat email');return;}
   if(!pass){showAuthErr('⚠️ Isi password');return;}
@@ -1248,16 +1287,20 @@ async function doRegister() {
       btn.textContent='Buat Akun'; btn.disabled=false;
       return;
     }
-    // Jika email confirmation DIMATIKAN di Supabase → session langsung ada
+    // Jika email confirmation DIMATIKAN → session langsung ada
     if(data.session) {
+      // Simpan kode ke localStorage agar diredeeem setelah login selesai
+      if(code && code.length===14) localStorage.setItem('pending_code', code);
       toast('🎉 Selamat datang, '+name+'!');
       await onLogin(data.user);
       return;
     }
     // Jika email confirmation DINYALAKAN → minta cek email
     if(data.user && !data.session) {
+      // Simpan kode, akan diredeeem setelah klik link konfirmasi dan login
+      if(code && code.length===14) localStorage.setItem('pending_code', code);
       const errEl=document.getElementById('authErr');
-      errEl.innerHTML='✅ Akun berhasil dibuat!<br><small>Cek email <strong>'+email+'</strong> untuk verifikasi, lalu masuk.</small>';
+      errEl.innerHTML='✅ Akun berhasil dibuat!<br><small>Cek email <strong>'+email+'</strong> untuk verifikasi, lalu masuk.'+(code?'<br>Kode akses Anda sudah tersimpan dan akan aktif otomatis setelah login.':'')+'</small>';
       errEl.style.display='block';
       errEl.style.background='#dcfce7';
       errEl.style.color='#15803d';
@@ -2874,6 +2917,51 @@ async function checkPendingCode(){
   toast('🔑 Kode ditemukan — klik Aktifkan untuk melanjutkan');
 }
 
+// ── QUICK REDEEM (dari settings page langsung) ──────────────
+async function quickRedeem(){
+  const input = document.getElementById('quickRedeemInput');
+  const msg   = document.getElementById('quickRedeemMsg');
+  const code  = input.value.trim();
+
+  if(code.length < 14){
+    msg.textContent = '⚠️ Format kode harus XXXX-XXXX-XXXX';
+    msg.style.cssText = 'display:block;color:#dc2626;font-size:12px;margin-top:8px';
+    return;
+  }
+  if(!currentUser){
+    msg.textContent = '⚠️ Login dulu sebelum mengaktifkan kode';
+    msg.style.cssText = 'display:block;color:#dc2626;font-size:12px;margin-top:8px';
+    return;
+  }
+
+  msg.textContent = '⏳ Mengaktifkan...';
+  msg.style.cssText = 'display:block;color:#059669;font-size:12px;margin-top:8px';
+
+  try{
+    const res = await fetch('/api/redeem',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code, userId:currentUser.id})
+    });
+    const data = await res.json();
+    if(data.success){
+      msg.textContent = '✅ ' + data.message;
+      msg.style.cssText = 'display:block;color:#166534;font-weight:700;font-size:13px;margin-top:8px';
+      input.value = '';
+      input.disabled = true;
+      // Reload subscription
+      await loadUserData(currentUser);
+      renderAll();
+      toast('🎉 Akses premium aktif!');
+    } else {
+      msg.textContent = '❌ ' + (data.error || 'Kode tidak valid');
+      msg.style.cssText = 'display:block;color:#dc2626;font-size:12px;margin-top:8px';
+    }
+  } catch(e){
+    msg.textContent = '❌ Error: ' + e.message;
+    msg.style.cssText = 'display:block;color:#dc2626;font-size:12px;margin-top:8px';
+  }
+}
 // ============================================================
 // EBOOK DOWNLOAD
 // ============================================================
