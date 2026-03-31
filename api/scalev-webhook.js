@@ -47,11 +47,37 @@ export default async function handler(req, res) {
   }
 
   const scalevOrderId = data?.order_id || '';
+  // Log SEMUA field untuk temukan di mana nomor WA disimpan
+  console.log('=== SCALEV FULL DATA ===');
+  console.log('destination_address:', JSON.stringify(data?.destination_address || {}));
+  console.log('customer keys:', Object.keys(data || {}).join(', '));
+  // Cek semua kemungkinan field WA
+  const allPhoneFields = {
+    'destination_address.phone':        data?.destination_address?.phone,
+    'destination_address.phone_number': data?.destination_address?.phone_number,
+    'destination_address.whatsapp':     data?.destination_address?.whatsapp,
+    'destination_address.wa':           data?.destination_address?.wa,
+    'customer_phone':                   data?.customer_phone,
+    'customer_whatsapp':                data?.customer_whatsapp,
+    'phone':                            data?.phone,
+    'whatsapp':                         data?.whatsapp,
+  };
+  console.log('All phone fields:', JSON.stringify(allPhoneFields));
+
   const email         = data?.destination_address?.email || '';
   const buyerName     = data?.destination_address?.name  || 'Bunda/Ayah';
-  // Fonnte: nomor WA dari field phone Scalev
-  // Scalev menyimpan phone dalam format 628xxx atau 08xxx
-  const rawPhone      = data?.destination_address?.phone || '';
+  // Ambil dari semua kemungkinan field Scalev
+  const rawPhone =
+    data?.destination_address?.phone        ||
+    data?.destination_address?.phone_number ||
+    data?.destination_address?.whatsapp     ||
+    data?.destination_address?.wa           ||
+    data?.customer_phone                    ||
+    data?.customer_whatsapp                 ||
+    data?.phone                             ||
+    data?.whatsapp                          ||
+    '';
+  console.log('rawPhone resolved:', rawPhone || '(masih kosong!)');
 
   if (!scalevOrderId) return res.status(200).send('OK');
 
@@ -101,10 +127,13 @@ export default async function handler(req, res) {
   console.log(`✅ Kode dibuat: ${code} | order: ${scalevOrderId} | phone: ${rawPhone}`);
 
   // ── 5. KIRIM WA VIA FONNTE ─────────────────────────────
-  if (fonteToken && rawPhone) {
-    await sendWA(fonteToken, rawPhone, code, buyerName, appUrl);
+  console.log('Fonnte check — token ada:', !!fonteToken, '| phone:', rawPhone || '(kosong)');
+  if (!fonteToken) {
+    console.error('❌ FONNTE_TOKEN tidak ada di env vars Vercel!');
+  } else if (!rawPhone) {
+    console.error('❌ Nomor HP pembeli kosong dari Scalev — pastikan field phone diisi di form Scalev');
   } else {
-    console.warn('Fonnte token atau phone tidak ada — WA tidak terkirim');
+    await sendWA(fonteToken, rawPhone, code, buyerName, appUrl);
   }
 
   return res.status(200).send('OK');
@@ -144,6 +173,8 @@ _Kode hanya bisa digunakan 1x._
 
 Pertanyaan? Balas pesan ini 😊`;
 
+  console.log(`Fonnte kirim ke: ${target} (asli: ${phone})`);
+
   try {
     const form = new URLSearchParams();
     form.append('target', target);
@@ -158,15 +189,21 @@ Pertanyaan? Balas pesan ini 😊`;
       body: form,
     });
 
-    const result = await res.json();
-    if (result.status) {
+    const rawText = await res.text();
+    console.log('Fonnte raw response:', rawText.substring(0, 200));
+
+    let result;
+    try { result = JSON.parse(rawText); }
+    catch(e) { console.error('Fonnte response bukan JSON:', rawText); return; }
+
+    if (result.status === true) {
       console.log(`✅ WA terkirim ke ${target}`);
     } else {
-      console.error(`❌ WA gagal ke ${target}:`, result.reason || result);
+      console.error(`❌ WA gagal ke ${target} | reason: ${result.reason} | detail:`, JSON.stringify(result));
     }
     return result;
   } catch(e) {
-    console.error('Fonnte error:', e.message);
+    console.error('Fonnte fetch error:', e.message);
   }
 }
 
