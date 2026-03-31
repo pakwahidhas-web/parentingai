@@ -1,7 +1,9 @@
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+  // Scalev GET saat validasi webhook — harus balas 200
+  if (req.method === 'GET') return res.status(200).json({ status: 'ok', service: 'ParentingAI' });
+  if (req.method !== 'POST') return res.status(200).send('OK');
 
   const supabaseUrl    = process.env.SUPABASE_URL          || '';
   const supabaseKey    = process.env.SUPABASE_SERVICE_KEY  || process.env.SUPABASE_ANON_KEY || '';
