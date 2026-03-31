@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 
   try {
     const timestamp = Date.now().toString();
-    const appUrl    = process.env.APP_URL || 'https://parentingai.vercel.app';
+    const appUrl    = process.env.APP_URL || 'https://app.parenting-ai.my.id';
 
     // ✅ Signature BENAR: SHA256(merchantCode + timestamp + apiKey)
     const signature = crypto.createHash('sha256')
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
         phoneNumber: '08000000000',
       },
       callbackUrl:  `${appUrl}/api/payment?webhook=1`,
-      returnUrl:    `${appUrl}/?payment=success&order=${orderId}`,
+      returnUrl:    `${appUrl}/?payment=verify&order=${orderId}`,  // verify dulu, bukan langsung success
       expiryPeriod: 1440,
     };
 
@@ -111,6 +111,27 @@ async function handleWebhook(req, res) {
     });
 
     if (status === 'success' && userId) {
+      // SECURITY: verifikasi amount dari DB, jangan percaya amount dari request webhook
+      const logRes = await fetch(
+        `${supabaseUrl}/rest/v1/payment_log?order_id=eq.${merchantOrderId}&select=amount,status`,
+        { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+      );
+      const logs = await logRes.json();
+
+      // Tolak jika: order tidak ada, sudah pernah diproses, atau amount tidak cocok
+      if (!logs.length) {
+        console.error('SECURITY: order tidak ada di DB:', merchantOrderId);
+        return res.status(200).send('SUCCESS'); // tetap 200 agar Duitku tidak retry
+      }
+      if (logs[0].status === 'success') {
+        console.warn('SECURITY: order sudah pernah diproses:', merchantOrderId);
+        return res.status(200).send('SUCCESS');
+      }
+      if (Number(logs[0].amount) !== Number(amount)) {
+        console.error('SECURITY: amount tidak cocok! DB:', logs[0].amount, 'webhook:', amount);
+        return res.status(200).send('SUCCESS');
+      }
+
       const now    = new Date();
       const expiry = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       await fetch(`${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${userId}`, {
@@ -123,6 +144,7 @@ async function handleWebhook(req, res) {
           updated_at:           now.toISOString(),
         }),
       });
+      console.log('Subscription activated:', userId, 'order:', merchantOrderId);
     }
     return res.status(200).send('SUCCESS');
   } catch(e) {
