@@ -343,7 +343,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
     <div class="lnd-nav-btns">
       <button class="tbbtn" onclick="showAuth('login')">Masuk</button>
       <button class="tbbtn pri" onclick="showAuth('register')">Coba Gratis 7 Hari</button>
-      <button class="tbbtn" style="padding:12px 24px;font-size:14px;background:#059669;color:#fff;border:none" onclick="location.href='/beli.html'">📚 Beli Ebook & App</button>
     </div>
   </nav>
 
@@ -409,7 +408,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
       </div>
     </div>
     <p style="font-size:12px;color:var(--sub);margin-top:20px">💳 Pembayaran aman via QRIS, GoPay, OVO, Dana, transfer bank</p>
-    <p style="font-size:13px;margin-top:12px"><a href="/beli.html" style="color:var(--purple);font-weight:700">📚 Atau beli paket Ebook + App sekarang →</a></p>
   </div>
 
   <div class="lnd-footer">
@@ -816,7 +814,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
       <div><h3>Aktifkan Kode Akses</h3><p class="msub">Masukkan kode dari pembelian ebook</p></div>
     </div>
     <div style="padding:4px 0 12px">
-      <p style="font-size:13px;color:var(--mut);margin-bottom:16px;line-height:1.6">Masukkan kode XXXX-XXXX-XXXX yang Anda terima setelah membeli ebook/bundle di <a href="/beli.html" style="color:var(--purple)">parentingai.vercel.app/beli</a></p>
+      <p style="font-size:13px;color:var(--mut);margin-bottom:16px;line-height:1.6">Masukkan kode XXXX-XXXX-XXXX yang Anda terima via WhatsApp setelah pembelian.
+
+Belum beli? Kunjungi toko kami untuk berlangganan.</p>
       <input type="text" id="redeemCodeInput" placeholder="XXXX-XXXX-XXXX"
         style="width:100%;padding:12px 16px;border:2px solid var(--bdr);border-radius:10px;font-size:18px;font-weight:700;text-align:center;letter-spacing:3px;text-transform:uppercase;font-family:monospace;outline:none;margin-bottom:10px"
         maxlength="14" oninput="fmtRedeemCode(this)" onkeydown="if(event.key==='Enter')submitRedeem()">
@@ -824,9 +824,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
       <button onclick="submitRedeem()" style="width:100%;padding:12px;background:var(--green,#059669);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer" id="redeemSubmitBtn">
         Aktifkan Kode
       </button>
-      <p style="font-size:12px;color:var(--mut);text-align:center;margin-top:10px">
-        Belum punya kode? <a href="/beli.html" style="color:var(--purple);font-weight:600">Beli di sini →</a>
-      </p>
     </div>
   </div>
 </div>
@@ -1339,7 +1336,13 @@ async function loadUserData() {
     }
     updateSubUI();
     checkTrialNotifications(); // cek notifikasi H-3, H-1, expired
-    checkPendingCode(); // cek apakah ada kode pending dari halaman beli
+    checkPendingCode();
+    // Cek apakah user baru kembali dari Duitku
+    const _urlP = new URLSearchParams(window.location.search);
+    if(_urlP.get('payment') === 'verify'){
+      const _orderId = _urlP.get('order') || '';
+      if(_orderId) verifyPaymentOnReturn(_orderId);
+    } // cek apakah ada kode pending dari halaman beli
     const {data:children}=await supa.from('children').select('*').eq('parent_id',currentUser.id).order('created_at');
     if(!children||children.length===0){
       state.children=[];
@@ -1981,9 +1984,9 @@ async function startPayment(method){
       }
 
       if(data && data.paymentUrl){
-        window.open(data.paymentUrl, '_blank');
-        toast('✅ Halaman pembayaran dibuka. Selesaikan di tab baru.');
-        showPaymentWaiting(orderId);
+        // Redirect di tab yang sama — lebih aman, returnUrl membawa user kembali
+        toast('🔄 Mengarahkan ke halaman pembayaran...');
+        setTimeout(() => { window.location.href = data.paymentUrl; }, 600);
       } else {
         throw new Error(data?.error || data?.statusMessage || 'Gagal membuat invoice Duitku');
       }
@@ -2006,30 +2009,66 @@ async function startPayment(method){
   }
 }
 
-function showPaymentWaiting(orderId){
-  // Tampilkan banner menunggu konfirmasi pembayaran
+async function verifyPaymentOnReturn(orderId){
+  // Dipanggil saat user kembali dari Duitku via returnUrl
   const banner = document.getElementById('subBanner');
-  const txt = document.getElementById('subBannerText');
+  const txt    = document.getElementById('subBannerText');
   if(banner && txt){
     banner.className='sub-banner trial';
     banner.classList.remove('hidden');
-    txt.textContent='⏳ Menunggu konfirmasi pembayaran Duitku...';
+    txt.innerHTML='⏳ Memverifikasi pembayaran...';
   }
-  // Poll status setiap 5 detik (max 5 menit)
+
+  // Poll sampai status terkonfirmasi dari DB (bukan dari URL param)
+  // Webhook Duitku bisa datang beberapa detik setelah user kembali
   let tries = 0;
+  const maxTries = 24; // 2 menit (24 x 5 detik)
   const poll = setInterval(async()=>{
     tries++;
-    if(tries > 60){ clearInterval(poll); return; }
-    try {
-      const {data} = await supa.from('payment_log')
+    if(tries > maxTries){
+      clearInterval(poll);
+      if(banner && txt) txt.innerHTML='⚠️ Verifikasi timeout — hubungi admin jika sudah bayar';
+      return;
+    }
+    try{
+      // Cek status dari payment_log — JANGAN percaya URL parameter
+      const {data:log} = await supa.from('payment_log')
         .select('status').eq('order_id', orderId).single();
-      if(data?.status === 'success'){
+
+      if(log?.status === 'success'){
         clearInterval(poll);
-        toast('🎉 Pembayaran berhasil! Premium aktif.');
-        await loadUserData(); // reload subscription
+        // Reload subscription dari server untuk konfirmasi
+        await loadUserData(currentUser);
+        // Double-check: pastikan subscription benar-benar aktif
+        const {data:sub} = await supa.from('subscriptions')
+          .select('status,current_period_end')
+          .eq('user_id', currentUser.id).single();
+        const isPremium = sub?.status === 'active' &&
+          sub?.current_period_end &&
+          new Date(sub.current_period_end) > new Date();
+        if(isPremium){
+          if(banner) banner.classList.add('hidden');
+          toast('🎉 Pembayaran berhasil! Premium aktif.');
+          renderAll();
+          // Bersihkan URL params agar tidak bisa di-refresh ulang
+          history.replaceState({}, '', '/');
+        } else {
+          if(banner && txt) txt.innerHTML='⚠️ Pembayaran diterima tapi aktivasi pending — refresh dalam 1 menit';
+        }
+      } else if(log?.status === 'failed'){
+        clearInterval(poll);
+        if(banner && txt) txt.innerHTML='❌ Pembayaran dibatalkan atau gagal';
+        setTimeout(()=>{ if(banner) banner.classList.add('hidden'); }, 4000);
+        history.replaceState({}, '', '/');
       }
-    } catch(e){}
+      // status 'pending_duitku' = masih menunggu webhook, lanjut poll
+    }catch(e){ console.warn('verify poll error:', e); }
   }, 5000);
+}
+
+function showPaymentWaiting(orderId){
+  // Legacy - tidak dipakai lagi, diganti verifyPaymentOnReturn
+  verifyPaymentOnReturn(orderId);
 }
 
 async function confirmManualPay(){
@@ -2677,7 +2716,7 @@ Hanya JSON, tidak ada teks lain.`}]
     doc.text(`ParentingAI  ·  ${c.name}  ·  ${TMPL[curIdx].title}  ·  Hal. ${i}/${pages}`,W/2,290,{align:'center'});
     // Watermark tipis pojok kanan atas
     doc.setFontSize(7);doc.setTextColor(200,200,200);
-    doc.text('parentingai.vercel.app',W-M,7,{align:'right'});
+    doc.text('app.parenting-ai.my.id',W-M,7,{align:'right'});
   }
 
   doc.save(`Laporan_${c.name.replace(/ /g,'_')}_${monthStr.replace(/ /g,'_')}.pdf`);
@@ -2794,7 +2833,7 @@ async function submitRedeem(){
   btn.textContent='Memproses...';btn.disabled=true;
 
   try{
-    const res=await fetch('/api/bundle?action=redeem',{
+    const res=await fetch('/api/redeem',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({code,userId:currentUser.id})
