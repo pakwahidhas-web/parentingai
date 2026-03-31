@@ -2,15 +2,15 @@
   "outputDirectory": "public",
   "buildCommand": "bash build.sh",
   "routes": [
-    { "src": "/api/chat",          "dest": "/api/chat.js"          },
-    { "src": "/api/payment",       "dest": "/api/payment.js"       },
-    { "src": "/api/bundle",        "dest": "/api/bundle.js"        },
-    { "src": "/api/send-reminder", "dest": "/api/send-reminder.js" },
-    { "src": "/api/test-duitku",   "dest": "/api/test-duitku.js"   },
-    { "src": "/beli",              "dest": "/beli.html"            },
-    { "src": "/(.*\\.html)",       "dest": "/$1"                   },
-    { "src": "/(.*\\.pdf)",        "dest": "/$1"                   },
-    { "src": "/(.*\\.js)",         "dest": "/$1"                   },
-    { "src": "/(.*)",              "dest": "/index.html"           }
+    { "src": "/api/chat",            "dest": "/api/chat.js"           },
+    { "src": "/api/payment",         "dest": "/api/payment.js"        },
+    { "src": "/api/redeem",          "dest": "/api/redeem.js"         },
+    { "src": "/api/scalev-webhook",  "dest": "/api/scalev-webhook.js" },
+    { "src": "/api/send-reminder",   "dest": "/api/send-reminder.js"  },
+    { "src": "/api/test-duitku",     "dest": "/api/test-duitku.js"    },
+    { "src": "/(.*\\.html)",         "dest": "/$1"                    },
+    { "src": "/(.*\\.pdf)",          "dest": "/$1"                    },
+    { "src": "/(.*\\.js)",           "dest": "/$1"                    },
+    { "src": "/(.*)",                "dest": "/index.html"            }
   ]
 }
