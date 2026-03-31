@@ -63,6 +63,8 @@ export default async function handler(req, res) {
     'whatsapp':                         data?.whatsapp,
   };
   console.log('All phone fields:', JSON.stringify(allPhoneFields));
+  console.log('customer field:', JSON.stringify(data?.customer || {}));
+  console.log('metadata field:', JSON.stringify(data?.metadata || {}));
 
   const email         = data?.destination_address?.email || '';
   const buyerName     = data?.destination_address?.name  || 'Bunda/Ayah';
@@ -71,13 +73,17 @@ export default async function handler(req, res) {
     data?.destination_address?.phone        ||
     data?.destination_address?.phone_number ||
     data?.destination_address?.whatsapp     ||
-    data?.destination_address?.wa           ||
-    data?.customer_phone                    ||
-    data?.customer_whatsapp                 ||
-    data?.phone                             ||
-    data?.whatsapp                          ||
+    data?.customer?.phone                   ||
+    data?.customer?.whatsapp                ||
+    data?.customer?.phone_number            ||
+    data?.metadata?.phone                   ||
+    data?.metadata?.whatsapp                ||
+    data?.metadata?.no_wa                   ||
+    data?.metadata?.no_hp                   ||
     '';
   console.log('rawPhone resolved:', rawPhone || '(masih kosong!)');
+  console.log('customer:', JSON.stringify(data?.customer || {}));
+  console.log('metadata:', JSON.stringify(data?.metadata || {}));
 
   if (!scalevOrderId) return res.status(200).send('OK');
 
