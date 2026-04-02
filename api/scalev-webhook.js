@@ -160,7 +160,7 @@ async function sendWA(token, phone, code, name, appUrl) {
 Terima kasih sudah membeli *ParentingAI Premium* 🌱
 
 Download Mini Ebook 135 Skills anak Indonesia
-https://drive.google.com/file/d/1Mt-DyRFJXvzkJ-BIeROnVaLCSWEGl016/view?usp=sharing
+https://drive.google.com/drive/folders/1qjZv9dSgct0_zNRFMlXt2SZ0fO4v2hNm
 
 Berikut kode akses 1 bulan Anda:
 
