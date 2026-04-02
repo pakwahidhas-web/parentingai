@@ -442,15 +442,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
     <div id="loginForm">
       <div class="field">
         <label>Email</label>
-        <input type="email" class="fin" id="loginEmail" placeholder="email@anda.com" autocomplete="email">
+        <input type="email" class="fin" id="loginEmail" placeholder="email@anda.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <div class="field">
         <label>Password</label>
-        <input type="password" class="fin" id="loginPass" placeholder="Password" autocomplete="current-password">
+        <input type="password" class="fin" id="loginPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <button class="btn-auth" id="loginBtn" onclick="doLogin()">Masuk</button>
-      <div class="auth-divider">atau</div>
-      <button class="btn-auth" style="background:#db4437" onclick="doGoogleLogin()">🔑 Masuk dengan Google</button>
     </div>
 
     <!-- REGISTER FORM -->
