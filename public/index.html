@@ -794,6 +794,53 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 </div>
 
 <!-- UPGRADE MODAL -->
+
+<div class="overlay hidden" id="editChildModal" onclick="bgClose(event,'editChildModal')">
+  <div class="modal">
+    <div class="mhdr"><div class="m-ico">✏️</div><div><h3>Edit Data Anak</h3><p class="msub">Perbarui informasi anak</p></div></div>
+    <input type="hidden" id="ecChildId">
+    <div class="msec"><label>Nama Anak</label><input type="text" class="fin" id="ecName" placeholder="Nama lengkap"></div>
+    <div class="msec"><label>Kelas Saat Ini</label>
+      <select class="fin" id="ecGrade">
+        <optgroup label="── Prasekolah ──">
+          <option value="-1">Playgroup (2-3 thn)</option>
+          <option value="0">TK A (4 thn)</option>
+          <option value="1">TK B (5-6 thn)</option>
+        </optgroup>
+        <optgroup label="── SD ──">
+          <option value="2">Kelas 1 SD</option><option value="3">Kelas 2 SD</option>
+          <option value="4">Kelas 3 SD</option><option value="5">Kelas 4 SD</option>
+          <option value="6">Kelas 5 SD</option><option value="7">Kelas 6 SD</option>
+        </optgroup>
+        <optgroup label="── SMP ──">
+          <option value="8">Kelas 7 SMP</option><option value="9">Kelas 8 SMP</option>
+          <option value="10">Kelas 9 SMP</option>
+        </optgroup>
+        <optgroup label="── SMA ──">
+          <option value="11">Kelas 10 SMA</option><option value="12">Kelas 11 SMA</option>
+          <option value="13">Kelas 12 SMA</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="msec"><label>Usia</label><input type="number" class="fin" id="ecAge" placeholder="Usia (tahun)" min="2" max="19"></div>
+    <div class="msec"><label>Avatar</label>
+      <div class="ava-pick">
+        <div class="avab" id="eav-👦" onclick="pickEAva('👦')">👦</div>
+        <div class="avab" id="eav-👧" onclick="pickEAva('👧')">👧</div>
+        <div class="avab" id="eav-🧒" onclick="pickEAva('🧒')">🧒</div>
+        <div class="avab" id="eav-👦🏽" onclick="pickEAva('👦🏽')">👦🏽</div>
+        <div class="avab" id="eav-👧🏽" onclick="pickEAva('👧🏽')">👧🏽</div>
+        <div class="avab" id="eav-👶" onclick="pickEAva('👶')">👶</div>
+      </div>
+    </div>
+    <div class="mact">
+      <button class="btn btn-r" onclick="confirmDeleteChild()" style="margin-right:auto">🗑 Hapus</button>
+      <button class="btn btn-g" onclick="closeModal('editChildModal')">Batal</button>
+      <button class="btn btn-p" onclick="saveEditChild()">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay hidden" id="upgradeModal" onclick="bgClose(event,'upgradeModal')">
   <div class="modal">
     <div style="text-align:center;margin-bottom:16px">
@@ -1523,9 +1570,12 @@ function renderChildBar(){
   const el=document.getElementById('childBar');
   if(!state.children.length){ el.innerHTML='<span style="font-size:12px;color:var(--mut)">Belum ada anak — tambah dulu 👶</span>'; return; }
   el.innerHTML=state.children.map((c,i)=>`
-    <div class="cpill ${i===state.activeChild?'active':''}" onclick="switchChild(${i})">
+    <div class="cpill ${i===state.activeChild?'active':''}" onclick="switchChild(${i})" style="position:relative">
       <div class="cava">${c.avatar}</div>
-      <div><strong>${c.name}</strong><span>Kelas ${c.grade} SD</span></div>
+      <div><strong>${c.name}</strong><span>${TMPL[c.grade]?TMPL[c.grade].title:''}</span></div>
+      <button onclick="event.stopPropagation();openEditChild(${i})" title="Edit data anak"
+        style="background:none;border:none;cursor:pointer;font-size:13px;opacity:.5;padding:2px 4px;flex-shrink:0;transition:opacity .15s"
+        onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity='.5'">✏️</button>
     </div>`).join('')+
     `<button class="add-c-btn" onclick="openModal('addChildModal')" title="Tambah anak">+</button>`;
 }
@@ -1891,11 +1941,13 @@ function pickAva(a){
 
 async function addChild(){
   const name=document.getElementById('ncName').value.trim();
-  const grade=parseInt(document.getElementById('ncGrade').value);
-  const age=parseInt(document.getElementById('ncAge').value)||grade+5;
+  // grade dari select: -1=Playgroup, 0=TKA, 1=TKB, 2=Kls1SD, ..., 13=Kls12SMA
+  const gradeRaw=parseInt(document.getElementById('ncGrade').value);
+  const grade=gradeRaw===-1?0:gradeRaw+1; // konversi ke index TMPL: PG(-1)→0, TKA(0)→1, TKB(1)→2, Kls1SD(2)→3, dst
+  const age=parseInt(document.getElementById('ncAge').value)||Math.max(2, grade+2);
   if(!name){toast('⚠️ Isi nama anak');return;}
   const {data,error}=await supa.from('children').insert({
-    parent_id:currentUser.id, name, grade, age, avatar:selAva, points:0
+    parent_id:currentUser.id, name, grade, age, avatar:selAva, points:0  // grade = index TMPL
   }).select().single();
   if(error){toast('⚠️ '+error.message);return;}
   // Add default rewards
@@ -1904,10 +1956,9 @@ async function addChild(){
   const rws=defRws.map((r,i)=>({id:'',name:r.name,icon:r.icon,pts:r.pts,done:false}));
   state.children.push({id:data.id,name,grade,age,avatar:selAva,points:0,skills:{},log:[],rewards:rws});
   state.activeChild=state.children.length-1;
-  // Auto-select jenjang
-  // grade from select: -1=PG, 0=TKA, 1=TKB, 2-7=SD, 8-10=SMP, 11-13=SMA
-  activeJenjang=grade<=1?0:grade<=7?1:grade<=10?2:3;
-  state.activeClass=gradeToIdx(grade);
+  // grade = index TMPL langsung (0=PG, 1=TKA, 2=TKB, 3=Kls1SD, ..., 14=Kls12SMA)
+  activeJenjang=grade<=2?0:grade<=8?1:grade<=11?2:3;
+  state.activeClass=grade; // index TMPL langsung, tanpa konversi
   closeModal('addChildModal');
   renderAll(); chatHist=[]; addAIGreeting();
   toast('👶 '+name+' ditambahkan!');
@@ -2959,6 +3010,94 @@ async function quickRedeem(){
     msg.textContent = '❌ Error: ' + e.message;
     msg.style.cssText = 'display:block;color:#dc2626;font-size:12px;margin-top:8px';
   }
+}
+
+// ============================================================
+// EDIT & HAPUS ANAK
+// ============================================================
+let selEAva = '👦';
+
+function pickEAva(a) {
+  selEAva = a;
+  document.querySelectorAll('[id^="eav-"]').forEach(el => el.classList.remove('sel'));
+  const el = document.getElementById('eav-' + a);
+  if (el) el.classList.add('sel');
+}
+
+function openEditChild(i) {
+  const c = state.children[i];
+  if (!c) return;
+  document.getElementById('ecChildId').value = c.id;
+  document.getElementById('ecName').value = c.name;
+  document.getElementById('ecAge').value = c.age || '';
+  // Konversi grade (TMPL index) kembali ke select value
+  // TMPL index: 0=PG, 1=TKA, 2=TKB, 3=Kls1SD... 14=Kls12SMA
+  // select value: -1=PG, 0=TKA, 1=TKB, 2=Kls1SD... 13=Kls12SMA
+  const selectVal = c.grade === 0 ? -1 : c.grade - 1;
+  document.getElementById('ecGrade').value = selectVal;
+  selEAva = c.avatar || '👦';
+  document.querySelectorAll('[id^="eav-"]').forEach(el => el.classList.remove('sel'));
+  const avaEl = document.getElementById('eav-' + selEAva);
+  if (avaEl) avaEl.classList.add('sel');
+  // Simpan index anak yang sedang diedit
+  document.getElementById('editChildModal').dataset.childIdx = i;
+  openModal('editChildModal');
+}
+
+async function saveEditChild() {
+  const name = document.getElementById('ecName').value.trim();
+  const age  = parseInt(document.getElementById('ecAge').value) || 0;
+  const gradeRaw = parseInt(document.getElementById('ecGrade').value);
+  const grade = gradeRaw === -1 ? 0 : gradeRaw + 1; // konversi ke TMPL index
+  const id = document.getElementById('ecChildId').value;
+  const idx = parseInt(document.getElementById('editChildModal').dataset.childIdx);
+
+  if (!name) { toast('⚠️ Isi nama anak'); return; }
+  if (!id) return;
+
+  const btn = document.querySelector('#editChildModal .btn-p');
+  btn.textContent = 'Menyimpan...'; btn.disabled = true;
+
+  const { error } = await supa.from('children')
+    .update({ name, grade, age, avatar: selEAva })
+    .eq('id', id);
+
+  btn.textContent = 'Simpan'; btn.disabled = false;
+
+  if (error) { toast('⚠️ ' + error.message); return; }
+
+  // Update state lokal
+  state.children[idx].name   = name;
+  state.children[idx].grade  = grade;
+  state.children[idx].age    = age;
+  state.children[idx].avatar = selEAva;
+
+  closeModal('editChildModal');
+  renderAll();
+  toast('✅ Data ' + name + ' berhasil diperbarui!');
+}
+
+async function confirmDeleteChild() {
+  const id  = document.getElementById('ecChildId').value;
+  const idx = parseInt(document.getElementById('editChildModal').dataset.childIdx);
+  const c   = state.children[idx];
+  if (!c) return;
+
+  if (!confirm(`Hapus data ${c.name}? Semua skill dan catatan akan terhapus permanen.`)) return;
+
+  // Hapus dari Supabase
+  await supa.from('skills').delete().eq('child_id', id);
+  await supa.from('activity_log').delete().eq('child_id', id);
+  await supa.from('rewards').delete().eq('child_id', id);
+  const { error } = await supa.from('children').delete().eq('id', id);
+
+  if (error) { toast('⚠️ ' + error.message); return; }
+
+  state.children.splice(idx, 1);
+  state.activeChild = Math.max(0, state.activeChild - 1);
+  closeModal('editChildModal');
+  renderAll();
+  toast('🗑 Data ' + c.name + ' dihapus.');
 }
 // ============================================================
 // EBOOK DOWNLOAD
