@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+// Config diisi oleh build.sh saat deploy ke Vercel
 window.ENV_SUPABASE_URL         = "%%SUPABASE_URL%%";
 window.ENV_SUPABASE_KEY         = "%%SUPABASE_ANON_KEY%%";
 window.ENV_ANTHROPIC_KEY        = "%%ANTHROPIC_KEY%%";
@@ -417,7 +418,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
         📚 Beli Ebook + Akses App — Rp 99.000 →
       </a>
     </p>
-    <p style="margin-top:10px">Pertanyaan? <a href="/cdn-cgi/l/email-protection#6e060b0202011e0f1c0b001a070009430f072e09030f0702400d0103" style="color:var(--purple)"><span class="__cf_email__" data-cfemail="eb838e8787849b8a998e859f82858cc68a82ab8c868a8287c5888486">[email&#160;protected]</span></a></p>
+    <p style="margin-top:10px">Pertanyaan? <a href="/cdn-cgi/l/email-protection#29414c45454659485b4c475d40474e044840694e44484045074a4644" style="color:var(--purple)"><span class="__cf_email__" data-cfemail="b4dcd1d8d8dbc4d5c6d1dac0dddad399d5ddf4d3d9d5ddd89ad7dbd9">[email&#160;protected]</span></a></p>
     <p style="margin-top:8px;font-size:11px"><a href="#" onclick="showPolicy('privacy')" style="color:var(--mut)">Kebijakan Privasi</a> &nbsp;·&nbsp; <a href="#" onclick="showPolicy('terms')" style="color:var(--mut)">Syarat & Ketentuan</a></p>
   </div>
 </div>
@@ -853,7 +854,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
       <div style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:#1a4d2e"><span>✓</span><span>Laporan mingguan</span></div>
       <div style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:#1a4d2e"><span>✓</span><span>Multi anak tanpa batas</span></div>
     </div>
-    <!-- Paket Bulanan -->
     <div style="border:2px solid #1a4d2e;border-radius:14px;padding:14px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div>
@@ -870,11 +870,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
         Bayar &amp; Konfirmasi via WA
       </button>
     </div>
-    <!-- Paket Tahunan -->
     <div style="border:2px solid #b8860b;border-radius:14px;padding:14px;margin-bottom:14px;position:relative;margin-top:8px">
-      <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#b8860b;color:#1a1208;font-size:10px;font-weight:700;padding:3px 14px;border-radius:10px;white-space:nowrap">
-        HEMAT Rp 189.000
-      </div>
+      <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#b8860b;color:#1a1208;font-size:10px;font-weight:700;padding:3px 14px;border-radius:10px;white-space:nowrap">HEMAT Rp 189.000</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div>
           <div style="font-size:14px;font-weight:700;color:#1a1208">Premium Tahunan</div>
@@ -890,39 +887,34 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
         Bayar &amp; Konfirmasi via WA
       </button>
     </div>
-    <!-- Info Rekening -->
     <div style="background:#faf8f3;border:1px solid #ddd5c5;border-radius:12px;padding:13px;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;color:#6b6057;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Info Rekening Transfer</div>
       <div style="display:flex;flex-direction:column;gap:6px">
         <div style="display:flex;justify-content:space-between;font-size:12px">
           <span style="color:#6b6057">Bank</span>
-          <span style="font-weight:600;color:#1a1208" id="infoBank">BCA</span>
+          <span style="font-weight:600;color:#1a1208" id="infoBank">-</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
           <span style="color:#6b6057">No. Rekening</span>
           <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-weight:700;font-family:monospace;color:#1a1208" id="infoNorek">1234567890</span>
+            <span style="font-weight:700;font-family:monospace;color:#1a1208" id="infoNorek">-</span>
             <button onclick="copyNorek()" id="copyBtn"
-              style="font-size:10px;background:#e8f5ee;color:#1a4d2e;border:none;padding:2px 8px;border-radius:6px;cursor:pointer;font-weight:600">
-              Salin
-            </button>
+              style="font-size:10px;background:#e8f5ee;color:#1a4d2e;border:none;padding:2px 8px;border-radius:6px;cursor:pointer;font-weight:600">Salin</button>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:12px">
           <span style="color:#6b6057">Atas Nama</span>
-          <span style="font-weight:600;color:#1a1208" id="infoAtas">ParentingAI</span>
+          <span style="font-weight:600;color:#1a1208" id="infoAtas">-</span>
         </div>
       </div>
-      <p style="font-size:10px;color:#6b6057;margin-top:10px;line-height:1.6">
-        Setelah transfer, tap tombol di atas. Admin aktifkan akses dalam 1x24 jam.
-      </p>
+      <p style="font-size:10px;color:#6b6057;margin-top:10px;line-height:1.6">Setelah transfer, tap tombol di atas. Admin aktifkan akses dalam 1×24 jam.</p>
     </div>
-    <button onclick="closeModal('upgradeModal')"
-      style="width:100%;background:none;border:none;color:#6b6057;font-size:13px;cursor:pointer;padding:6px">
-      Nanti Saja
-    </button>
+    <button onclick="closeModal('upgradeModal')" style="width:100%;background:none;border:none;color:#6b6057;font-size:13px;cursor:pointer;padding:6px">Nanti Saja</button>
   </div>
 </div>
+
+
+
 
 <!-- POLICY MODAL -->
 <div class="overlay hidden" id="policyModal" onclick="bgClose(event,'policyModal')">
@@ -998,12 +990,13 @@ Belum beli? Kunjungi toko kami untuk berlangganan.</p>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ============================================================
-// CONFIG — diisi oleh build.sh saat deploy ke Vercel
+// CONFIG — diisi dari /api/env (Vercel Serverless Function)
 // ============================================================
-const SUPA_URL       = window.ENV_SUPABASE_URL  || '';
-const SUPA_KEY       = window.ENV_SUPABASE_KEY  || '';
-const ANTHROPIC_KEY  = window.ENV_ANTHROPIC_KEY || '';
-// Duitku dihapus — gunakan transfer manual
+const SUPA_URL       = window.ENV_SUPABASE_URL        || '';
+const SUPA_KEY       = window.ENV_SUPABASE_KEY         || '';
+const ANTHROPIC_KEY  = window.ENV_ANTHROPIC_KEY        || '';
+const DUITKU_KEY    = window.ENV_DUITKU_MERCHANT_KEY  || ''; // Duitku Merchant Key
+const DUITKU_CODE   = window.ENV_DUITKU_MERCHANT_CODE || ''; // Duitku Merchant Code
 const APP_PRICE      = 49000;
 const TRIAL_DAYS     = 7;
 const OWNER_WA       = window.ENV_OWNER_WA             || '6281234567890';
@@ -1022,12 +1015,6 @@ function initSupa() {
     return false;
   }
   try {
-    if(!SUPA_URL || SUPA_URL.includes('GANTI_DENGAN') || !SUPA_KEY || SUPA_KEY.includes('GANTI_DENGAN')) {
-      console.error('❌ Supabase belum dikonfigurasi. Buka file HTML dan isi ENV_SUPABASE_URL & ENV_SUPABASE_KEY');
-      const authErr = document.getElementById('authErr');
-      if(authErr) { authErr.textContent = '⚠️ Aplikasi belum dikonfigurasi. Hubungi admin.'; authErr.style.display='block'; }
-      return;
-    }
     supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
     return true;
   } catch(e) {
@@ -1478,42 +1465,7 @@ async function loadUserData() {
     updateSubUI();
     checkTrialNotifications(); // cek notifikasi H-3, H-1, expired
     checkPendingCode();
-    function openWAUpgrade(paket, harga) {
-    const nama  = curUser?.user_metadata?.full_name || curUser?.email || '';
-    const email = curUser?.email || '';
-    const norek = document.getElementById('infoNorek')?.textContent || BANK_INFO.norek;
-    const msg   = encodeURIComponent(
-      'Halo Admin ParentingAI! 👋\n\n' +
-      'Saya ingin berlangganan:\n\n' +
-      '📦 Paket: ' + paket + '\n' +
-      '💰 Harga: ' + harga + '\n' +
-      '👤 Nama: ' + nama + '\n' +
-      '📧 Email: ' + email + '\n\n' +
-      'Saya sudah transfer ke rekening ' + BANK_INFO.bank + ' ' + BANK_INFO.norek + ' a.n. ' + BANK_INFO.atas + '.\n\n' +
-      'Mohon konfirmasi aktivasi akses premium. Terima kasih! 🌱'
-    );
-    closeModal('upgradeModal');
-    window.open('https://wa.me/' + ADMIN_WA + '?text=' + msg, '_blank');
-  }
-
-  function copyNorek() {
-    navigator.clipboard.writeText(BANK_INFO.norek).then(() => {
-      const btn = document.getElementById('copyBtn');
-      if (btn) { btn.textContent = 'Tersalin!'; setTimeout(() => { btn.textContent = 'Salin'; }, 2000); }
-    }).catch(() => {});
-  }
-
-  function openUpgradeModal() {
-    const ib = document.getElementById('infoBank');
-    const ir = document.getElementById('infoNorek');
-    const ia = document.getElementById('infoAtas');
-    if (ib) ib.textContent = BANK_INFO.bank;
-    if (ir) ir.textContent = BANK_INFO.norek;
-    if (ia) ia.textContent = BANK_INFO.atas;
-    openUpgradeModal();
-  }
-
-  // Cek apakah user baru kembali dari Duitku
+    // Cek apakah user baru kembali dari Duitku
     const _urlP = new URLSearchParams(window.location.search);
     if(_urlP.get('payment') === 'verify'){
       const _orderId = _urlP.get('order') || '';
@@ -3231,6 +3183,47 @@ function confirmDeleteAccount(){
 }
 
 // ============================================================
+// UPGRADE / PAYMENT FUNCTIONS
+// ============================================================
+function openWAUpgrade(paket, harga) {
+  const nama  = curUser?.user_metadata?.full_name || curUser?.email || '';
+  const parts = OWNER_BANK.split(' ');
+  const bank  = parts[0] || 'Bank';
+  const norek = parts[1] || '-';
+  const atas  = parts.slice(2).join(' ') || 'ParentingAI';
+  const msg = encodeURIComponent(
+    'Halo Admin ParentingAI! 👋\n\n' +
+    'Saya ingin berlangganan:\n\n' +
+    '📦 Paket: ' + paket + '\n' +
+    '💰 Harga: ' + harga + '\n' +
+    '👤 Nama: ' + nama + '\n' +
+    '📧 Email: ' + (curUser?.email || '') + '\n\n' +
+    'Saya sudah transfer ke rekening ' + bank + ' ' + norek + ' a.n. ' + atas + '.\n\n' +
+    'Mohon konfirmasi aktivasi akses premium saya. Terima kasih! 🌱'
+  );
+  closeModal('upgradeModal');
+  window.open('https://wa.me/' + OWNER_WA.replace(/\D/g,'') + '?text=' + msg, '_blank');
+}
+
+function copyNorek() {
+  const parts = OWNER_BANK.split(' ');
+  const norek = parts[1] || '-';
+  navigator.clipboard.writeText(norek).then(() => {
+    const btn = document.getElementById('copyBtn');
+    if (btn) { btn.textContent = 'Tersalin!'; setTimeout(() => btn.textContent = 'Salin', 2000); }
+  }).catch(() => {});
+}
+
+function openUpgradeModal() {
+  const parts = OWNER_BANK.split(' ');
+  const el = id => document.getElementById(id);
+  if(el('infoBank'))  el('infoBank').textContent  = parts[0] || '-';
+  if(el('infoNorek')) el('infoNorek').textContent = parts[1] || '-';
+  if(el('infoAtas'))  el('infoAtas').textContent  = parts.slice(2).join(' ') || 'ParentingAI';
+  openUpgradeModal();
+}
+
+// ============================================================
 // INIT
 // ============================================================
 (async()=>{
@@ -3257,3 +3250,10 @@ function confirmDeleteAccount(){
   supa.auth.onAuthStateChange(async(event,session)=>{
     if(event==='SIGNED_IN' && session?.user && !currentUser){
       await onLogin(session.user);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
