@@ -3186,7 +3186,7 @@ function confirmDeleteAccount(){
 // UPGRADE / PAYMENT FUNCTIONS
 // ============================================================
 function openWAUpgrade(paket, harga) {
-  const nama  = curUser?.user_metadata?.full_name || curUser?.email || '';
+  const nama  = currentUser?.user_metadata?.full_name || currentUser?.email || '';
   const parts = OWNER_BANK.split(' ');
   const bank  = parts[0] || 'Bank';
   const norek = parts[1] || '-';
@@ -3197,7 +3197,7 @@ function openWAUpgrade(paket, harga) {
     '📦 Paket: ' + paket + '\n' +
     '💰 Harga: ' + harga + '\n' +
     '👤 Nama: ' + nama + '\n' +
-    '📧 Email: ' + (curUser?.email || '') + '\n\n' +
+    '📧 Email: ' + (currentUser?.email || '') + '\n\n' +
     'Saya sudah transfer ke rekening ' + bank + ' ' + norek + ' a.n. ' + atas + '.\n\n' +
     'Mohon konfirmasi aktivasi akses premium saya. Terima kasih! 🌱'
   );
