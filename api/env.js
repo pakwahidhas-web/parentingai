@@ -12,8 +12,8 @@ export default function handler(req, res) {
     SUPABASE_ANON_KEY:   process.env.SUPABASE_ANON_KEY   || '',
     ANTHROPIC_KEY:       process.env.ANTHROPIC_KEY        || '',
     MIDTRANS_CLIENT_KEY: process.env.MIDTRANS_CLIENT_KEY  || '',
-    OWNER_WA:            process.env.OWNER_WA             || '62889649936466',
-    OWNER_BANK:          process.env.OWNER_BANK           || 'BCA 6630631309',
+    OWNER_WA:            process.env.OWNER_WA             || '6285789102020',
+    OWNER_BANK:          process.env.OWNER_BANK           || 'MANDIRI 1670005262216',
   };
 
   res.status(200).send(`
