@@ -418,7 +418,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
         📚 Beli Ebook + Akses App — Rp 99.000 →
       </a>
     </p>
-    <p style="margin-top:10px">Pertanyaan? <a href="mailto:helloparenting-ai@gmail.com" style="color:var(--purple)">helloparenting-ai@gmail.com</a></p>
+    <p style="margin-top:10px">Pertanyaan? <a href="/cdn-cgi/l/email-protection#6e060b0202011e0f1c0b001a070009430f072e09030f0702400d0103" style="color:var(--purple)"><span class="__cf_email__" data-cfemail="eb838e8787849b8a998e859f82858cc68a82ab8c868a8287c5888486">[email&#160;protected]</span></a></p>
     <p style="margin-top:8px;font-size:11px"><a href="#" onclick="showPolicy('privacy')" style="color:var(--mut)">Kebijakan Privasi</a> &nbsp;·&nbsp; <a href="#" onclick="showPolicy('terms')" style="color:var(--mut)">Syarat & Ketentuan</a></p>
   </div>
 </div>
@@ -515,7 +515,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
     <!-- SUBSCRIPTION BANNER -->
     <div class="sub-banner hidden" id="subBanner">
       <span id="subBannerText">—</span>
-      <button class="tbbtn" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:#fff;font-size:11px;padding:4px 10px" onclick="openModal('upgradeModal')">Upgrade</button>
+      <button class="tbbtn" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:#fff;font-size:11px;padding:4px 10px" onclick="openUpgradeModal()">Upgrade</button>
     </div>
 
     <div class="content">
@@ -620,7 +620,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
             <div class="sub-pill" id="subStatusPill">Free</div>
           </div>
           <div id="subCardBody" style="font-size:13px;opacity:.9;line-height:1.7">Memuat...</div>
-          <button class="btn-auth" id="subActionBtn" style="margin-top:14px;padding:10px;font-size:13px" onclick="openModal('upgradeModal')">⬆️ Upgrade ke Premium</button>
+          <button class="btn-auth" id="subActionBtn" style="margin-top:14px;padding:10px;font-size:13px" onclick="openUpgradeModal()">⬆️ Upgrade ke Premium</button>
         </div>
 
         <!-- REDEEM KODE AKSES -->
@@ -842,45 +842,88 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 </div>
 
 <div class="overlay hidden" id="upgradeModal" onclick="bgClose(event,'upgradeModal')">
-  <div class="modal">
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:40px;margin-bottom:8px">🚀</div>
-      <h3 style="font-size:20px">Upgrade ke Premium</h3>
-      <p class="msub" style="margin-top:4px">Akses penuh semua fitur AI ParentingAI</p>
+  <div class="modal" style="max-width:420px">
+    <div style="background:linear-gradient(135deg,#1a4d2e,#2d7a47);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px">
+      <div style="font-size:36px;margin-bottom:8px">🚀</div>
+      <h3 style="font-size:19px;color:#fff;margin:0">Upgrade ke Premium</h3>
+      <p style="font-size:12px;color:#a7d9b8;margin-top:4px">Akses penuh semua fitur AI ParentingAI</p>
     </div>
-    <!-- What you get -->
-    <div style="background:var(--pl);border-radius:var(--r);padding:14px;margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--pd);margin-bottom:10px">Yang Anda dapatkan:</div>
-      <div style="display:flex;flex-direction:column;gap:7px">
-        <div style="display:flex;gap:8px;align-items:center;font-size:13px"><span>✅</span> AI Konsultan 24/7 untuk semua anak</div>
-        <div style="display:flex;gap:8px;align-items:center;font-size:13px"><span>✅</span> Laporan PDF bulanan dengan analisis AI</div>
-        <div style="display:flex;gap:8px;align-items:center;font-size:13px"><span>✅</span> Laporan mingguan otomatis</div>
-        <div style="display:flex;gap:8px;align-items:center;font-size:13px"><span>✅</span> Multi anak tanpa batas</div>
+    <div style="background:#e8f5ee;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:#1a4d2e"><span>✓</span><span>AI Konsultan 24/7</span></div>
+      <div style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:#1a4d2e"><span>✓</span><span>Laporan PDF bulanan</span></div>
+      <div style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:#1a4d2e"><span>✓</span><span>Laporan mingguan</span></div>
+      <div style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:#1a4d2e"><span>✓</span><span>Multi anak tanpa batas</span></div>
+    </div>
+    <!-- Paket Bulanan -->
+    <div style="border:2px solid #1a4d2e;border-radius:14px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1a1208">Premium Bulanan</div>
+          <div style="font-size:11px;color:#6b6057">Diperpanjang manual oleh admin</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:800;color:#1a4d2e">Rp 49.000</div>
+          <div style="font-size:11px;color:#6b6057">/bulan</div>
+        </div>
       </div>
+      <button onclick="openWAUpgrade('Premium Bulanan','Rp 49.000/bulan')"
+        style="width:100%;padding:11px;background:#1a4d2e;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">
+        Bayar &amp; Konfirmasi via WA
+      </button>
     </div>
-    <!-- Price -->
-    <div class="pay-total" style="margin-bottom:16px">
-      <div><div class="label">Premium Bulanan</div><div style="font-size:11px;color:var(--mut)">Perpanjang otomatis, batalkan kapan saja</div></div>
-      <div class="amount">Rp 49.000</div>
-    </div>
-    <!-- Payment methods -->
-    <div style="font-size:12px;font-weight:600;color:var(--mut);margin-bottom:8px">Pilih metode pembayaran:</div>
-    <div class="pay-opts">
-      <div class="pay-opt" onclick="startPayment('duitku')" id="duitkuBtn">
-        <div class="pay-icon">💳</div>
-        <div><div class="pay-label">Duitku (Otomatis)</div><div class="pay-sub">QRIS, Transfer Bank, GoPay, OVO, Dana, ShopeePay</div></div>
+    <!-- Paket Tahunan -->
+    <div style="border:2px solid #b8860b;border-radius:14px;padding:14px;margin-bottom:14px;position:relative;margin-top:8px">
+      <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#b8860b;color:#1a1208;font-size:10px;font-weight:700;padding:3px 14px;border-radius:10px;white-space:nowrap">
+        HEMAT Rp 189.000
       </div>
-      <div class="pay-opt" onclick="startPayment('manual')">
-        <div class="pay-icon">🏦</div>
-        <div><div class="pay-label">Transfer Manual</div><div class="pay-sub">Konfirmasi via WhatsApp setelah transfer</div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1a1208">Premium Tahunan</div>
+          <div style="font-size:11px;color:#6b6057">Setara Rp 33.000/bulan</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:800;color:#b8860b">Rp 399.000</div>
+          <div style="font-size:11px;color:#6b6057">/tahun</div>
+        </div>
       </div>
+      <button onclick="openWAUpgrade('Premium Tahunan','Rp 399.000/tahun')"
+        style="width:100%;padding:11px;background:#b8860b;color:#1a1208;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">
+        Bayar &amp; Konfirmasi via WA
+      </button>
     </div>
-    <div class="mact">
-      <button class="btn btn-g" onclick="closeModal('upgradeModal')">Nanti Saja</button>
+    <!-- Info Rekening -->
+    <div style="background:#faf8f3;border:1px solid #ddd5c5;border-radius:12px;padding:13px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:#6b6057;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Info Rekening Transfer</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <span style="color:#6b6057">Bank</span>
+          <span style="font-weight:600;color:#1a1208" id="infoBank">BCA</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+          <span style="color:#6b6057">No. Rekening</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-weight:700;font-family:monospace;color:#1a1208" id="infoNorek">1234567890</span>
+            <button onclick="copyNorek()" id="copyBtn"
+              style="font-size:10px;background:#e8f5ee;color:#1a4d2e;border:none;padding:2px 8px;border-radius:6px;cursor:pointer;font-weight:600">
+              Salin
+            </button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <span style="color:#6b6057">Atas Nama</span>
+          <span style="font-weight:600;color:#1a1208" id="infoAtas">ParentingAI</span>
+        </div>
+      </div>
+      <p style="font-size:10px;color:#6b6057;margin-top:10px;line-height:1.6">
+        Setelah transfer, tap tombol di atas. Admin aktifkan akses dalam 1x24 jam.
+      </p>
     </div>
+    <button onclick="closeModal('upgradeModal')"
+      style="width:100%;background:none;border:none;color:#6b6057;font-size:13px;cursor:pointer;padding:6px">
+      Nanti Saja
+    </button>
   </div>
 </div>
-
 
 <!-- POLICY MODAL -->
 <div class="overlay hidden" id="policyModal" onclick="bgClose(event,'policyModal')">
@@ -923,7 +966,7 @@ Belum beli? Kunjungi toko kami untuk berlangganan.</p>
     <div id="trialNotifIco" style="font-size:52px;margin-bottom:12px">⏰</div>
     <h3 id="trialNotifTitle" style="font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;margin-bottom:8px">Trial Anda Segera Berakhir</h3>
     <p id="trialNotifMsg" style="font-size:13px;color:var(--mut);line-height:1.6;margin-bottom:20px"></p>
-    <button class="btn-auth" style="margin:0 0 10px;width:100%" onclick="closeModal('trialNotifModal');openModal('upgradeModal')">
+    <button class="btn-auth" style="margin:0 0 10px;width:100%" onclick="closeModal('trialNotifModal');openUpgradeModal()">
       ⬆️ Upgrade Sekarang – Rp 49.000/bln
     </button>
     <button style="background:none;border:none;color:var(--mut);font-size:12px;cursor:pointer;width:100%;padding:6px" onclick="closeModal('trialNotifModal')">
@@ -954,7 +997,7 @@ Belum beli? Kunjungi toko kami untuk berlangganan.</p>
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ============================================================
 // CONFIG — diisi dari /api/env (Vercel Serverless Function)
 // ============================================================
@@ -965,8 +1008,8 @@ const DUITKU_KEY    = window.ENV_DUITKU_MERCHANT_KEY  || ''; // Duitku Merchant 
 const DUITKU_CODE   = window.ENV_DUITKU_MERCHANT_CODE || ''; // Duitku Merchant Code
 const APP_PRICE      = 49000;
 const TRIAL_DAYS     = 7;
-const OWNER_WA       = window.ENV_OWNER_WA             || '6281234567890';
-const OWNER_BANK     = window.ENV_OWNER_BANK           || 'BCA 1234567890';
+const OWNER_WA       = window.ENV_OWNER_WA             || '6285789102020';
+const OWNER_BANK     = window.ENV_OWNER_BANK           || 'MANDIRI 1670005262216';
 
 // ============================================================
 // SUPABASE INIT
@@ -1431,7 +1474,42 @@ async function loadUserData() {
     updateSubUI();
     checkTrialNotifications(); // cek notifikasi H-3, H-1, expired
     checkPendingCode();
-    // Cek apakah user baru kembali dari Duitku
+    function openWAUpgrade(paket, harga) {
+    const nama  = curUser?.user_metadata?.full_name || curUser?.email || '';
+    const email = curUser?.email || '';
+    const norek = document.getElementById('infoNorek')?.textContent || BANK_INFO.norek;
+    const msg   = encodeURIComponent(
+      'Halo Admin ParentingAI! 👋\n\n' +
+      'Saya ingin berlangganan:\n\n' +
+      '📦 Paket: ' + paket + '\n' +
+      '💰 Harga: ' + harga + '\n' +
+      '👤 Nama: ' + nama + '\n' +
+      '📧 Email: ' + email + '\n\n' +
+      'Saya sudah transfer ke rekening ' + BANK_INFO.bank + ' ' + BANK_INFO.norek + ' a.n. ' + BANK_INFO.atas + '.\n\n' +
+      'Mohon konfirmasi aktivasi akses premium. Terima kasih! 🌱'
+    );
+    closeModal('upgradeModal');
+    window.open('https://wa.me/' + ADMIN_WA + '?text=' + msg, '_blank');
+  }
+
+  function copyNorek() {
+    navigator.clipboard.writeText(BANK_INFO.norek).then(() => {
+      const btn = document.getElementById('copyBtn');
+      if (btn) { btn.textContent = 'Tersalin!'; setTimeout(() => { btn.textContent = 'Salin'; }, 2000); }
+    }).catch(() => {});
+  }
+
+  function openUpgradeModal() {
+    const ib = document.getElementById('infoBank');
+    const ir = document.getElementById('infoNorek');
+    const ia = document.getElementById('infoAtas');
+    if (ib) ib.textContent = BANK_INFO.bank;
+    if (ir) ir.textContent = BANK_INFO.norek;
+    if (ia) ia.textContent = BANK_INFO.atas;
+    openUpgradeModal();
+  }
+
+  // Cek apakah user baru kembali dari Duitku
     const _urlP = new URLSearchParams(window.location.search);
     if(_urlP.get('payment') === 'verify'){
       const _orderId = _urlP.get('order') || '';
@@ -2030,7 +2108,7 @@ function showUpgradePrompt(){
   d.innerHTML=`<div class="upgrade-prompt">
     <h4>🔒 Untuk Pengguna Premium</h4>
     <p>${msg}</p>
-    <button class="btn-auth" style="margin:0;padding:10px 20px;font-size:13px;max-width:260px" onclick="openModal('upgradeModal')">⬆️ Upgrade ke Premium – Rp 49.000/bln</button>
+    <button class="btn-auth" style="margin:0;padding:10px 20px;font-size:13px;max-width:260px" onclick="openUpgradeModal()">⬆️ Upgrade ke Premium – Rp 49.000/bln</button>
   </div>`;
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
@@ -2267,7 +2345,7 @@ function addAIGreeting(){
         ? `Masa trial 7 hari Anda sudah selesai. Upgrade ke Premium untuk kembali menggunakan AI Konsultan.`
         : `Fitur AI Konsultan tersedia untuk pengguna Premium. Daftar sekarang dan coba gratis 7 hari!`
       }</p>
-      <button class="btn-auth" style="margin:0;padding:10px 20px;font-size:13px;max-width:280px" onclick="openModal('upgradeModal')">⬆️ Upgrade ke Premium – Rp 49.000/bln</button>
+      <button class="btn-auth" style="margin:0;padding:10px 20px;font-size:13px;max-width:280px" onclick="openUpgradeModal()">⬆️ Upgrade ke Premium – Rp 49.000/bln</button>
     </div>`;
     msgs.appendChild(d);
     // Sembunyikan quick chips & input
@@ -2388,7 +2466,7 @@ function renderNotifList(){
 }
 
 async function genWeeklyAI(){
-  if(!canUseAI()){openModal('upgradeModal');return;}
+  if(!canUseAI()){openUpgradeModal();return;}
   if(!ANTHROPIC_KEY){toast('⚠️ API Key belum dikonfigurasi oleh admin');return;}
   toast('🔄 Membuat laporan mingguan...');
   const c=child(); if(!c)return;
@@ -2426,7 +2504,7 @@ Berikan: (1) apresiasi pencapaian, (2) 2 saran konkret minggu depan sesuai jenja
 // ============================================================
 async function genPDF(){
   const c=child(); if(!c){toast('⚠️ Pilih anak dulu');return;}
-  if(!canUseAI()){openModal('upgradeModal');return;}
+  if(!canUseAI()){openUpgradeModal();return;}
   toast('📄 Membuat laporan PDF...');
   const jLabel=gradeToJenjang(c.grade);
   const curIdx=gradeToIdx(c.grade);
@@ -3104,7 +3182,7 @@ async function confirmDeleteChild() {
 // ============================================================
 function downloadEbook(){
   if(!canUseAI() && state.subscription.status !== 'trial'){
-    openModal('upgradeModal');
+    openUpgradeModal();
     toast('⚠️ Download ebook hanya untuk pengguna Premium');
     return;
   }
@@ -3175,19 +3253,3 @@ function confirmDeleteAccount(){
   supa.auth.onAuthStateChange(async(event,session)=>{
     if(event==='SIGNED_IN' && session?.user && !currentUser){
       await onLogin(session.user);
-    }
-    if(event==='SIGNED_OUT'){
-      currentUser=null;
-    }
-    if(event==='PASSWORD_RECOVERY'){
-      // Handle password reset jika diperlukan
-      nav('settings');
-    }
-  });
-
-  // Default qchips
-  renderQchips('SD');
-})();
-</script>
-</body>
-</html>
