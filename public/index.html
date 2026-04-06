@@ -9,17 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-// Config diisi oleh build.sh saat deploy ke Vercel
-/* ============================================================
-   ⚙️  KONFIGURASI — ISI NILAI DI BAWAH SEBELUM DEPLOY
-   ============================================================ */
-window.ENV_SUPABASE_URL  = "GANTI_DENGAN_SUPABASE_URL";       // contoh: https://xxxx.supabase.co
-window.ENV_SUPABASE_KEY  = "GANTI_DENGAN_SUPABASE_ANON_KEY";  // dari Project Settings → API
-window.ENV_ANTHROPIC_KEY = "GANTI_DENGAN_ANTHROPIC_API_KEY";  // dari console.anthropic.com
-window.ENV_OWNER_WA      = "628XXXXXXXXXX";                   // nomor WA admin (tanpa +)
-window.ENV_OWNER_BANK    = "BCA 1234567890 a.n. ParentingAI"; // info rekening
-</script>
+<script src="/api/env"></script>
 <style>
 /* ===== TOKENS ===== */
 :root{
