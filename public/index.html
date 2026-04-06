@@ -3220,7 +3220,7 @@ function openUpgradeModal() {
   if(el('infoBank'))  el('infoBank').textContent  = parts[0] || '-';
   if(el('infoNorek')) el('infoNorek').textContent = parts[1] || '-';
   if(el('infoAtas'))  el('infoAtas').textContent  = parts.slice(2).join(' ') || 'ParentingAI';
-  openUpgradeModal();
+  openModal('upgradeModal');
 }
 
 // ============================================================
