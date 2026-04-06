@@ -9,7 +9,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="/api/env"></script>
+<script>
+window.ENV_SUPABASE_URL         = "%%SUPABASE_URL%%";
+window.ENV_SUPABASE_KEY         = "%%SUPABASE_ANON_KEY%%";
+window.ENV_ANTHROPIC_KEY        = "%%ANTHROPIC_KEY%%";
+window.ENV_DUITKU_MERCHANT_KEY  = "%%DUITKU_MERCHANT_KEY%%";
+window.ENV_DUITKU_MERCHANT_CODE = "%%DUITKU_MERCHANT_CODE%%";
+window.ENV_OWNER_WA             = "%%OWNER_WA%%";
+window.ENV_OWNER_BANK           = "%%OWNER_BANK%%";
+</script>
 <style>
 /* ===== TOKENS ===== */
 :root{
@@ -990,7 +998,7 @@ Belum beli? Kunjungi toko kami untuk berlangganan.</p>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ============================================================
-// CONFIG — diisi dari /api/env (Vercel Serverless Function)
+// CONFIG — diisi oleh build.sh saat deploy ke Vercel
 // ============================================================
 const SUPA_URL       = window.ENV_SUPABASE_URL  || '';
 const SUPA_KEY       = window.ENV_SUPABASE_KEY  || '';
