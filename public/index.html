@@ -11,13 +11,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 // Config diisi oleh build.sh saat deploy ke Vercel
-window.ENV_SUPABASE_URL         = "%%SUPABASE_URL%%";
-window.ENV_SUPABASE_KEY         = "%%SUPABASE_ANON_KEY%%";
-window.ENV_ANTHROPIC_KEY        = "%%ANTHROPIC_KEY%%";
-window.ENV_DUITKU_MERCHANT_KEY  = "%%DUITKU_MERCHANT_KEY%%";
-window.ENV_DUITKU_MERCHANT_CODE = "%%DUITKU_MERCHANT_CODE%%";
-window.ENV_OWNER_WA             = "%%OWNER_WA%%";
-window.ENV_OWNER_BANK           = "%%OWNER_BANK%%";
+/* ============================================================
+   ⚙️  KONFIGURASI — ISI NILAI DI BAWAH SEBELUM DEPLOY
+   ============================================================ */
+window.ENV_SUPABASE_URL  = "GANTI_DENGAN_SUPABASE_URL";       // contoh: https://xxxx.supabase.co
+window.ENV_SUPABASE_KEY  = "GANTI_DENGAN_SUPABASE_ANON_KEY";  // dari Project Settings → API
+window.ENV_ANTHROPIC_KEY = "GANTI_DENGAN_ANTHROPIC_API_KEY";  // dari console.anthropic.com
+window.ENV_OWNER_WA      = "628XXXXXXXXXX";                   // nomor WA admin (tanpa +)
+window.ENV_OWNER_BANK    = "BCA 1234567890 a.n. ParentingAI"; // info rekening
 </script>
 <style>
 /* ===== TOKENS ===== */
@@ -1001,15 +1002,14 @@ Belum beli? Kunjungi toko kami untuk berlangganan.</p>
 // ============================================================
 // CONFIG — diisi dari /api/env (Vercel Serverless Function)
 // ============================================================
-const SUPA_URL       = window.ENV_SUPABASE_URL        || '';
-const SUPA_KEY       = window.ENV_SUPABASE_KEY         || '';
-const ANTHROPIC_KEY  = window.ENV_ANTHROPIC_KEY        || '';
-const DUITKU_KEY    = window.ENV_DUITKU_MERCHANT_KEY  || ''; // Duitku Merchant Key
-const DUITKU_CODE   = window.ENV_DUITKU_MERCHANT_CODE || ''; // Duitku Merchant Code
+const SUPA_URL       = window.ENV_SUPABASE_URL  || '';
+const SUPA_KEY       = window.ENV_SUPABASE_KEY  || '';
+const ANTHROPIC_KEY  = window.ENV_ANTHROPIC_KEY || '';
+// Duitku dihapus — gunakan transfer manual
 const APP_PRICE      = 49000;
 const TRIAL_DAYS     = 7;
-const OWNER_WA       = window.ENV_OWNER_WA             || '6285789102020';
-const OWNER_BANK     = window.ENV_OWNER_BANK           || 'MANDIRI 1670005262216';
+const OWNER_WA       = window.ENV_OWNER_WA             || '6281234567890';
+const OWNER_BANK     = window.ENV_OWNER_BANK           || 'BCA 1234567890';
 
 // ============================================================
 // SUPABASE INIT
@@ -1024,6 +1024,12 @@ function initSupa() {
     return false;
   }
   try {
+    if(!SUPA_URL || SUPA_URL.includes('GANTI_DENGAN') || !SUPA_KEY || SUPA_KEY.includes('GANTI_DENGAN')) {
+      console.error('❌ Supabase belum dikonfigurasi. Buka file HTML dan isi ENV_SUPABASE_URL & ENV_SUPABASE_KEY');
+      const authErr = document.getElementById('authErr');
+      if(authErr) { authErr.textContent = '⚠️ Aplikasi belum dikonfigurasi. Hubungi admin.'; authErr.style.display='block'; }
+      return;
+    }
     supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
     return true;
   } catch(e) {
