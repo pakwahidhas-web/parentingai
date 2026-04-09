@@ -554,7 +554,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 
       <!-- AI CHAT -->
       <div class="page" id="page-ai">
-        <div class="pgtit">AI Konsultan</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="pgtit">AI Konsultan</div>
+          <div id="aiQuotaBadge" style="font-size:11px;background:#e8f5ee;color:#1a4d2e;padding:3px 10px;border-radius:10px;font-weight:600;display:none"></div>
+        </div>
         <div class="pgsub">Tanyakan apa saja tentang tumbuh kembang anak</div>
         <div class="chat-wrap">
           <div class="chat-msgs" id="chatMsgs"></div>
@@ -2368,6 +2371,27 @@ function addBubble(type,text,loading=false){
   return d;
 }
 
+async function loadAIQuota(){
+  const badge=document.getElementById('aiQuotaBadge');
+  if(!badge)return;
+  try{
+    const {data:{session}}=await supa.auth.getSession();
+    if(!session)return;
+    const today=new Date().toISOString().slice(0,10);
+    const {count}=await supa.from('activity_log')
+      .select('*',{count:'exact',head:true})
+      .eq('user_id',session.user.id).eq('type','ai_chat')
+      .gte('created_at',today+'T00:00:00Z');
+    const used=count||0;
+    const LIMIT=20;
+    const rem=Math.max(0,LIMIT-used);
+    badge.style.display='block';
+    badge.textContent=`${rem} pesan tersisa hari ini`;
+    badge.style.background=rem<=5?'#fee2e2':rem<=10?'#fef9c3':'#e8f5ee';
+    badge.style.color=rem<=5?'#991b1b':rem<=10?'#854d0e':'#1a4d2e';
+  }catch(e){}
+}
+
 async function sendChat(){
   const inp=document.getElementById('chatIn');
   const btn=document.getElementById('sbtn');
@@ -2404,7 +2428,15 @@ async function sendChat(){
     // Tampilkan sisa pesan hari ini
     if(data.remaining!==undefined){
       const rem=data.remaining;
+      const badge=document.getElementById('aiQuotaBadge');
+      if(badge){
+        badge.style.display='block';
+        badge.textContent=`${rem} pesan tersisa hari ini`;
+        badge.style.background=rem<=5?'#fee2e2':rem<=10?'#fef9c3':'#e8f5ee';
+        badge.style.color=rem<=5?'#991b1b':rem<=10?'#854d0e':'#1a4d2e';
+      }
       if(rem<=5) toast(`⚠️ Sisa ${rem} pesan AI hari ini`);
+      if(rem<=0) toast('❌ Batas pesan harian tercapai. Coba lagi besok!');
     }
   }catch(e){
     ld.querySelector('.bubble').innerHTML='❌ '+e.message;
@@ -3179,6 +3211,7 @@ function nav(id){
   document.getElementById('nb-'+id).classList.add('active');
   if(id==='notif'){document.getElementById('notifDot').style.display='none';renderNotifList();}
   if(id==='ai'&&document.getElementById('chatMsgs').children.length===0)addAIGreeting();
+  if(id==='ai') loadAIQuota();
 }
 function openModal(id){document.getElementById(id).classList.remove('hidden');}
 function closeModal(id){document.getElementById(id).classList.add('hidden');}
