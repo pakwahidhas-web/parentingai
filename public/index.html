@@ -1561,17 +1561,15 @@ function child(){ return state.children[state.activeChild]||null; }
 // SMP: grade 7-9 → index 9-11
 // SMA: grade 10-12 → index 12-14
 function gradeToIdx(grade){
-  if(grade<=0) return Math.max(0, grade+2); // -2→0(PG), -1→1(TKA), 0→2(TKB) - safety
-  if(grade<=2) return grade; // grade 1→1? No: 0=PG,1=TKA,2=TKB so SD starts at 3
-  // For input grade 1-12:
-  if(grade<=6) return grade+2;   // SD: 1→3, 2→4, ..., 6→8
-  if(grade<=9) return grade+2;   // SMP: 7→9, 8→10, 9→11
-  return grade+2;                // SMA: 10→12, 11→13, 12→14
+  // grade dari database sudah merupakan TMPL index langsung
+  // 0=Playgroup, 1=TKA, 2=TKB, 3=Kls1SD...8=Kls6SD, 9=Kls7SMP...14=Kls12SMA
+  return Math.max(0, Math.min(14, grade));
 }
 function gradeToJenjang(grade){
-  if(grade<1) return 'Pra';
-  if(grade<=6) return 'SD';
-  if(grade<=9) return 'SMP';
+  // grade = TMPL index: 0-2=Pra, 3-8=SD, 9-11=SMP, 12-14=SMA
+  if(grade<=2)  return 'Pra';
+  if(grade<=8)  return 'SD';
+  if(grade<=11) return 'SMP';
   return 'SMA';
 }
 function getSk(ci,si){
