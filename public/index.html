@@ -2374,26 +2374,40 @@ async function sendChat(){
   const msg=inp.value.trim();
   if(!msg)return;
   if(!canUseAI()){showUpgradePrompt();return;}
-  if(!ANTHROPIC_KEY){toast('⚠️ API Key belum dikonfigurasi oleh admin');return;}
   inp.value=''; btn.disabled=true;
   addBubble('user',msg);
   chatHist.push({role:'user',content:msg});
   const ld=addBubble('ai','Sedang berpikir...',true);
   try{
+    // Ambil session token untuk auth di server
+    const {data:{session}}=await supa.auth.getSession();
+    const token=session?.access_token||'';
+
+    // Potong history maks 6 pesan — hemat token
+    const trimmed=chatHist.slice(-6);
+
     const res=await fetch('/api/chat',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildCtx(),messages:chatHist})
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+token
+      },
+      body:JSON.stringify({messages:trimmed,child:child()})
     });
     const data=await res.json();
-    if(data.error)throw new Error(data.error.message);
-    const reply=data.content?.map(b=>b.text||'').join('')||'Maaf, ada gangguan.';
+    if(data.error)throw new Error(data.error);
+    const reply=data.content||'Maaf, ada gangguan.';
     ld.querySelector('.bubble').className='bubble ai';
     ld.querySelector('.bubble').innerHTML=reply.replace(/\n/g,'<br>');
     chatHist.push({role:'assistant',content:reply});
     if(chatHist.length>20)chatHist=chatHist.slice(-20);
+    // Tampilkan sisa pesan hari ini
+    if(data.remaining!==undefined){
+      const rem=data.remaining;
+      if(rem<=5) toast(`⚠️ Sisa ${rem} pesan AI hari ini`);
+    }
   }catch(e){
-    ld.querySelector('.bubble').innerHTML='❌ Error: '+e.message;
+    ld.querySelector('.bubble').innerHTML='❌ '+e.message;
   }
   btn.disabled=false;
   document.getElementById('chatMsgs').scrollTop=9999;
@@ -2437,7 +2451,7 @@ async function genWeeklyAI(){
     const res=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,
         messages:[{role:'user',content:`Kamu adalah konsultan parenting & coach anak profesional. Buat laporan mingguan (4-5 kalimat, Bahasa Indonesia, hangat & memotivasi) untuk orang tua dari ${c.name}, ${TMPL[curIdx].title}, usia ${c.age||c.grade+5} tahun (${jLabel}).
 Skill dikuasai minggu ini: ${done.slice(-5).join(', ')||'belum ada baru'}.
 Sedang dipelajari: ${learn.join(', ')||'belum ada'}.
@@ -2499,7 +2513,7 @@ async function genPDF(){
         else if(ci===curIdx)curNone.push(s.n);
       }));
       const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,
           messages:[{role:'user',content:`Buat analisis perkembangan untuk laporan PDF ParentingAI. Bahasa Indonesia formal tapi hangat. Data:
 Anak: ${c.name} | ${TMPL[curIdx].title} (${jLabel}) | Usia: ${c.age||c.grade+5} thn
 Progress: ${td}/${ta} skill dikuasai (${op}%) | Kelas ini: ${curDone}/${curTotal} (${curPct}%)
