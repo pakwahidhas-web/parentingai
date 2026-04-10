@@ -13,7 +13,7 @@
 // Config diisi oleh build.sh saat deploy ke Vercel
 window.ENV_SUPABASE_URL         = "%%SUPABASE_URL%%";
 window.ENV_SUPABASE_KEY         = "%%SUPABASE_ANON_KEY%%";
-window.ENV_ANTHROPIC_KEY        = "%%ANTHROPIC_KEY%%";
+// OpenAI dipakai di server (api/chat.js) — tidak perlu key di browser
 window.ENV_DUITKU_MERCHANT_KEY  = "%%DUITKU_MERCHANT_KEY%%";
 window.ENV_DUITKU_MERCHANT_CODE = "%%DUITKU_MERCHANT_CODE%%";
 window.ENV_OWNER_WA             = "%%OWNER_WA%%";
@@ -2380,7 +2380,7 @@ async function loadAIQuota(){
     const today=new Date().toISOString().slice(0,10);
     const {count}=await supa.from('activity_log')
       .select('*',{count:'exact',head:true})
-      .eq('user_id',session.user.id).eq('type','ai_chat')
+      .eq('parent_id',session.user.id).eq('dot','ai_chat')
       .gte('created_at',today+'T00:00:00Z');
     const used=count||0;
     const LIMIT=20;
@@ -2418,8 +2418,10 @@ async function sendChat(){
       },
       body:JSON.stringify({messages:trimmed,child:child()})
     });
-    const data=await res.json();
-    if(data.error)throw new Error(data.error);
+    let data;
+    try{ data=await res.json(); }
+    catch(e){ throw new Error('Server error ('+res.status+')'); }
+    if(!res.ok || data.error) throw new Error(data.error||'Error '+res.status);
     const reply=data.content||'Maaf, ada gangguan.';
     ld.querySelector('.bubble').className='bubble ai';
     ld.querySelector('.bubble').innerHTML=reply.replace(/\n/g,'<br>');
@@ -2467,7 +2469,6 @@ function renderNotifList(){
 
 async function genWeeklyAI(){
   if(!canUseAI()){openUpgradeModal();return;}
-  if(!ANTHROPIC_KEY){toast('⚠️ API Key belum dikonfigurasi oleh admin');return;}
   toast('🔄 Membuat laporan mingguan...');
   const c=child(); if(!c)return;
   const jLabel=gradeToJenjang(c.grade);
@@ -2480,19 +2481,17 @@ async function genWeeklyAI(){
     else if(ci===curIdx)curNone.push(s.n);
   }));
   try{
+    const {data:{session}}=await supa.auth.getSession();
     const res=await fetch('/api/chat',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,
-        messages:[{role:'user',content:`Kamu adalah konsultan parenting & coach anak profesional. Buat laporan mingguan (4-5 kalimat, Bahasa Indonesia, hangat & memotivasi) untuk orang tua dari ${c.name}, ${TMPL[curIdx].title}, usia ${c.age||c.grade+5} tahun (${jLabel}).
-Skill dikuasai minggu ini: ${done.slice(-5).join(', ')||'belum ada baru'}.
-Sedang dipelajari: ${learn.join(', ')||'belum ada'}.
-Belum dimulai di kelasnya: ${curNone.slice(0,3).join(', ')||'semua selesai'}.
-Berikan: (1) apresiasi pencapaian, (2) 2 saran konkret minggu depan sesuai jenjang ${jLabel}, (3) 1 tips parenting relevan untuk ${TMPL[curIdx].title} usia ${c.age||c.grade+5} tahun.`}]
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?.access_token||'')},
+      body:JSON.stringify({
+        messages:[{role:'user',content:`Buat laporan mingguan (4-5 kalimat, Bahasa Indonesia, hangat & memotivasi) untuk orang tua dari ${c.name}, ${TMPL[curIdx].title}, usia ${c.age||c.grade+5} tahun (${jLabel}). Skill dikuasai: ${done.slice(-5).join(', ')||'belum ada baru'}. Sedang dipelajari: ${learn.join(', ')||'belum ada'}. Belum dimulai: ${curNone.slice(0,3).join(', ')||'semua selesai'}. Berikan: (1) apresiasi pencapaian, (2) 2 saran konkret minggu depan, (3) 1 tips parenting.`}],
+        child:c
       })
     });
     const d=await res.json();
-    const rep=d.content?.[0]?.text||'Gagal membuat laporan.';
+    const rep=d.content||'Gagal membuat laporan.';
     pushNotif('📊 Laporan Mingguan '+c.name+'\n\n'+rep);
     nav('notif');
     toast('✅ Laporan mingguan selesai!');
@@ -2535,7 +2534,7 @@ async function genPDF(){
   // ── AI Analisis ────────────────────────────────────────────
   let aiAnalysis='Gunakan fitur AI Konsultan untuk mendapatkan analisis mendalam.';
   let aiStrengths=[], aiRecommendations=[], aiMotivation='';
-  if(ANTHROPIC_KEY&&canUseAI()){
+  if(canUseAI()){
     try{
       let done=[],learn=[],curNone=[];
       TMPL.forEach((cls,ci)=>cls.skills.forEach((s,si)=>{
@@ -2544,8 +2543,10 @@ async function genPDF(){
         else if(sk.status==='learning')learn.push(s.n);
         else if(ci===curIdx)curNone.push(s.n);
       }));
-      const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,
+      const {data:{session:pdfSess}}=await supa.auth.getSession();
+      const res=await fetch('/api/chat',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+(pdfSess?.access_token||'')},
+        body:JSON.stringify({
           messages:[{role:'user',content:`Buat analisis perkembangan untuk laporan PDF ParentingAI. Bahasa Indonesia formal tapi hangat. Data:
 Anak: ${c.name} | ${TMPL[curIdx].title} (${jLabel}) | Usia: ${c.age||c.grade+5} thn
 Progress: ${td}/${ta} skill dikuasai (${op}%) | Kelas ini: ${curDone}/${curTotal} (${curPct}%)
@@ -2564,7 +2565,7 @@ Hanya JSON, tidak ada teks lain.`}]
         })
       });
       const d=await res.json();
-      const txt=d.content?.[0]?.text||'{}';
+      const txt=d.content||(d.choices?.[0]?.message?.content)||'{}';
       try{
         const parsed=JSON.parse(txt.replace(/```json|```/g,'').trim());
         aiAnalysis=parsed.ringkasan||aiAnalysis;
