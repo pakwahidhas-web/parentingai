@@ -314,6 +314,36 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 .gate-lock p{font-size:13px;font-weight:600;color:var(--txt);text-align:center;padding:0 16px}
 .gate-lock .sub-note{font-size:11px;color:var(--mut);text-align:center}
 /* Upgrade prompt in chat */
+.cl-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0}
+.cl-modal{background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:0 0 32px}
+.cl-modal-handle{width:40px;height:4px;background:#ddd5c5;border-radius:2px;margin:12px auto 0}
+.cl-hdr{background:#1a4d2e;padding:18px 20px 16px}
+.cl-hdr h3{font-size:17px;font-weight:800;color:#fff;margin-bottom:3px}
+.cl-hdr p{font-size:12px;color:#a7d9b8}
+.cl-prog-wrap{padding:10px 20px;background:#e8f5ee;border-bottom:1px solid #ddd5c5}
+.cl-prog-bar{height:8px;background:#ddd5c5;border-radius:4px;overflow:hidden;margin-bottom:4px}
+.cl-prog-fill{height:100%;background:#1a4d2e;border-radius:4px;transition:width .5s ease}
+.cl-prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:#6b6057}
+.cl-section{padding:14px 20px 0}
+.cl-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.cl-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
+.cl-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;border:1px solid #e8e0d4;background:#faf8f3;cursor:pointer;transition:all .15s}
+.cl-row.done{background:#e8f5ee;border-color:#b6e8d4}
+.cl-row.partial{background:#fef9c3;border-color:#fde68a}
+.cl-checkbox{width:20px;height:20px;border-radius:6px;border:2px solid #ddd5c5;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;transition:all .15s}
+.cl-row.done .cl-checkbox{background:#1a4d2e;border-color:#1a4d2e}
+.cl-row.partial .cl-checkbox{background:#f59e0b;border-color:#f59e0b}
+.cl-row-text{flex:1;font-size:13px;color:#1a1208;line-height:1.4}
+.cl-row.done .cl-row-text{color:#085041;font-weight:500}
+.cl-row.partial .cl-row-text{color:#7c5c10}
+.cl-row-age{font-size:10px;color:#aaa;flex-shrink:0}
+.cl-legend{display:flex;gap:12px;font-size:10px;color:#6b6057;padding:12px 20px 0;flex-wrap:wrap}
+.cl-legend span{display:flex;align-items:center;gap:4px}
+.cl-legend-dot{width:10px;height:10px;border-radius:3px}
+.cl-actions{padding:16px 20px 0;display:flex;flex-direction:column;gap:8px}
+.cl-btn-primary{width:100%;padding:13px;background:#1a4d2e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.cl-btn-secondary{width:100%;padding:11px;background:transparent;border:1.5px solid #ddd5c5;border-radius:12px;font-size:13px;color:#6b6057;cursor:pointer;font-family:inherit}
+.cl-share-btn{width:100%;padding:11px;background:#b8860b;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
 .upgrade-prompt{background:linear-gradient(135deg,var(--pl),#e0e7ff);border:1.5px solid #c4b5fd;border-radius:var(--r);padding:16px;margin:8px 0;text-align:center}
 .upgrade-prompt h4{font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;color:var(--pd);margin-bottom:6px}
 .upgrade-prompt p{font-size:12px;color:var(--purple);margin-bottom:12px;line-height:1.5}
@@ -516,6 +546,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
     <div class="sub-banner hidden" id="subBanner">
       <span id="subBannerText">—</span>
       <button class="tbbtn" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:#fff;font-size:11px;padding:4px 10px" onclick="openUpgradeModal()">Upgrade</button>
+      <button id="btnChecklist" onclick="openChecklist()" style="display:none;background:rgba(212,168,67,.25);border:1px solid rgba(212,168,67,.5);color:#d4a843;font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:inherit;font-weight:600">📋 Checklist SD</button>
     </div>
 
     <div class="content">
@@ -918,6 +949,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 
 
 
+
+<!-- CHECKLIST KESIAPAN SD MODAL -->
+<div id="checklistModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeChecklist()">
+  <div class="cl-modal">
+    <div class="cl-modal-handle"></div>
+    <div class="cl-hdr">
+      <h3>📋 Checklist Kesiapan Masuk SD</h3>
+      <p id="cl-anak-label">27 skill yang perlu dikuasai sebelum kelas 1 SD</p>
+    </div>
+    <div class="cl-prog-wrap">
+      <div class="cl-prog-bar"><div class="cl-prog-fill" id="cl-prog-fill" style="width:0%"></div></div>
+      <div class="cl-prog-lbl"><span id="cl-prog-text">0 dari 27 skill dikuasai</span><span id="cl-prog-pct">0%</span></div>
+    </div>
+    <div id="cl-body"></div>
+    <div class="cl-legend">
+      <span><div class="cl-legend-dot" style="background:#1a4d2e"></div>Sudah dikuasai</span>
+      <span><div class="cl-legend-dot" style="background:#f59e0b"></div>Sedang belajar</span>
+      <span><div class="cl-legend-dot" style="background:#ddd5c5"></div>Belum dimulai</span>
+    </div>
+    <div class="cl-actions">
+      <button class="cl-share-btn" onclick="shareChecklist()">📤 Bagikan hasil ke WhatsApp</button>
+      <button class="cl-btn-primary" onclick="openUpgradeModal();closeChecklist()">⬆️ Upgrade ke Premium untuk Tracker Lengkap</button>
+      <button class="cl-btn-secondary" onclick="closeChecklist()">Tutup</button>
+    </div>
+  </div>
+</div>
 
 <!-- POLICY MODAL -->
 <div class="overlay hidden" id="policyModal" onclick="bgClose(event,'policyModal')">
@@ -1512,6 +1569,7 @@ async function loadUserData() {
     });
 
     renderAll();
+    checkShowChecklist();
     startRealtimeSync();
     toast('✅ Selamat datang kembali!');
   } catch(e) {
@@ -1636,6 +1694,7 @@ function switchChild(i){
   else           activeJenjang=3;
   state.activeClass=gradeToIdx(g);
   renderAll(); chatHist=[]; addAIGreeting();
+  checkShowChecklist();
 }
 
 function updatePts(){
@@ -3241,6 +3300,153 @@ function confirmDeleteAccount(){
 // ============================================================
 // UPGRADE / PAYMENT FUNCTIONS
 // ============================================================
+// ============================================================
+// CHECKLIST KESIAPAN MASUK SD
+// ============================================================
+const CHECKLIST_SD = [
+  { kat:'Kemandirian', warna:'#e09830', items:[
+    { id:'kmd1', text:'Mandi sendiri & gosok gigi', usia:'TK A' },
+    { id:'kmd2', text:'Memakai & melepas sepatu sendiri', usia:'TK A' },
+    { id:'kmd3', text:'Memakai baju sendiri', usia:'TK B' },
+    { id:'kmd4', text:'Menyiapkan tas sekolah sendiri', usia:'TK B' },
+    { id:'kmd5', text:'Ke toilet & membersihkan diri sendiri', usia:'TK B' },
+    { id:'kmd6', text:'Merapikan tempat tidur', usia:'TK B' },
+    { id:'kmd7', text:'Membereskan mainan setelah bermain', usia:'TK A' },
+  ]},
+  { kat:'Komunikasi & Sosial', warna:'#2878cc', items:[
+    { id:'kom1', text:'Memperkenalkan diri kepada orang baru', usia:'TK A' },
+    { id:'kom2', text:'Menggunakan kata tolong, terima kasih, maaf', usia:'TK A' },
+    { id:'kom3', text:'Bermain bersama & berbagi giliran', usia:'TK A' },
+    { id:'kom4', text:'Menyampaikan kebutuhan kepada guru', usia:'TK B' },
+    { id:'kom5', text:'Meminta bantuan jika ada masalah', usia:'TK B' },
+  ]},
+  { kat:'Kognitif & Kesiapan Belajar', warna:'#18a070', items:[
+    { id:'kog1', text:'Mengenal warna dan bentuk dasar', usia:'TK A' },
+    { id:'kog2', text:'Menghitung 1–20 dengan benar', usia:'TK B' },
+    { id:'kog3', text:'Mengenal huruf alfabet (A–Z)', usia:'TK B' },
+    { id:'kog4', text:'Fokus pada 1 kegiatan selama 15 menit', usia:'TK B' },
+    { id:'kog5', text:'Mengikuti instruksi 2–3 langkah', usia:'TK B' },
+    { id:'kog6', text:'Memegang pensil dengan benar', usia:'TK A' },
+  ]},
+  { kat:'Emosi & Karakter', warna:'#c84820', items:[
+    { id:'emo1', text:'Mengenali & menyebut perasaan sendiri', usia:'TK A' },
+    { id:'emo2', text:'Berpisah dengan orang tua tanpa menangis', usia:'TK A' },
+    { id:'emo3', text:'Mengelola frustrasi tanpa tantrum', usia:'TK B' },
+    { id:'emo4', text:'Bangkit sendiri setelah kecewa atau kalah', usia:'TK B' },
+    { id:'emo5', text:'Bertanggung jawab atas kesalahan kecil', usia:'TK B' },
+  ]},
+  { kat:'Literasi Keuangan Dasar', warna:'#6858bb', items:[
+    { id:'keu1', text:'Mengenal uang koin & kertas', usia:'TK B' },
+    { id:'keu2', text:'Mengerti konsep menabung', usia:'TK B' },
+    { id:'keu3', text:'Tidak mudah merengek minta beli sesuatu', usia:'TK B' },
+  ]},
+  { kat:'Kreativitas & Motorik', warna:'#508010', items:[
+    { id:'kre1', text:'Berimajinasi & bercerita sederhana', usia:'TK A' },
+    { id:'kre2', text:'Menggambar & mewarnai dalam garis', usia:'TK A' },
+    { id:'kre3', text:'Menggunting & menempel dengan rapi', usia:'TK B' },
+    { id:'kre4', text:'Bisa menggunting pola sederhana', usia:'TK B' },
+  ]},
+];
+
+let clData = {}; // { itemId: 'done'|'partial'|'' }
+
+function openChecklist() {
+  const c = child();
+  const modal = document.getElementById('checklistModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // Load dari localStorage
+  const key = 'cl_' + (c ? c.id : 'default');
+  try { clData = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e){ clData={}; }
+
+  // Update label
+  if (c) document.getElementById('cl-anak-label').textContent =
+    c.name + ' · ' + (TMPL[c.grade]?.title||'Pra SD') + ' · 27 skill kesiapan SD';
+
+  renderChecklist();
+}
+
+function closeChecklist() {
+  document.getElementById('checklistModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function renderChecklist() {
+  const c = child();
+  const key = 'cl_' + (c ? c.id : 'default');
+
+  let total = 0, done = 0;
+  CHECKLIST_SD.forEach(cat => { cat.items.forEach(it => {
+    total++;
+    if (clData[it.id] === 'done') done++;
+    else if (clData[it.id] === 'partial') done += 0.5;
+  })});
+  const pct = Math.round((done/total)*100);
+
+  document.getElementById('cl-prog-fill').style.width = pct+'%';
+  document.getElementById('cl-prog-text').textContent =
+    Math.floor(done) + ' dari ' + total + ' skill dikuasai';
+  document.getElementById('cl-prog-pct').textContent = pct+'%';
+
+  let html = '';
+  CHECKLIST_SD.forEach(cat => {
+    html += `<div class="cl-section">
+      <div class="cl-section-title" style="color:${cat.warna}">${cat.kat}</div>
+      <div class="cl-list">`;
+    cat.items.forEach(it => {
+      const st = clData[it.id] || '';
+      const cls = st==='done'?'done':st==='partial'?'partial':'';
+      const check = st==='done'?'✓':st==='partial'?'~':'';
+      html += `<div class="cl-row ${cls}" onclick="toggleCl('${it.id}','${c?c.id:'default'}')">
+        <div class="cl-checkbox">${check}</div>
+        <div class="cl-row-text">${it.text}</div>
+        <div class="cl-row-age">${it.usia}</div>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+  document.getElementById('cl-body').innerHTML = html;
+
+  // Save
+  try { localStorage.setItem(key, JSON.stringify(clData)); } catch(e){}
+}
+
+function toggleCl(itemId, childKey) {
+  const cur = clData[itemId] || '';
+  // Siklus: '' → 'partial' → 'done' → ''
+  clData[itemId] = cur===''?'partial':cur==='partial'?'done':'';
+  try { localStorage.setItem('cl_'+childKey, JSON.stringify(clData)); } catch(e){}
+  renderChecklist();
+}
+
+function shareChecklist() {
+  const c = child();
+  let total=0, done=0;
+  CHECKLIST_SD.forEach(cat=>cat.items.forEach(it=>{
+    total++;
+    if(clData[it.id]==='done') done++;
+    else if(clData[it.id]==='partial') done+=0.5;
+  }));
+  const pct = Math.round((done/total)*100);
+  const nama = c ? c.name : 'anak saya';
+  const msg = encodeURIComponent(
+    `📋 Checklist Kesiapan Masuk SD — ${nama}\n\n` +
+    `✅ ${Math.floor(done)} dari ${total} skill sudah dikuasai (${pct}%)\n\n` +
+    `Cek skill gap anak kamu juga di ParentingAI:\nhttps://app.parenting-ai.my.id`
+  );
+  window.open('https://wa.me/?text='+msg,'_blank');
+}
+
+// Cek otomatis saat ganti anak
+function checkShowChecklist() {
+  const c = child();
+  const btn = document.getElementById('btnChecklist');
+  if (!c || !btn) return;
+  const isPra = c.grade <= 2; // grade 0=PG, 1=TKA, 2=TKB
+  btn.style.display = isPra ? 'inline-block' : 'none';
+}
+
 function openWAUpgrade(paket, harga) {
   const nama  = currentUser?.user_metadata?.full_name || currentUser?.email || '';
   const parts = OWNER_BANK.split(' ');
