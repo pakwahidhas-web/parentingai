@@ -969,8 +969,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
       <span><div class="cl-legend-dot" style="background:#ddd5c5"></div>Belum dimulai</span>
     </div>
     <div class="cl-actions">
+      <button class="cl-btn-primary" onclick="saveChecklist()">💾 Simpan Progres</button>
       <button class="cl-share-btn" onclick="shareChecklist()">📤 Bagikan hasil ke WhatsApp</button>
-      <button class="cl-btn-primary" onclick="openUpgradeModal();closeChecklist()">⬆️ Upgrade ke Premium untuk Tracker Lengkap</button>
       <button class="cl-btn-secondary" onclick="closeChecklist()">Tutup</button>
     </div>
   </div>
@@ -3436,6 +3436,17 @@ function shareChecklist() {
     `Cek skill gap anak kamu juga di ParentingAI:\nhttps://app.parenting-ai.my.id`
   );
   window.open('https://wa.me/?text='+msg,'_blank');
+}
+
+function saveChecklist() {
+  const c = child();
+  const key = 'cl_' + (c ? c.id : 'default');
+  try {
+    localStorage.setItem(key, JSON.stringify(clData));
+    toast('✅ Progres checklist tersimpan!');
+  } catch(e) {
+    toast('⚠️ Gagal menyimpan: ' + e.message);
+  }
 }
 
 // Cek otomatis saat ganti anak
