@@ -344,6 +344,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 .cl-btn-primary{width:100%;padding:13px;background:#1a4d2e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
 .cl-btn-secondary{width:100%;padding:11px;background:transparent;border:1.5px solid #ddd5c5;border-radius:12px;font-size:13px;color:#6b6057;cursor:pointer;font-family:inherit}
 .cl-share-btn{width:100%;padding:11px;background:#b8860b;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.modal-tabs{display:flex;border-bottom:1px solid var(--bdr);margin:-4px -4px 14px;background:var(--surf)}
+.mtab{flex:1;padding:10px 6px;font-size:12px;font-weight:600;color:var(--mut);cursor:pointer;text-align:center;border-bottom:2px solid transparent;transition:all .15s}
+.mtab.active{color:var(--grn,#059669);border-bottom-color:var(--grn,#059669);background:var(--bg)}
+.acts-wrap{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;padding-right:2px}
+.act-card{background:var(--surf);border:0.5px solid var(--bdr);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
+.act-num{width:22px;height:22px;border-radius:50%;background:var(--grn,#059669);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.act-body .act-title{font-size:12px;font-weight:700;color:var(--fg);margin-bottom:3px}
+.act-body .act-desc{font-size:11px;color:var(--mut);line-height:1.6}
+.act-body .act-dur{font-size:10px;color:var(--grn,#059669);font-weight:600;margin-top:4px}
+.act-empty{text-align:center;padding:24px;color:var(--mut);font-size:13px}
 .upgrade-prompt{background:linear-gradient(135deg,var(--pl),#e0e7ff);border:1.5px solid #c4b5fd;border-radius:var(--r);padding:16px;margin:8px 0;text-align:center}
 .upgrade-prompt h4{font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;color:var(--pd);margin-bottom:6px}
 .upgrade-prompt p{font-size:12px;color:var(--purple);margin-bottom:12px;line-height:1.5}
@@ -722,28 +732,41 @@ body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--txt);font-size:15px}
 
 <!-- SKILL MODAL -->
 <div class="overlay hidden" id="skillModal" onclick="bgClose(event,'skillModal')">
-  <div class="modal">
+  <div class="modal" style="max-width:420px">
     <div class="mhdr"><div class="m-ico" id="mIco">📖</div><div><h3 id="mTit">Skill</h3><p class="msub" id="mSub">Update progres</p></div></div>
-    <div class="msec"><label>Status</label>
-      <div class="stpick">
-        <div class="stbtn" id="stN" onclick="setSt('none')">Belum mulai</div>
-        <div class="stbtn sl" id="stL" onclick="setSt('learning')">⏳ Sedang</div>
-        <div class="stbtn sd" id="stD" onclick="setSt('done')">✅ Dikuasai</div>
+    <div class="modal-tabs">
+      <div class="mtab active" id="mtab-progres" onclick="switchMTab('progres')">📊 Progres</div>
+      <div class="mtab" id="mtab-aktivitas" onclick="switchMTab('aktivitas')">🎯 10 Aktivitas</div>
+    </div>
+    <div id="mpanel-progres">
+      <div class="msec"><label>Status</label>
+        <div class="stpick">
+          <div class="stbtn" id="stN" onclick="setSt('none')">Belum mulai</div>
+          <div class="stbtn sl" id="stL" onclick="setSt('learning')">⏳ Sedang</div>
+          <div class="stbtn sd" id="stD" onclick="setSt('done')">✅ Dikuasai</div>
+        </div>
+      </div>
+      <div class="msec"><label>Bintang</label>
+        <div class="starp">
+          <div class="starb" onclick="setStar(1)">⭐</div>
+          <div class="starb" onclick="setStar(2)">⭐</div>
+          <div class="starb" onclick="setStar(3)">⭐</div>
+        </div>
+      </div>
+      <div class="msec"><label>Catatan</label>
+        <input type="text" class="fin" id="mNote" placeholder="Tambah catatan...">
+      </div>
+      <div class="mact">
+        <button class="btn btn-g" onclick="closeModal('skillModal')">Batal</button>
+        <button class="btn btn-p" onclick="saveSkill()">Simpan</button>
       </div>
     </div>
-    <div class="msec"><label>Bintang</label>
-      <div class="starp">
-        <div class="starb" onclick="setStar(1)">⭐</div>
-        <div class="starb" onclick="setStar(2)">⭐</div>
-        <div class="starb" onclick="setStar(3)">⭐</div>
+    <div id="mpanel-aktivitas" style="display:none">
+      <div id="acts-list" class="acts-wrap"></div>
+      <div class="mact" style="margin-top:10px">
+        <button class="btn btn-g" onclick="switchMTab('progres')">← Kembali</button>
+        <button class="btn btn-p" onclick="setSt('learning');switchMTab('progres')">⏳ Tandai Sedang Belajar</button>
       </div>
-    </div>
-    <div class="msec"><label>Catatan</label>
-      <input type="text" class="fin" id="mNote" placeholder="Tambah catatan...">
-    </div>
-    <div class="mact">
-      <button class="btn btn-g" onclick="closeModal('skillModal')">Batal</button>
-      <button class="btn btn-p" onclick="saveSkill()">Simpan</button>
     </div>
   </div>
 </div>
@@ -1976,6 +1999,213 @@ function showTrialPopup(ico, title, msg, isExpired){
   // Push ke notif panel juga
   pushNotif(ico + ' ' + title);
 }
+// ── TAB SWITCHER ─────────────────────────────────────
+function switchMTab(tab) {
+  ['progres','aktivitas'].forEach(t => {
+    document.getElementById('mtab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('mpanel-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  if (tab === 'aktivitas') renderAktivitas(modalCI, modalSI);
+}
+
+// ── DATABASE 10 AKTIVITAS per SKILL ──────────────────
+// Key: "ci_si" → array 10 aktivitas [{judul, desc, dur}]
+const SKILL_AKTIVITAS = {
+  // ── PLAYGROUP (ci=0) ─────────────────────────
+  "0_0":[ // Motorik Kasar Dasar
+    {j:"Lompat-lompat di kasur",d:"Biarkan anak melompat di kasur dengan pengawasan. Latih keseimbangan dan kekuatan kaki.",dur:"10 mnt"},
+    {j:"Main bola guling",d:"Gulingkan bola ke anak, minta anak tendang balik. Boleh pakai berbagai ukuran bola.",dur:"10 mnt"},
+    {j:"Naik-turun tangga pelan",d:"Pegang tangan anak, naik turun 3-5 anak tangga. Latih koordinasi kaki-tangan.",dur:"5 mnt"},
+    {j:"Lempar-tangkap balon",d:"Gunakan balon besar yang gerakannya lambat. Lebih mudah untuk anak 2-3 tahun.",dur:"10 mnt"},
+    {j:"Berjalan di atas garis",d:"Tempel selotip di lantai, minta anak berjalan di atasnya tanpa keluar garis.",dur:"5 mnt"},
+    {j:"Main kejar-kejaran",d:"Berlari pelan bersama anak di taman atau ruangan luas. Berhenti setiap 30 detik.",dur:"10 mnt"},
+    {j:"Panjat-turun sofa",d:"Awasi anak memanjat dan turun dari sofa rendah secara berulang. Kembangkan kepercayaan diri.",dur:"5 mnt"},
+    {j:"Drum-drum dari panci",d:"Beri anak sendok kayu dan berbagai panci/wadah. Biarkan pukul sesuka hati.",dur:"10 mnt"},
+    {j:"Gerak lagu sederhana",d:"Nyanyikan lagu 'Kepala Pundak Lutut Kaki' sambil gerakkan bagian tubuh bersama anak.",dur:"5 mnt"},
+    {j:"Bermain di taman",d:"Biarkan anak memanjat, meluncur, dan berayun di playground. Minimal 3x seminggu.",dur:"30 mnt"},
+  ],
+  "0_6":[ // Makan Sendiri
+    {j:"Latihan sendok besar",d:"Mulai dengan sendok besar berbahan plastik. Isi dengan makanan lembut seperti nasi atau bubur.",dur:"15 mnt"},
+    {j:"Camilan dengan jari",d:"Berikan potongan buah kecil. Biarkan anak mengambil dan memasukkan sendiri ke mulut.",dur:"10 mnt"},
+    {j:"Piring anti-slip",d:"Gunakan piring beralas karet agar tidak bergeser. Kurangi frustrasi anak saat belajar.",dur:"Tiap makan"},
+    {j:"Duduk bersama makan keluarga",d:"Ajak anak duduk di meja makan bersama keluarga. Tiru cara orang tua memegang sendok.",dur:"Tiap makan"},
+    {j:"Mangkuk suction cup",d:"Pakai mangkuk yang bisa menempel di meja. Anak bisa fokus menyendok tanpa mangkuk bergerak.",dur:"Tiap makan"},
+    {j:"Biarkan berantakan",d:"Sediakan alas makan atau koran di bawah kursi. Berantakan = belajar. Jangan terlalu dibatasi.",dur:"Tiap makan"},
+    {j:"Pilih makanan sendiri",d:"Taruh 2 pilihan lauk di depan anak, biarkan ia menunjuk yang diinginkan dan ambil sendiri.",dur:"Tiap makan"},
+    {j:"Minum dari gelas terbuka",d:"Mulai dengan air sedikit (1-2 cm) di gelas kecil. Bantu pegang di awal, lepas bertahap.",dur:"5 mnt"},
+    {j:"Masak bersama",d:"Libatkan anak mengaduk adonan, tuang bahan. Ini meningkatkan minat makan makanan yang dimasak.",dur:"20 mnt"},
+    {j:"Kuis nama makanan",d:"Saat makan, sebut nama makanan dan minta anak mengulang. Sambil makan, sambil belajar kosakata.",dur:"Tiap makan"},
+  ],
+  // ── TK A (ci=1) ─────────────────────────────
+  "1_0":[ // Mewarnai & Menggambar
+    {j:"Mewarnai gambar besar",d:"Cetak gambar sederhana (buah, hewan) ukuran besar. Gunakan crayon tebal agar mudah dipegang.",dur:"15 mnt"},
+    {j:"Gambar bebas di kertas A3",d:"Sediakan kertas besar dan berbagai alat warna. Tidak perlu diarahkan — biarkan berekspresi.",dur:"20 mnt"},
+    {j:"Gambar mengikuti titik-titik",d:"Buat pola titik-titik, minta anak hubungkan membentuk gambar sederhana.",dur:"10 mnt"},
+    {j:"Finger painting",d:"Gunakan cat jari yang aman. Biarkan anak melukis dengan jari dan telapak tangan di kertas besar.",dur:"20 mnt"},
+    {j:"Gambar wajah",d:"Minta anak menggambar wajah dengan lingkaran, titik mata, dan garis senyum. Tidak perlu sempurna.",dur:"10 mnt"},
+    {j:"Kolase dari majalah",d:"Gunting gambar dari majalah lama, tempel di kertas. Latih motorik halus sekaligus kreativitas.",dur:"20 mnt"},
+    {j:"Mewarnai batu",d:"Cat batu kecil dengan cat air. Setelah kering, bisa dijadikan dekorasi atau mainan.",dur:"15 mnt"},
+    {j:"Gambar keluarga",d:"Minta anak menggambar semua anggota keluarga. Tanya nama dan peran setiap orang yang digambar.",dur:"15 mnt"},
+    {j:"Stempel buah & sayur",d:"Potong wortel/apel, celup ke cat, cap di kertas. Unik dan sensorik sekaligus.",dur:"15 mnt"},
+    {j:"Buku mewarnai bertema",d:"Pilih buku mewarnai bertema favorit anak (dino, princess, dll). Mewarnai 1-2 gambar per hari.",dur:"10 mnt"},
+  ],
+  "1_3":[ // Mengenal Huruf A-Z
+    {j:"Lagu ABC sambil tunjuk huruf",d:"Nyanyikan lagu alfabet sambil menunjuk huruf di poster dinding. Ulangi 3-5 kali.",dur:"5 mnt"},
+    {j:"Kartu huruf bergambar",d:"Tunjukkan kartu 'A-Apel', 'B-Buku'. Tanya anak: 'Ini huruf apa?' Bergantian setiap hari.",dur:"10 mnt"},
+    {j:"Telusuri huruf dengan jari",d:"Cetak huruf besar ukuran 10cm, laminating. Anak telusuri bentuk huruf dengan jari telunjuk.",dur:"5 mnt"},
+    {j:"Cari huruf di lingkungan",d:"'Coba cari huruf A di papan nama toko itu!' Buat jadi permainan saat jalan-jalan.",dur:"10 mnt"},
+    {j:"Puzzle huruf",d:"Gunakan puzzle huruf kayu/foam. Minta anak memasang sambil menyebut nama huruf.",dur:"10 mnt"},
+    {j:"Tulis huruf di pasir",d:"Isi nampan dengan pasir atau garam kasar. Anak menulis huruf dengan jari.",dur:"10 mnt"},
+    {j:"Buku alfabet bergambar",d:"Baca bersama 2-3 halaman per hari. Setiap halaman fokus 1 huruf dengan gambar konkret.",dur:"10 mnt"},
+    {j:"Huruf dari playdough",d:"Bentuk huruf dari lilin mainan. Biarkan anak meraba dan merasakannya.",dur:"15 mnt"},
+    {j:"Tebak huruf depan nama",d:"'Nama kamu dimulai huruf apa ya?' Latih anak mengenali huruf pertama nama sendiri dan teman.",dur:"5 mnt"},
+    {j:"Bingo huruf",d:"Buat kartu bingo 3x3 dengan huruf acak. Sebut huruf, anak tutup dengan koin jika ada.",dur:"15 mnt"},
+  ],
+  // ── TK B (ci=2) — SD KELAS 1 (ci=3) ─────────
+  "3_0":[ // Story Telling
+    {j:"Cerita dari gambar",d:"Tunjukkan gambar (dari buku/majalah), minta anak ceritakan apa yang terjadi. Tidak ada jawaban salah.",dur:"10 mnt"},
+    {j:"Lanjutkan ceritaku",d:"Mulai cerita: 'Suatu hari ada seekor beruang...', minta anak lanjutkan 2-3 kalimat. Bergantian.",dur:"10 mnt"},
+    {j:"Boneka tangan storytelling",d:"Gunakan kaus kaki sebagai boneka. Biarkan anak bermain peran dan bercerita menggunakan boneka.",dur:"15 mnt"},
+    {j:"Cerita sebelum tidur",d:"Minta anak membuat cerita pengantar tidur sendiri. Boleh lucu, ajaib, atau tidak masuk akal.",dur:"10 mnt"},
+    {j:"Rekam cerita anak",d:"Rekam anak bercerita di HP. Putar ulang bersama — anak biasanya senang mendengar suara sendiri.",dur:"10 mnt"},
+    {j:"Cerita 3 benda acak",d:"Ambil 3 benda (pensil, sendok, mobil mainan). Minta anak buat cerita yang melibatkan ketiganya.",dur:"10 mnt"},
+    {j:"Buku cerita tanpa teks",d:"Baca buku bergambar tanpa teks, minta anak 'membaca' dengan menceritakan gambarnya.",dur:"10 mnt"},
+    {j:"Cerita berantai keluarga",d:"Satu kalimat satu orang, bergantian membangun cerita bersama. Sangat seru saat makan malam.",dur:"10 mnt"},
+    {j:"Ulang film favorit",d:"Setelah nonton film, minta anak ceritakan kembali alur film dalam 5 menit.",dur:"10 mnt"},
+    {j:"Buku harian bergambar",d:"Sediakan buku kosong. Anak gambar dan ceritakan 1 kejadian hari ini setiap malam.",dur:"10 mnt"},
+  ],
+  "3_3":[ // Memasak Sederhana
+    {j:"Aduk adonan kue",d:"Biarkan anak mengaduk adonan pancake atau brownies. Kembangkan kekuatan tangan dan ketelitian.",dur:"15 mnt"},
+    {j:"Cuci sayuran dan buah",d:"Minta anak mencuci sayuran/buah di wastafel dengan air mengalir sebelum dimasak.",dur:"5 mnt"},
+    {j:"Hiasi kue/biscuit",d:"Sediakan selai, meses, atau buah potongan. Anak menghias kue sesuai kreativitasnya.",dur:"15 mnt"},
+    {j:"Buat sandwich",d:"Sediakan roti tawar, selai, dan isian. Anak meracik sandwichnya sendiri untuk sarapan.",dur:"10 mnt"},
+    {j:"Takar bahan masakan",d:"Libatkan anak dalam mengukur tepung, gula, garam dengan sendok takar. Ini juga belajar matematika.",dur:"10 mnt"},
+    {j:"Iris pisang dengan pisau plastik",d:"Gunakan pisau plastik aman. Minta anak iris pisang untuk salad buah. Awasi selalu.",dur:"5 mnt"},
+    {j:"Buat jus buah",d:"Potong buah, masukkan ke blender (anak pegang tutupnya). Tuang sendiri ke gelas.",dur:"10 mnt"},
+    {j:"Masak nasi di rice cooker",d:"Ajari cara takar beras, cuci, isi air, dan nyalakan rice cooker. Anak bisa lakukan sendiri.",dur:"10 mnt"},
+    {j:"Bikin teh/susu sendiri",d:"Ajari cara rebus air (dengan pengawasan), seduh teh/susu. Anak bangga buat minuman sendiri.",dur:"10 mnt"},
+    {j:"Dokumentasi resep",d:"Setelah masak bersama, minta anak gambar atau tulis langkah-langkahnya di buku resep mini.",dur:"10 mnt"},
+  ],
+  "4_0":[ // Block Coding (Scratch)
+    {j:"Buka Scratch.mit.edu",d:"Daftarkan akun Scratch gratis. Eksplorasi antarmuka bersama anak — blok, sprite, panggung.",dur:"20 mnt"},
+    {j:"Buat kucing bergerak",d:"Tutorial Scratch 1: Drag blok 'when flag clicked' + 'move 10 steps'. Jalankan dan lihat hasilnya.",dur:"15 mnt"},
+    {j:"Animasi sederhana",d:"Buat sprite bergerak bolak-balik menggunakan blok 'if on edge, bounce'. Eksperimen angkanya.",dur:"20 mnt"},
+    {j:"Musik dengan Scratch",d:"Gunakan blok musik Scratch. Buat sprite memainkan melodi sederhana saat diklik.",dur:"15 mnt"},
+    {j:"Game tangkap bola",d:"Ikuti tutorial YouTube 'Scratch game for kids'. Buat game sederhana dalam 30 menit.",dur:"30 mnt"},
+    {j:"Code.org Course A",d:"Daftarkan di code.org. Kerjakan Course A bersama — puzzle visual mudah dipahami anak SD.",dur:"20 mnt"},
+    {j:"Debugging sederhana",d:"Buat kesalahan kecil di program Scratch, minta anak temukan dan perbaiki. Ini belajar debugging.",dur:"15 mnt"},
+    {j:"Presentasikan ke keluarga",d:"Minta anak tunjukkan dan jelaskan program yang dibuat ke anggota keluarga lain.",dur:"10 mnt"},
+    {j:"Remix project Scratch",d:"Buka project publik di Scratch, klik 'Remix'. Modifikasi sesuai keinginan anak.",dur:"20 mnt"},
+    {j:"Buat kartu ucapan digital",d:"Buat animasi ucapan ulang tahun di Scratch. Bisa dikirim link ke saudara.",dur:"30 mnt"},
+  ],
+  "4_8":[ // Literasi Keuangan Dasar
+    {j:"Celengan 3 toples",d:"Buat sistem 3 toples: Pakai, Tabung, Berbagi. Setiap dapat uang jajan, bagi ke 3 toples.",dur:"5 mnt/hari"},
+    {j:"Belanja di warung",d:"Beri uang Rp 5.000, minta beli 1-2 barang di warung. Anak hitung kembaliannya sendiri.",dur:"15 mnt"},
+    {j:"Permainan toko-tokoan",d:"Gunakan uang mainan. Bergantian jadi penjual dan pembeli. Latih hitung harga dan kembalian.",dur:"20 mnt"},
+    {j:"Buku kas mini",d:"Sediakan buku kecil. Setiap hari anak catat uang masuk dan keluar. Review mingguan bersama.",dur:"5 mnt/hari"},
+    {j:"Bedakan kebutuhan-keinginan",d:"Saat belanja, tanya: 'Ini kebutuhan atau keinginan?' untuk setiap barang yang diminta anak.",dur:"Saat belanja"},
+    {j:"Target tabungan visual",d:"Buat grafik tabungan. Anak warnai setiap kali menabung. Rayakan saat target tercapai.",dur:"Review mingguan"},
+    {j:"Kunjungi bank/ATM",d:"Ajak anak ke bank. Jelaskan fungsi ATM, tabungan, dan bunga. Tunjukkan buku tabungan.",dur:"30 mnt"},
+    {j:"Bandingkan harga",d:"Di supermarket, minta anak bandingkan 2 produk serupa. Mana yang lebih hemat per ml/gram?",dur:"Saat belanja"},
+    {j:"Simulasi gaji dan kebutuhan",d:"Beri anak Rp 50.000 'gaji' di atas kertas. Daftar kebutuhan sebulan. Bisa cukup tidak?",dur:"20 mnt"},
+    {j:"Kelas sedekah",d:"Ajak anak ikut sumbangkan sebagian tabungannya ke kotak amal atau bantu teman yang kesulitan.",dur:"Situasional"},
+  ],
+  "5_0":[ // Critical Thinking & Analisis
+    {j:"Teka-teki lateral",d:"'Ada yang jatuh dari gedung 20 lantai tapi tidak apa-apa. Kenapa?' Dorong anak berpikir kreatif.",dur:"10 mnt"},
+    {j:"Bedah berita",d:"Baca berita singkat bersama. Tanya: 'Menurut kamu, ini fakta atau pendapat? Buktinya apa?'",dur:"10 mnt"},
+    {j:"Eksperimen sains rumahan",d:"Baking soda + cuka = gunung berapi mini. Minta anak prediksi dulu hasilnya sebelum mencoba.",dur:"20 mnt"},
+    {j:"Debat keluarga ringan",d:"Topik: 'Mana lebih baik: kucing atau anjing?' Setiap orang beri 3 alasan. Latih argumentasi.",dur:"15 mnt"},
+    {j:"Analisis iklan",d:"Tonton iklan bersama. Tanya: 'Apa yang ingin iklan ini kamu lakukan? Apakah kamu setuju?'",dur:"10 mnt"},
+    {j:"Buat mind map",d:"Pilih topik (air, makanan, sekolah). Buat peta pikiran bersama di kertas besar. Hubungkan ide.",dur:"15 mnt"},
+    {j:"Teka-teki logika",d:"'3 teman mau menyeberang jembatan malam hari dengan 1 senter...' Cari di Google 'logic puzzles kids'.",dur:"15 mnt"},
+    {j:"Bandingkan 2 hal berbeda",d:"'Apa persamaan dan perbedaan kucing dan ikan?' Buat tabel T. Latih analisis komparatif.",dur:"10 mnt"},
+    {j:"Proyek investigasi",d:"Pilih pertanyaan: 'Mengapa langit biru?' Minta anak cari jawaban dari 2 sumber berbeda.",dur:"20 mnt"},
+    {j:"Evaluasi solusi",d:"Hadirkan masalah nyata rumah tangga. Minta anak usulkan 3 solusi, evaluasi pro-kontra masing-masing.",dur:"15 mnt"},
+  ],
+  "5_3":[ // Membuat Website
+    {j:"Kenali HTML dasar",d:"Buka Notepad, ketik <h1>Namaku</h1>, simpan sebagai .html, buka di browser. Ajaib!",dur:"15 mnt"},
+    {j:"Buat halaman profil",d:"Tambahkan paragraf, gambar, dan warna background di HTML. Eksperimen tag p, img, body.",dur:"20 mnt"},
+    {j:"Coba Replit.com",d:"Daftar akun Replit gratis. Buat project HTML/CSS pertama dengan template yang tersedia.",dur:"20 mnt"},
+    {j:"Kenali CSS dasar",d:"Ubah warna teks, background, dan font menggunakan file CSS terpisah. Langsung lihat hasilnya.",dur:"20 mnt"},
+    {j:"Buat website hobi",d:"Buat website 3 halaman tentang hobi anak: tentang, galeri foto, kontak. Latih navigasi.",dur:"60 mnt"},
+    {j:"Tambahkan gambar & link",d:"Sisipkan gambar dan buat hyperlink antar halaman. Anak belajar konsep URL dan path.",dur:"20 mnt"},
+    {j:"Deploy ke Netlify",d:"Upload folder website ke netlify.com (gratis). Anak punya website live dengan URL sendiri!",dur:"15 mnt"},
+    {j:"Inspeksi website favoritnya",d:"Klik kanan di website favorit → Inspect. Ubah teks atau warna. Seru dan tidak permanen.",dur:"10 mnt"},
+    {j:"Tambahkan formulir",d:"Buat form nama + email sederhana menggunakan HTML. Perkenalkan konsep input data.",dur:"20 mnt"},
+    {j:"Presentasikan website",d:"Minta anak tunjukkan websitenya ke keluarga dan jelaskan cara membuatnya step by step.",dur:"15 mnt"},
+  ],
+  "6_0":[ // Kepemimpinan Tim
+    {j:"Pimpin proyek keluarga",d:"Beri anak tanggung jawab memimpin 1 proyek keluarga: gotong royong, masak bersama, atau piknik.",dur:"1-2 jam"},
+    {j:"Delegasi tugas",d:"Saat proyek, minta anak bagi tugas ke anggota tim (adik, saudara). Latih skills delegasi.",dur:"10 mnt"},
+    {j:"Diskusi dan ambil keputusan",d:"Hadirkan keputusan keluarga sederhana. Minta anak pimpin diskusi dan simpulkan keputusan.",dur:"15 mnt"},
+    {j:"Buat aturan kelompok",d:"Dalam bermain dengan teman, ajak anak buat 3 aturan bersama. Ini latih negosiasi dan fairness.",dur:"10 mnt"},
+    {j:"Evaluasi setelah kegiatan",d:"Setelah proyek: 'Apa yang berhasil? Apa yang bisa lebih baik?' Biasakan refleksi sebagai leader.",dur:"10 mnt"},
+    {j:"Buku pemimpin idola",d:"Baca biografi pemimpin sederhana (Soekarno, RA Kartini). Diskusikan sifat kepemimpinannya.",dur:"20 mnt"},
+    {j:"Resolusi konflik",d:"Saat ada konflik antar teman, minta anak jadi mediator. Dengarkan kedua pihak lalu usulkan solusi.",dur:"Situasional"},
+    {j:"Orasi 1 menit",d:"Minta anak berdiri dan bicara 1 menit tentang topik yang ia sukai. Latih keberanian dan artikulasi.",dur:"10 mnt"},
+    {j:"Feedback konstruktif",d:"Latih memberi pujian + saran: 'Yang bagus adalah... Yang bisa ditingkatkan adalah...' Roleplaying.",dur:"10 mnt"},
+    {j:"Volunteer di sekolah",d:"Dorong anak jadi ketua kelas, panitia acara, atau pengurus OSIS. Support penuh dari orang tua.",dur:"Situasional"},
+  ],
+  "7_0":[ // SMP - Kepemimpinan
+    {j:"Pimpin proyek nyata",d:"Beri anak tanggung jawab memimpin proyek sekolah atau keluarga dari awal hingga selesai.",dur:"Beberapa hari"},
+    {j:"Analisis leader film",d:"Tonton film bertema kepemimpinan (Remember the Titans, dll). Diskusikan teknik leadership-nya.",dur:"2 jam"},
+    {j:"Wawancara pemimpin",d:"Minta anak wawancarai guru, kepala sekolah, atau tokoh lokal tentang pengalaman memimpin.",dur:"30 mnt"},
+    {j:"Simulasi rapat",d:"Roleplay rapat organisasi. Anak jadi ketua, adik/orang tua jadi anggota. Ada agenda dan notulen.",dur:"20 mnt"},
+    {j:"Buku The 7 Habits",d:"Baca versi anak dari 7 Habits (Sean Covey). Diskusikan 1 habit per minggu bersama.",dur:"20 mnt/minggu"},
+    {j:"Kelola event kecil",d:"Anak bertanggung jawab mengorganisir 1 event kecil (ulang tahun, pertemuan keluarga).",dur:"Beberapa hari"},
+    {j:"Public speaking 3 menit",d:"Siapkan pidato 3 menit tentang isu yang peduli padanya. Presentasikan ke keluarga.",dur:"20 mnt"},
+    {j:"Feedback 360 derajat",d:"Minta 3 orang (teman, guru, orang tua) berikan feedback jujur tentang gaya kepemimpinannya.",dur:"Seminggu"},
+    {j:"Buat visi & misi pribadi",d:"Minta anak tulis: 'Pemimpin seperti apa yang ingin kamu jadi?' dan '5 nilai utama hidupku'.",dur:"30 mnt"},
+    {j:"Jadi mentor adik kelas",d:"Mendaftar jadi tutor atau mentor untuk adik kelas di mata pelajaran yang dikuasai.",dur:"Reguler"},
+  ],
+  "10_0":[ // SMA - Spesialisasi
+    {j:"Deep dive bidang minat",d:"Pilih 1 bidang spesifik (AI, biologi, sastra). Baca 1 buku nonteks per bulan di bidang itu.",dur:"Reguler"},
+    {j:"Ikut lomba bidang spesifik",d:"Daftarkan diri ke olimpiade, kompetisi, atau hackathon sesuai minat. Targetkan 2x per tahun.",dur:"Persiapan 1-2 bulan"},
+    {j:"Buat proyek portofolio",d:"Kerjakan proyek nyata: penelitian, aplikasi, karya seni, atau bisnis kecil yang bisa ditampilkan.",dur:"Beberapa minggu"},
+    {j:"Mentor dari praktisi",d:"Cari mentor profesional di bidang minat via LinkedIn atau komunitas. Minta sesi mentoring rutin.",dur:"Bulanan"},
+    {j:"Ikuti kursus online advanced",d:"Coursera, edX, atau Udemy — ambil kursus level intermediate atau advanced sesuai spesialisasi.",dur:"Beberapa bulan"},
+    {j:"Tulis artikel atau paper",d:"Tulis artikel di blog, Medium, atau makalah sederhana. Latih kemampuan menulis akademik.",dur:"Mingguan"},
+    {j:"Presentasi di forum",d:"Presentasikan keahlian di webinar, komunitas, atau seminar sekolah. Bangun reputasi sejak dini.",dur:"Persiapan 2 minggu"},
+    {j:"Kolaborasi proyek",d:"Kolaborasi dengan teman dari sekolah lain atau komunitas online dalam proyek bersama.",dur:"Beberapa minggu"},
+    {j:"Bangun jejaring",d:"Aktif di komunitas atau forum sesuai bidang. LinkedIn, Discord, atau komunitas lokal.",dur:"Reguler"},
+    {j:"Refleksi dan evaluasi",d:"Setiap akhir bulan, evaluasi: apa yang sudah dikuasai, apa yang masih kurang, langkah selanjutnya.",dur:"30 mnt/bulan"},
+  ],
+};
+
+// Generator aktivitas default untuk skill yang belum ada di database
+function generateDefaultAkt(skillName) {
+  const base = [
+    {j:`Eksplorasi mandiri`,d:`Cari tahu lebih lanjut tentang "${skillName}" lewat buku, YouTube, atau tanya orang yang ahli.`,dur:"20 mnt"},
+    {j:`Latihan harian`,d:`Dedikasikan 10-15 menit setiap hari untuk berlatih "${skillName}" secara konsisten.`,dur:"15 mnt/hari"},
+    {j:`Coba di kehidupan nyata`,d:`Identifikasi situasi sehari-hari di mana kamu bisa menerapkan skill "${skillName}" langsung.`,dur:"Situasional"},
+    {j:`Belajar dari contoh`,d:`Cari orang yang sudah menguasai "${skillName}". Amati cara mereka melakukannya.`,dur:"15 mnt"},
+    {j:`Roleplay bersama orang tua`,d:`Simulasikan situasi yang membutuhkan "${skillName}" bersama orang tua. Minta feedback.`,dur:"15 mnt"},
+    {j:`Buat proyek mini`,d:`Rancang proyek kecil yang membutuhkan "${skillName}" sebagai skill utamanya.`,dur:"1-2 jam"},
+    {j:`Catat progres`,d:`Tulis di jurnal: apa yang sudah bisa, apa yang masih perlu latihan, dan target minggu depan.`,dur:"5 mnt/hari"},
+    {j:`Tantang diri lebih tinggi`,d:`Setelah menguasai dasar, cari cara yang lebih sulit atau kompleks untuk melatih "${skillName}".`,dur:"30 mnt"},
+    {j:`Ajarkan ke orang lain`,d:`Cara terbaik menguasai skill adalah mengajarkannya. Coba jelaskan "${skillName}" ke adik atau teman.`,dur:"15 mnt"},
+    {j:`Evaluasi dan refleksi`,d:`Setiap minggu, tanya diri sendiri: sudah seberapa jauh kemajuanku di "${skillName}"?`,dur:"10 mnt/minggu"},
+  ];
+  return base;
+}
+
+function renderAktivitas(ci, si) {
+  const key = ci+'_'+si;
+  const skName = TMPL[ci]?.skills[si]?.n || 'skill ini';
+  const acts = SKILL_AKTIVITAS[key] || generateDefaultAkt(skName);
+  const wrap = document.getElementById('acts-list');
+  if (!wrap) return;
+  wrap.innerHTML = acts.map((a,i) => `
+    <div class="act-card">
+      <div class="act-num">${i+1}</div>
+      <div class="act-body">
+        <div class="act-title">${a.j}</div>
+        <div class="act-desc">${a.d}</div>
+        <div class="act-dur">⏱ ${a.dur}</div>
+      </div>
+    </div>`).join('');
+}
+
 function openSkillModal(ci,si){
   modalCI=ci; modalSI=si;
   const sk=getSk(ci,si);
@@ -1985,6 +2215,7 @@ function openSkillModal(ci,si){
   document.getElementById('mSub').textContent=TMPL[ci].title;
   document.getElementById('mNote').value=sk.note||'';
   updStBtns(); updStarBtns();
+  switchMTab('progres'); // selalu mulai dari tab progres
   openModal('skillModal');
 }
 function setSt(s){modalSt=s;updStBtns();}
@@ -3349,20 +3580,29 @@ const CHECKLIST_SD = [
 ];
 
 let clData = {}; // { itemId: 'done'|'partial'|'' }
+let clSaving = false; // debounce flag
 
-function openChecklist() {
+// Load clData: coba dari child.checklist_sd (Supabase), fallback localStorage
+async function openChecklist() {
   const c = child();
   const modal = document.getElementById('checklistModal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
-  // Load dari localStorage
-  const key = 'cl_' + (c ? c.id : 'default');
-  try { clData = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e){ clData={}; }
-
-  // Update label
+  // Tampilkan label dulu
   if (c) document.getElementById('cl-anak-label').textContent =
     c.name + ' · ' + (TMPL[c.grade]?.title||'Pra SD') + ' · 27 skill kesiapan SD';
+
+  // Load dari memory child object (sudah di-load saat loadUserData)
+  if (c && c.checklist_sd) {
+    try { clData = typeof c.checklist_sd === 'string'
+      ? JSON.parse(c.checklist_sd) : c.checklist_sd;
+    } catch(e) { clData = {}; }
+  } else {
+    // Fallback localStorage (migrasi data lama)
+    const key = 'cl_' + (c ? c.id : 'default');
+    try { clData = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e){ clData={}; }
+  }
 
   renderChecklist();
 }
@@ -3374,8 +3614,6 @@ function closeChecklist() {
 
 function renderChecklist() {
   const c = child();
-  const key = 'cl_' + (c ? c.id : 'default');
-
   let total = 0, done = 0;
   CHECKLIST_SD.forEach(cat => { cat.items.forEach(it => {
     total++;
@@ -3398,7 +3636,7 @@ function renderChecklist() {
       const st = clData[it.id] || '';
       const cls = st==='done'?'done':st==='partial'?'partial':'';
       const check = st==='done'?'✓':st==='partial'?'~':'';
-      html += `<div class="cl-row ${cls}" onclick="toggleCl('${it.id}','${c?c.id:'default'}')">
+      html += `<div class="cl-row ${cls}" onclick="toggleCl('${it.id}')">
         <div class="cl-checkbox">${check}</div>
         <div class="cl-row-text">${it.text}</div>
         <div class="cl-row-age">${it.usia}</div>
@@ -3407,17 +3645,48 @@ function renderChecklist() {
     html += '</div></div>';
   });
   document.getElementById('cl-body').innerHTML = html;
-
-  // Save
-  try { localStorage.setItem(key, JSON.stringify(clData)); } catch(e){}
 }
 
-function toggleCl(itemId, childKey) {
+function toggleCl(itemId) {
+  const c = child();
   const cur = clData[itemId] || '';
   // Siklus: '' → 'partial' → 'done' → ''
   clData[itemId] = cur===''?'partial':cur==='partial'?'done':'';
-  try { localStorage.setItem('cl_'+childKey, JSON.stringify(clData)); } catch(e){}
+
+  // Simpan ke memory child object
+  if (c) c.checklist_sd = clData;
+
   renderChecklist();
+
+  // Auto-save ke Supabase (debounce 1.5 detik)
+  if (!clSaving) {
+    clSaving = true;
+    setTimeout(async () => {
+      await persistChecklist(false);
+      clSaving = false;
+    }, 1500);
+  }
+}
+
+// Simpan ke Supabase kolom checklist_sd di tabel children
+async function persistChecklist(showToast = true) {
+  const c = child();
+  if (!c) return;
+  try {
+    const { error } = await supa.from('children')
+      .update({ checklist_sd: clData })
+      .eq('id', c.id);
+    if (error) throw new Error(error.message);
+    c.checklist_sd = clData; // update memory
+    // Juga simpan localStorage sebagai cache offline
+    try { localStorage.setItem('cl_'+c.id, JSON.stringify(clData)); } catch(e){}
+    if (showToast) toast('✅ Checklist tersimpan ke akun kamu!');
+  } catch(e) {
+    // Fallback ke localStorage saja
+    try { localStorage.setItem('cl_'+(c?c.id:'default'), JSON.stringify(clData)); } catch(e2){}
+    if (showToast) toast('⚠️ Tersimpan lokal — cek koneksi internet');
+    console.warn('persistChecklist error:', e.message);
+  }
 }
 
 function shareChecklist() {
@@ -3438,15 +3707,8 @@ function shareChecklist() {
   window.open('https://wa.me/?text='+msg,'_blank');
 }
 
-function saveChecklist() {
-  const c = child();
-  const key = 'cl_' + (c ? c.id : 'default');
-  try {
-    localStorage.setItem(key, JSON.stringify(clData));
-    toast('✅ Progres checklist tersimpan!');
-  } catch(e) {
-    toast('⚠️ Gagal menyimpan: ' + e.message);
-  }
+async function saveChecklist() {
+  await persistChecklist(true);
 }
 
 // Cek otomatis saat ganti anak
